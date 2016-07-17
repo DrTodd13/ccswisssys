@@ -1,0 +1,209 @@
+Went in section 017110C8 DLPJU400 Abdrashitov Ali 958 J DLP
+Went in section 017110C8 JWECW754 Adiraju Vimal 763 C Jacob Wismer Elementary
+Went in section 017110C8 SPLDQ471 Agarwal Aryan 711 D springville elementary school
+Went in section 017110C8 WNTIU435 Alexander Henry 924 I Winterhaven
+Went in section 017110C8 CRDFT980 Anderson Daniel 1230 F Carden Cascade Academy
+Went in section 017110C8 ATHIQ677 Ankeney Benjamin 940 I Athey Creek
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 ATHJQ099 Ankeney George 1174 J West Linn High School
+Went in section 017110C8 TROET183 Baker Gabriel 803 E Trost
+Went in section 017110C8 PCOJS251 Balwit Theo 1169 J Pacific Crest Community School
+Went in section 017110C8 WHPKW359 Bednark River 1326 K Woodrow Wilson High School
+Went in section 01711140 GCEBM717 Beffert Soren 412 B Glencoe
+Went in section 01711140 HSOEL156 Beksultan Baatyr 569 E Home school
+Went in section 017110C8 N/A Binford Oakley 800 I DLP
+Went in section 017110C8 MTZEL698 Bishop Jack 803 E Metzger Elementary School
+Went in section 01711140 NONE Blevens Emma 500 F Holy Trinity
+Went in section 017110C8 HVMI9457 Botez Andrea 1789 I HVM
+Went in section 017110C8 SLLHQ214 Bowden Robert 1343 H Stoller middle school
+Went in section 01711140 MTZDL500 Bowers Benjamin 417 D Metzger
+Went in section 017110C8 HCHER314 Boyce Alexandre 1071 E Hope Chinese Charter School
+Went in section 017110C8 SLLGQ074 Brahmarouthu Deetya 892 G Stoller Middle School
+Went in section 017110C8 ACCIW317 Bromley Joshua 1272 I ACCESS Academy
+Went in section 01711140 NONE Burger Aidan 400 E Boise-Eliot/Humboldt
+Went in section 01711140 NONE Burger Ethan 500 F Boise-Eliot/Humboldt
+Went in section 01711140 NONE Butzien-Pape Ben 300 D Astor
+Went in section 017110C8 SLVHW367 Cagle Charles 822 H West Sylvan Middle School
+Went in section 01711140 NONE Cao Minh Khang 0 A Holy Trinity School
+Went in section 01711140 NONE Cao Minh Viet 200 C Holy Trinity school
+Went in section 01711140 WNTDU616 Castile Guthrie 434 D Winterhaven
+Went in section 01711140 WDSET174 Chan Alvin 400 E Woodstock E.S.
+Went in section 017110C8 ILCFF466 Cheng Erin 1209 F Illahee elementary
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 SHHGI826 Cheng Megan 1409 G Shahala
+Went in section 017110C8 HCHDR334 Chondro Robert 1071 D Hope Chinese Charter School
+Went in section 01711140 HCHBU664 Chondro William 593 B Hope Chinese Charter
+Went in section 017110C8 SHHI8442 Chong Benjamin 1200 I shahala
+Went in section 017110C8 TMGIS674 Cooper Olivia 1292 H Talmadge Middle School
+Went in section 017110C8 HSOGW332 Cooper Sarah 759 G Homeschool
+Went in section 017110C8 TMGHP075 Corrales Yair 1017 H Talmadge Middle School
+Went in section 017110C8 NONE Culbertson Casey 800 I Athey Creek Middle School
+Went in section 017110C8 DLPMW928 Cvetkovic Sean 1273 M DLP
+Went in section 01711140 GCEEP341 Dauch Sean 522 E Glencoe
+Went in section 017110C8 HTRHW970 David Matt 970 H Holy Trinity Parish School
+Went in section 01711140 CJEEU308 De Bender Miles 570 E CJOG
+Went in section 017110C8 SKLHP862 Diana Nick 1082 H Skyline
+Went in section 01711140 PCOGL040 Dieringer-Lukens Sam 576 G PCO
+Went in section 017110C8 RGMHQ432 Dobbins Kira 946 H RGM
+Went in section 01711140 NONE Docktor Kenton 200 C Holy Trinity
+Went in section 017110C8 GCEEQ360 Droege Charlie 934 E Glencoe
+Went in section 01711140 MTZAN872 Ducsik Cavan 461 A Metzger Elementary School
+Went in section 017110C8 MTZCM781 Ducsik Elena 738 C Metzger Elementary
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 WNTHT251 Ehnes Anders 1178 H Southwest Charter
+Went in section 017110C8 WNTEM175 Ehnes Jennings 997 E Winterhaven
+Went in section 01711140 ORNFM254 Evans KaelaDae 592 F Orenco
+Went in section 017110C8 LRGLF694 Evered Cole 1272 L Lakeridge High School
+Went in section 017110C8 ACCHQ729 Feldman Konner 1608 H ACCESS Academy
+Went in section 017110C8 ACCFW266 Feldman Neena 1297 F ACCESS Academy
+Went in section 017110C8 FWLHR513 Fennelly Kyle 707 H Fowler Middle School
+Went in section 01711140 ACCDL036 Fisher Mats 589 D Access Academy
+Went in section 017110C8 ACCHL605 Fisher Orion 1092 H Access Academy
+Went in section 017110C8 BCEFW668 Fisher Zach 786 F Beverly Cleary
+Went in section 017110C8 FWLGL931 Fitzgerald Sam 954 G Fowler MS
+Went in section 01711140 NONE Gambino Bryndan 500 F Astor
+Went in section 017110C8 SLLHV803 Gardner-O'Kearny Aidan 1321 H Stoller Middle School
+Went in section 017110C8 ACEEU305 Gatherum Matthew 746 E Ash Creek Elementary
+Went in section 017110C8 RIKEV707 Gaudette Dumlao Gavin 817 E Rieke
+Went in section 017110C8 RIKCQ569 Gaudette Dumlao Joshua 734 C Rieke
+Went in section 01711140 VCEEV573 Gauthier Audrey 564 E Valley Catholic Elementary School
+Went in section 017110C8 HTRHP126 Ginter Nick 828 H Holy Trinity
+Went in section 01711140 NONE Greensted Kai 400 E Chief Joseph Ockley Green
+Went in section 017110C8 CJEGT235 Greensted Rhys 825 G Chief Joseph Ockley Green
+Went in section 017110C8 RGMIW290 Grehan Sinan 1445 I Robert Gray
+Went in section 017110C8 WNTFW339 Gullung Charlie 1243 F Winterhaven
+Went in section 017110C8 WNTDL569 Gullung Hank 638 D Winterhaven
+Went in section 017110C8 ACCGN088 Guo William 1282 G Access Academy
+Went in section 017110C8 DLPMR577 Hangdaan Aldridge 700 M DLP
+Went in section 017110C8 CANKQ654 Hansen James 1737 K Canby High School
+Went in section 017110C8 JAHEP830 Hewage Sayuri 668 E Jackson Elementary
+Went in section 01711140 HTRDS526 Ho Clara 512 D Holy Trinity Catholic School
+Went in section 017110C8 HSFGU439 Ho Cody 1262 G Hosford Middle School
+Went in section 01711140 HTRAW742 Ho Devon 400 A Holy Trinity Catholic School
+Went in section 01711140 HTRFN688 Ho Sidney 440 F Holy Trinity Catholic School
+Went in section 017110C8 RIKDL107 Holt Forrest 839 D Rieke
+Went in section 017110C8 NONE Hoover Orin 800 I Chief Joseph Ockley Green
+Went in section 01711140 SLVGR383 Howard Baylor 433 G West Sylvan Middle School
+Went in section 017110C8 WNTGN113 Hoyt Linus 1051 G Winterhaven
+Went in section 017110C8 LHPMW103 Huard Dylan 1388 M Lincoln High School
+Went in section 017110C8 HTRGL033 Huard James 653 G Holy Trinity School
+Went in section 017110C8 MNBEL048 Jallow Abdouraheem 826 E Minter Bridge Elementary School
+Went in section 017110C8 WHPLQ862 Jewell Nathan 1592 L WHP
+Went in section 017110C8 GCEDN873 Jordan William 842 D Glencoe Elementary
+Went in section 01711140 CJECU410 Joy Nao 554 C Chief Joseph/Ockley Green
+Went in section 017110C8 RGMHN833 Joy Ryuu 1170 H Robert Gray MS
+Went in section 017110C8 DLPLS236 Kawatra Pranav 785 L DLP
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 UHVMK810 Kellogg Erik 1353 M Union High School
+Went in section 017110C8 NONE Kenny Mitchell 700 H da Vinci Arts Middle School
+Went in section 01711140 NONE Key Aiden 200 C winterhaven
+Went in section 01711140 WNTFV527 Key Devan 454 F winterhaven
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 WNTJP931 Key Hunter 1226 J cleveland highschool
+Went in section 017110C8 SLLHQ861 Kodithyala Raj 1400 H Stoller Middle
+Went in section 01711140 CVLFX655 Kwon Joshua 598 F ColumbiaValley
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 A904 Lee Brian 1660 H Chehalis Middle School
+Went in section 017110C8 WDSDR812 Leong Albert 999 D Woodstock school
+Went in section 017110C8 CGSJM783 Leungpathomaram Mathus 1295 J Catlin Gabel
+Went in section 01711140 DLPJS529 Li Dianhui 400 J DLP
+Went in section 017110C8 CJEGL631 Liebert Josiah 1186 G Chief Joseph-Ockley Green
+Went in section 017110C8 SLLHW124 Liu Colin 1739 H Stoller MS
+Went in section 017110C8 JWEFW231 Liu Kyle 1472 F Jacob Wismer
+Went in section 017110C8 PTTEW324 Long Ryan 1131 E Patterson Elementary
+Went in section 017110C8 LRMHV796 Ma David 1459 H Laurel Ridge middle school
+Went in section 017110C8 WNTFU256 Mackey Garrett 773 F Winterhaven
+Went in section 017110C8 VCEFQ126 Majmudar Riya 881 F Valley Catholic Elementary School
+Went in section 017110C8 PCOKL145 Mannan Fariah 659 K Pacific Crest Community School
+Went in section 017110C8 DLPIU610 Maslennikov Robert 677 I DLP
+Went in section 017110C8 HPMGN560 Mattingly Allison 1067 G Highland Park Middle School
+Went in section 017110C8 HPMIS731 Mattingly John Evan 817 I Highland Park Middle School
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 S743 McClain Jack 1673 H Homeschool
+Went in section 017110C8 HTRBL144 McClure Lazlo 639 B Holy Trinity Catholic School
+Went in section 017110C8 HTRCM787 McClure Levi 857 C Holy Trinity Catholic School
+Went in section 017110C8 OESDU583 McCoog Parker 613 D Oregon Episcopal School
+Went in section 017110C8 HSOCT779 McCoy Kevin 889 C Homeschool
+Went in section 017110C8 HSOHP469 McCoy Owen 2008 H Homeschool
+Went in section 017110C8 BKSCP326 McCutchen Carson 746 C Banks Elementary
+Went in section 017110C8 BKSFL483 McCutchen Connor 998 F Banks Elementary
+Went in section 017110C8 GCEEP827 Metz Andrew 801 E Glencoe Elementary
+Went in section 017110C8 MTRHU467 Metz Michael 1112 H Mt Tabor Middle School
+Went in section 017110C8 ATHIR316 Miller Zachary 835 I Athey Creek Middle School
+Went in section 017110C8 SCTLT623 Molchanov Valentin 1737 L School of Science and Technology
+Went in section 017110C8 RIKEL102 Moore Zane 824 E Mary Rieke Elementary School
+Went in section 017110C8 JWECQ350 Moorthy Jeeva 939 C JACOB WISMER
+Went in section 017110C8 HTRHR612 Mustonen Benjamin 769 H Holy Trinity Catholic School
+Went in section 017110C8 WHPLQ590 Naghdi Arya 1230 L wilson highschool
+Went in section 017110C8 NONE Nagler John 600 G Athey Creek MS
+Went in section 017110C8 VCEER030 Nair Roshen 1609 E Valley Catholic Elementary School
+Went in section 017110C8 RGMIQ170 Ng Christopher 1317 I Robert Gray Middle School
+Went in section 017110C8 OACEK933 Ni Stephen 1002 E Oak Creek Elementary School
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 WNTEV571 Nichols Breslin 846 E winterhaven
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 WNTET320 Nichols Eldon 732 E Winterhaven
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 WNTCN880 Nichols River 689 C Winterhaven
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 WNTHT588 Nichols Wade 1067 H Winterhaven
+Went in section 017110C8 MDTDU637 Osman Mohamed 865 D Middleton Elementary
+Went in section 017110C8 MDTEM085 Osman Saif 914 E Middleton Elemntary
+Went in section 017110C8 SLLGV472 Pai Kushal 1439 G Stoller Middle school
+Went in section 01711140 WNTGR392 Parks-Orr Eleanor 400 G Winterhaven
+Went in section 017110C8 TCHFW922 Pasadhika Uno 1042 F Touchstone Elementary
+Went in section 017110C8 DLPKW746 Pascal Marc 968 K DLP
+Went in section 017110C8 HSOIP483 Patton Julie 749 I Home School
+Went in section 01711140 MDTCP343 Pendergrass A'Sharia 400 C Middleton Elementary
+Went in section 01711140 DLPIW722 Perez Ventura Emilio 487 I DLP
+Went in section 017110C8 BCHEW737 Peterson Maxwell 1061 E Beach
+Went in section 017110C8 SPLBN847 Pinnamaneni Suhas 815 B Springville K8
+Went in section 017110C8 ASOGL497 Pulanco Piolo 867 G All Saints School
+Went in section 017110C8 HCHDN814 Punsalan Ocean 981 D Hope Chinese Charter School
+Went in section 01711140 RIKET753 Ratner Michael 577 E Rieke
+Went in section 01711140 DLPIW718 Roy Eli 417 I DLP
+Went in section 01711140 HSOET195 Sanchez Aleah 564 E Home School
+Went in section 017110C8 HSOGM117 Sanchez Faith 717 G Home School
+Went in section 017110C8 HSOIN903 Sanchez Reyna 728 I Home School
+Went in section 017110C8 BTNGT563 Sastry Nikita 892 G Montessori School of Beaverton
+Went in section 017110C8 BTNER297 Sastry Rohan 1123 E Montessori School of Beaverton
+Went in section 017110C8 HTRCM265 Schaal Elijah 771 C Holy Trinity Catholic School
+Went in section 017110C8 RIKEV894 Schlimgen Owen 906 E Rieke Elementary
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 RGMHQ341 Schuff Michael 1391 H Robert Gray Middle School
+Found by name and 4 digit ID string from ratings file Went in section 017110C8 RIKFT965 Schuff Thomas 1179 F Rieke Elementary
+Went in section 017110C8 NPNIA354 Serl Nathaniel 1521 I Napavine Middle School
+Went in section 017110C8 WNTFN283 Shepski Casimir (Cash) 662 F Winterhaven
+Went in section 017110C8 PCOLN955 Smith Nathan 1376 L Pacific Crest Community School
+Went in section 017110C8 WNTFL538 St. Amand Carson 631 F Winterhaven
+Went in section 017110C8 RGMGW739 Stedman Sophia 616 G Robert Gray Middle School
+Went in section 017110C8 CRDDM771 Suri Ronak 935 D Carden Cascade Academy
+Went in section 017110C8 ORNDW342 Tan Katherine 712 D Orenco Elementary School
+Went in section 017110C8 ORNGQ594 Tan Nathaniel 1282 G Orenco Elementary School
+Went in section 01711140 NONE Tang Austin 0 A Hope Chinese Charter
+Went in section 017110C8 HCHDV657 Tang Zoey 611 D Hope Chinese Charter
+Went in section 017110C8 WNTFW688 Taylor Liam 751 F Winterhaven School
+Went in section 01711140 AREDL042 Tedja Adrian 441 D Alberta Rider Elementary
+Went in section 01711140 NONE Tedja Brian 0 A Alberta Rider Elementary
+Went in section 017110C8 AAPFT765 Thompson Dominic 1111 F Astor
+Went in section 017110C8 HTRGN882 Trueworthy Aidan 715 G Holy Trinity Catholic Achool
+Went in section 017110C8 SCUEP939 Truong Ethan 1175 E Scouters Mountain
+Went in section 01711140 SCUBP870 Truong McKayla 484 B Scouters Mountain
+Went in section 017110C8 HCHET546 Tsai Ethan 1094 E Hope Chinese Charter School
+Went in section 017110C8 SWMGP446 Valladares Ethan 779 G Sherwood Middle School
+Went in section 01711140 AGNEU534 Valladares Kiara 400 G Archer Glen
+Went in section 017110C8 HCHDL030 Van Der Lee Trystan 895 D Hope Chinese Charter School
+Went in section 017110C8 AAPFS824 Vann Jonathan 972 F Astor
+Went in section 017110C8 BKWFS258 Vazquez Alex 963 F Brookwood
+Went in section 017110C8 DLPLP961 Vianna Phillip 1293 L DLP
+Went in section 01711140 JAHBS515 Waduthanthree Thihansa 465 B Jackson Elementary
+Went in section 017110C8 SCLGT993 Wagh Pranav 650 G St. Cecilia
+Went in section 017110C8 NONE Washington Caleb 600 G da Vinci Arts Middle School
+Went in section 017110C8 WHPLP905 Waugh Riley 1520 L Wilson High School
+Went in section 017110C8 SLVHW383 Wei Alex 987 H West Sylvan
+Went in section 01711140 NONE Westlund Henry 100 B Skyline K8
+Went in section 017110C8 HCHDN937 Wheeler Deva 907 D Hope Chinese Charter School
+Went in section 017110C8 NONE Wilcox Valen 700 H da Vinci Arts Middle School
+Went in section 017110C8 WNLJC667 Woltjer Peter 1599 J Wilsonville HS
+Went in section 017110C8 JWEEQ013 Wong Egan 1315 E Jacob Wismer Elementary School
+Went in section 017110C8 MTZER262 Woodward Tate 912 E Metzger
+Went in section 017110C8 MTZCR776 Woodward Trent 623 C Metzger
+Went in section 01711140 NONE Wright Brodie 500 F Astor
+Went in section 017110C8 NONE Wright Conner 600 G Astor
+Went in section 017110C8 ACCEU625 Wunderle Mason 1066 E Access Academy
+Went in section 017110C8 SLLIR162 Xu Marshal 1590 I Stoller Middle School
+Went in section 01711140 NONE Yang Kangkang 400 E Jacob Wismer Elementary
+Went in section 017110C8 LKOJP207 Zhang Allen 1200 J Lake Oswego High School
+Went in section 017110C8 ACCDP828 Zhang Ethan 1349 D ACCess Academy
+Went in section 017110C8 ACCHN466 Zhang Gavin 1909 H Access Academy
+Went in section 01711140 NONE Zhang Lucas 0 A Forest Park Elementary School
+Went in section 01711140 DLPKM719 Zhao Alan 496 K DLP
+Went in section 01711140 DLPGT185 Zhong James 576 G DLP

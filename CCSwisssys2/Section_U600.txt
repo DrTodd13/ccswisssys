@@ -1,0 +1,245 @@
+Name = BEFFERT, SOREN
+Rating = 412
+ID# = GCEBM717
+Team = GCE
+
+Name = BEKSULTAN, BAATYR
+Rating = 569
+ID# = HSOEL156
+Team = HSO
+
+Name = BLEVENS, EMMA
+Rating = 500
+ID# = NONE
+Team = 
+
+Name = BOWERS, BENJAMIN
+Rating = 417
+ID# = MTZDL500
+Team = MTZ
+
+Name = BURGER, AIDAN
+Rating = 400
+ID# = NONE
+Team = 
+
+Name = BURGER, ETHAN
+Rating = 500
+ID# = NONE
+Team = 
+
+Name = BUTZIEN-PAPE, BEN
+Rating = 300
+ID# = NONE
+Team = 
+
+Name = CAO MINH, KHANG
+Rating = 0
+ID# = NONE
+Team = 
+
+Name = CAO MINH, VIET
+Rating = 200
+ID# = NONE
+Team = 
+
+Name = CASTILE, GUTHRIE
+Rating = 434
+ID# = WNTDU616
+Team = WNT
+
+Name = CHAN, ALVIN
+Rating = 400
+ID# = WDSET174
+Team = WDS
+
+Name = CHONDRO, WILLIAM
+Rating = 593
+ID# = HCHBU664
+Team = HCH
+
+Name = DAUCH, SEAN
+Rating = 522
+ID# = GCEEP341
+Team = GCE
+
+Name = DE BENDER, MILES
+Rating = 570
+ID# = CJEEU308
+Team = CJE
+
+Name = DIERINGER-LUKENS, SAM
+Rating = 576
+ID# = PCOGL040
+Team = PCO
+
+Name = DOCKTOR, KENTON
+Rating = 200
+ID# = NONE
+Team = 
+
+Name = DUCSIK, CAVAN
+Rating = 461
+ID# = MTZAN872
+Team = MTZ
+
+Name = EVANS, KAELADAE
+Rating = 592
+ID# = ORNFM254
+Team = ORN
+
+Name = FISHER, MATS
+Rating = 589
+ID# = ACCDL036
+Team = ACC
+
+Name = GAMBINO, BRYNDAN
+Rating = 500
+ID# = NONE
+Team = 
+
+Name = GAUTHIER, AUDREY
+Rating = 564
+ID# = VCEEV573
+Team = VCE
+
+Name = GREENSTED, KAI
+Rating = 400
+ID# = NONE
+Team = 
+
+Name = HO, CLARA
+Rating = 512
+ID# = HTRDS526
+Team = HTR
+
+Name = HO, DEVON
+Rating = 400
+ID# = HTRAW742
+Team = HTR
+
+Name = HO, SIDNEY
+Rating = 440
+ID# = HTRFN688
+Team = HTR
+
+Name = HOWARD, BAYLOR
+Rating = 433
+ID# = SLVGR383
+Team = SLV
+
+Name = JOY, NAO
+Rating = 554
+ID# = CJECU410
+Team = CJE
+
+Name = KEY, AIDEN
+Rating = 200
+ID# = NONE
+Team = 
+
+Name = KEY, DEVAN
+Rating = 454
+ID# = WNTFV527
+Team = WNT
+
+Name = KWON, JOSHUA
+Rating = 598
+ID# = CVLFX655
+Team = CVL
+
+Name = LI, DIANHUI
+Rating = 400
+ID# = DLPJS529
+Team = DLP
+
+Name = PARKS-ORR, ELEANOR
+Rating = 400
+ID# = WNTGR392
+Team = WNT
+
+Name = PENDERGRASS, A'SHARIA
+Rating = 400
+ID# = MDTCP343
+Team = MDT
+
+Name = PEREZ VENTURA, EMILIO
+Rating = 487
+ID# = DLPIW722
+Team = DLP
+
+Name = RATNER, MICHAEL
+Rating = 577
+ID# = RIKET753
+Team = RIK
+
+Name = ROY, ELI
+Rating = 417
+ID# = DLPIW718
+Team = DLP
+
+Name = SANCHEZ, ALEAH
+Rating = 564
+ID# = HSOET195
+Team = HSO
+
+Name = TANG, AUSTIN
+Rating = 0
+ID# = NONE
+Team = 
+
+Name = TEDJA, ADRIAN
+Rating = 441
+ID# = AREDL042
+Team = ARE
+
+Name = TEDJA, BRIAN
+Rating = 0
+ID# = NONE
+Team = 
+
+Name = TRUONG, MCKAYLA
+Rating = 484
+ID# = SCUBP870
+Team = SCU
+
+Name = VALLADARES, KIARA
+Rating = 400
+ID# = AGNEU534
+Team = AGN
+
+Name = WADUTHANTHREE, THIHANSA
+Rating = 465
+ID# = JAHBS515
+Team = JAH
+
+Name = WESTLUND, HENRY
+Rating = 100
+ID# = NONE
+Team = 
+
+Name = WRIGHT, BRODIE
+Rating = 500
+ID# = NONE
+Team = 
+
+Name = YANG, KANGKANG
+Rating = 400
+ID# = NONE
+Team = 
+
+Name = ZHANG, LUCAS
+Rating = 0
+ID# = NONE
+Team = 
+
+Name = ZHAO, ALAN
+Rating = 496
+ID# = DLPKM719
+Team = DLP
+
+Name = ZHONG, JAMES
+Rating = 576
+ID# = DLPGT185
+Team = DLP
+

@@ -1,0 +1,240 @@
+Name = ANDERSON, DANIEL
+Rating = 1230
+ID# = CRDFT980
+Team = CRD
+
+Name = BEDNARK, RIVER
+Rating = 1326
+ID# = WHPKW359
+Team = WHP
+
+Name = BOTEZ, ANDREA
+Rating = 1789
+ID# = HVMI9457
+Team = HVM
+
+Name = BOWDEN, ROBERT
+Rating = 1343
+ID# = SLLHQ214
+Team = SLL
+
+Name = BROMLEY, JOSHUA
+Rating = 1272
+ID# = ACCIW317
+Team = ACC
+
+Name = CHENG, ERIN
+Rating = 1209
+ID# = ILCFF466
+Team = ILC
+
+Name = CHENG, MEGAN
+Rating = 1409
+ID# = SHHGI826
+Team = SHH
+
+Name = CHONG, BENJAMIN
+Rating = 1200
+ID# = SHHI8442
+Team = SHH
+
+Name = COOPER, OLIVIA
+Rating = 1292
+ID# = TMGIS674
+Team = TMG
+
+Name = CVETKOVIC, SEAN
+Rating = 1273
+ID# = DLPMW928
+Team = DLP
+
+Name = EVERED, COLE
+Rating = 1272
+ID# = LRGLF694
+Team = LRG
+
+Name = FELDMAN, KONNER
+Rating = 1608
+ID# = ACCHQ729
+Team = ACC
+
+Name = FELDMAN, NEENA
+Rating = 1297
+ID# = ACCFW266
+Team = ACC
+
+Name = GARDNER-O'KEARNY, AIDAN
+Rating = 1321
+ID# = SLLHV803
+Team = SLL
+
+Name = GREHAN, SINAN
+Rating = 1445
+ID# = RGMIW290
+Team = RGM
+
+Name = GULLUNG, CHARLIE
+Rating = 1243
+ID# = WNTFW339
+Team = WNT
+
+Name = GUO, WILLIAM
+Rating = 1282
+ID# = ACCGN088
+Team = ACC
+
+Name = HANSEN, JAMES
+Rating = 1737
+ID# = CANKQ654
+Team = CAN
+
+Name = HO, CODY
+Rating = 1262
+ID# = HSFGU439
+Team = HSF
+
+Name = HUARD, DYLAN
+Rating = 1388
+ID# = LHPMW103
+Team = LHP
+
+Name = JEWELL, NATHAN
+Rating = 1592
+ID# = WHPLQ862
+Team = WHP
+
+Name = KELLOGG, ERIK
+Rating = 1353
+ID# = UHVMK810
+Team = UHV
+
+Name = KEY, HUNTER
+Rating = 1226
+ID# = WNTJP931
+Team = WNT
+
+Name = KODITHYALA, RAJ
+Rating = 1400
+ID# = SLLHQ861
+Team = SLL
+
+Name = LEE, BRIAN
+Rating = 1660
+ID# = A904
+Team = 
+
+Name = LEUNGPATHOMARAM, MATHUS
+Rating = 1295
+ID# = CGSJM783
+Team = CGS
+
+Name = LIU, COLIN
+Rating = 1739
+ID# = SLLHW124
+Team = SLL
+
+Name = LIU, KYLE
+Rating = 1472
+ID# = JWEFW231
+Team = JWE
+
+Name = MA, DAVID
+Rating = 1459
+ID# = LRMHV796
+Team = LRM
+
+Name = MCCLAIN, JACK
+Rating = 1673
+ID# = S743
+Team = 
+
+Name = MCCOY, OWEN
+Rating = 2008
+ID# = HSOHP469
+Team = HSO
+
+Name = MOLCHANOV, VALENTIN
+Rating = 1737
+ID# = SCTLT623
+Team = SCT
+
+Name = NAGHDI, ARYA
+Rating = 1230
+ID# = WHPLQ590
+Team = WHP
+
+Name = NAIR, ROSHEN
+Rating = 1609
+ID# = VCEER030
+Team = VCE
+
+Name = NG, CHRISTOPHER
+Rating = 1317
+ID# = RGMIQ170
+Team = RGM
+
+Name = PAI, KUSHAL
+Rating = 1439
+ID# = SLLGV472
+Team = SLL
+
+Name = SCHUFF, MICHAEL
+Rating = 1391
+ID# = RGMHQ341
+Team = RGM
+
+Name = SERL, NATHANIEL
+Rating = 1521
+ID# = NPNIA354
+Team = NPN
+
+Name = SMITH, NATHAN
+Rating = 1376
+ID# = PCOLN955
+Team = PCO
+
+Name = TAN, NATHANIEL
+Rating = 1282
+ID# = ORNGQ594
+Team = ORN
+
+Name = VIANNA, PHILLIP
+Rating = 1293
+ID# = DLPLP961
+Team = DLP
+
+Name = WAUGH, RILEY
+Rating = 1520
+ID# = WHPLP905
+Team = WHP
+
+Name = WOLTJER, PETER
+Rating = 1599
+ID# = WNLJC667
+Team = WNL
+
+Name = WONG, EGAN
+Rating = 1315
+ID# = JWEEQ013
+Team = JWE
+
+Name = XU, MARSHAL
+Rating = 1590
+ID# = SLLIR162
+Team = SLL
+
+Name = ZHANG, ALLEN
+Rating = 1200
+ID# = LKOJP207
+Team = LKO
+
+Name = ZHANG, ETHAN
+Rating = 1349
+ID# = ACCDP828
+Team = ACC
+
+Name = ZHANG, GAVIN
+Rating = 1909
+ID# = ACCHN466
+Team = ACC
+

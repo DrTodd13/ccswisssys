@@ -1,0 +1,225 @@
+Name = ABDRASHITOV, ALI
+Rating = 958
+ID# = DLPJU400
+Team = DLP
+
+Name = ALEXANDER, HENRY
+Rating = 924
+ID# = WNTIU435
+Team = WNT
+
+Name = ANKENEY, BENJAMIN
+Rating = 940
+ID# = ATHIQ677
+Team = ATH
+
+Name = ANKENEY, GEORGE
+Rating = 1174
+ID# = ATHJQ099
+Team = ATH
+
+Name = BALWIT, THEO
+Rating = 1169
+ID# = PCOJS251
+Team = PCO
+
+Name = BOYCE, ALEXANDRE
+Rating = 1071
+ID# = HCHER314
+Team = HCH
+
+Name = CHONDRO, ROBERT
+Rating = 1071
+ID# = HCHDR334
+Team = HCH
+
+Name = CORRALES, YAIR
+Rating = 1017
+ID# = TMGHP075
+Team = TMG
+
+Name = DAVID, MATT
+Rating = 970
+ID# = HTRHW970
+Team = HTR
+
+Name = DIANA, NICK
+Rating = 1082
+ID# = SKLHP862
+Team = SKL
+
+Name = DOBBINS, KIRA
+Rating = 946
+ID# = RGMHQ432
+Team = RGM
+
+Name = DROEGE, CHARLIE
+Rating = 934
+ID# = GCEEQ360
+Team = GCE
+
+Name = EHNES, ANDERS
+Rating = 1178
+ID# = WNTHT251
+Team = WNT
+
+Name = EHNES, JENNINGS
+Rating = 997
+ID# = WNTEM175
+Team = WNT
+
+Name = FISHER, ORION
+Rating = 1092
+ID# = ACCHL605
+Team = ACC
+
+Name = FITZGERALD, SAM
+Rating = 954
+ID# = FWLGL931
+Team = FWL
+
+Name = HOYT, LINUS
+Rating = 1051
+ID# = WNTGN113
+Team = WNT
+
+Name = JOY, RYUU
+Rating = 1170
+ID# = RGMHN833
+Team = RGM
+
+Name = LEONG, ALBERT
+Rating = 999
+ID# = WDSDR812
+Team = WDS
+
+Name = LIEBERT, JOSIAH
+Rating = 1186
+ID# = CJEGL631
+Team = CJE
+
+Name = LONG, RYAN
+Rating = 1131
+ID# = PTTEW324
+Team = PTT
+
+Name = MATTINGLY, ALLISON
+Rating = 1067
+ID# = HPMGN560
+Team = HPM
+
+Name = MCCUTCHEN, CONNOR
+Rating = 998
+ID# = BKSFL483
+Team = BKS
+
+Name = METZ, MICHAEL
+Rating = 1112
+ID# = MTRHU467
+Team = MTR
+
+Name = MOORTHY, JEEVA
+Rating = 939
+ID# = JWECQ350
+Team = JWE
+
+Name = NI, STEPHEN
+Rating = 1002
+ID# = OACEK933
+Team = OAC
+
+Name = NICHOLS, WADE
+Rating = 1067
+ID# = WNTHT588
+Team = WNT
+
+Name = OSMAN, SAIF
+Rating = 914
+ID# = MDTEM085
+Team = MDT
+
+Name = PASADHIKA, UNO
+Rating = 1042
+ID# = TCHFW922
+Team = TCH
+
+Name = PASCAL, MARC
+Rating = 968
+ID# = DLPKW746
+Team = DLP
+
+Name = PETERSON, MAXWELL
+Rating = 1061
+ID# = BCHEW737
+Team = BCH
+
+Name = PUNSALAN, OCEAN
+Rating = 981
+ID# = HCHDN814
+Team = HCH
+
+Name = SASTRY, ROHAN
+Rating = 1123
+ID# = BTNER297
+Team = BTN
+
+Name = SCHLIMGEN, OWEN
+Rating = 906
+ID# = RIKEV894
+Team = RIK
+
+Name = SCHUFF, THOMAS
+Rating = 1179
+ID# = RIKFT965
+Team = RIK
+
+Name = SURI, RONAK
+Rating = 935
+ID# = CRDDM771
+Team = CRD
+
+Name = THOMPSON, DOMINIC
+Rating = 1111
+ID# = AAPFT765
+Team = AAP
+
+Name = TRUONG, ETHAN
+Rating = 1175
+ID# = SCUEP939
+Team = SCU
+
+Name = TSAI, ETHAN
+Rating = 1094
+ID# = HCHET546
+Team = HCH
+
+Name = VANN, JONATHAN
+Rating = 972
+ID# = AAPFS824
+Team = AAP
+
+Name = VAZQUEZ, ALEX
+Rating = 963
+ID# = BKWFS258
+Team = BKW
+
+Name = WEI, ALEX
+Rating = 987
+ID# = SLVHW383
+Team = SLV
+
+Name = WHEELER, DEVA
+Rating = 907
+ID# = HCHDN937
+Team = HCH
+
+Name = WOODWARD, TATE
+Rating = 912
+ID# = MTZER262
+Team = MTZ
+
+Name = WUNDERLE, MASON
+Rating = 1066
+ID# = ACCEU625
+Team = ACC
+

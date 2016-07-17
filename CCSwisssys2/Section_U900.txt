@@ -1,0 +1,335 @@
+Name = ADIRAJU, VIMAL
+Rating = 763
+ID# = JWECW754
+Team = JWE
+
+Name = AGARWAL, ARYAN
+Rating = 711
+ID# = SPLDQ471
+Team = SPL
+
+Name = BAKER, GABRIEL
+Rating = 803
+ID# = TROET183
+Team = TRO
+
+Name = BINFORD, OAKLEY
+Rating = 800
+ID# = N/A
+Team = 
+
+Name = BISHOP, JACK
+Rating = 803
+ID# = MTZEL698
+Team = MTZ
+
+Name = BRAHMAROUTHU, DEETYA
+Rating = 892
+ID# = SLLGQ074
+Team = SLL
+
+Name = CAGLE, CHARLES
+Rating = 822
+ID# = SLVHW367
+Team = SLV
+
+Name = COOPER, SARAH
+Rating = 759
+ID# = HSOGW332
+Team = HSO
+
+Name = CULBERTSON, CASEY
+Rating = 800
+ID# = NONE
+Team = 
+
+Name = DUCSIK, ELENA
+Rating = 738
+ID# = MTZCM781
+Team = MTZ
+
+Name = FENNELLY, KYLE
+Rating = 707
+ID# = FWLHR513
+Team = FWL
+
+Name = FISHER, ZACH
+Rating = 786
+ID# = BCEFW668
+Team = BCE
+
+Name = GATHERUM, MATTHEW
+Rating = 746
+ID# = ACEEU305
+Team = ACE
+
+Name = GAUDETTE DUMLAO, GAVIN
+Rating = 817
+ID# = RIKEV707
+Team = RIK
+
+Name = GAUDETTE DUMLAO, JOSHUA
+Rating = 734
+ID# = RIKCQ569
+Team = RIK
+
+Name = GINTER, NICK
+Rating = 828
+ID# = HTRHP126
+Team = HTR
+
+Name = GREENSTED, RHYS
+Rating = 825
+ID# = CJEGT235
+Team = CJE
+
+Name = GULLUNG, HANK
+Rating = 638
+ID# = WNTDL569
+Team = WNT
+
+Name = HANGDAAN, ALDRIDGE
+Rating = 700
+ID# = DLPMR577
+Team = DLP
+
+Name = HEWAGE, SAYURI
+Rating = 668
+ID# = JAHEP830
+Team = JAH
+
+Name = HOLT, FORREST
+Rating = 839
+ID# = RIKDL107
+Team = RIK
+
+Name = HOOVER, ORIN
+Rating = 800
+ID# = NONE
+Team = 
+
+Name = HUARD, JAMES
+Rating = 653
+ID# = HTRGL033
+Team = HTR
+
+Name = JALLOW, ABDOURAHEEM
+Rating = 826
+ID# = MNBEL048
+Team = MNB
+
+Name = JORDAN, WILLIAM
+Rating = 842
+ID# = GCEDN873
+Team = GCE
+
+Name = KAWATRA, PRANAV
+Rating = 785
+ID# = DLPLS236
+Team = DLP
+
+Name = KENNY, MITCHELL
+Rating = 700
+ID# = NONE
+Team = 
+
+Name = MACKEY, GARRETT
+Rating = 773
+ID# = WNTFU256
+Team = WNT
+
+Name = MAJMUDAR, RIYA
+Rating = 881
+ID# = VCEFQ126
+Team = VCE
+
+Name = MANNAN, FARIAH
+Rating = 659
+ID# = PCOKL145
+Team = PCO
+
+Name = MASLENNIKOV, ROBERT
+Rating = 677
+ID# = DLPIU610
+Team = DLP
+
+Name = MATTINGLY, JOHN EVAN
+Rating = 817
+ID# = HPMIS731
+Team = HPM
+
+Name = MCCLURE, LAZLO
+Rating = 639
+ID# = HTRBL144
+Team = HTR
+
+Name = MCCLURE, LEVI
+Rating = 857
+ID# = HTRCM787
+Team = HTR
+
+Name = MCCOOG, PARKER
+Rating = 613
+ID# = OESDU583
+Team = OES
+
+Name = MCCOY, KEVIN
+Rating = 889
+ID# = HSOCT779
+Team = HSO
+
+Name = MCCUTCHEN, CARSON
+Rating = 746
+ID# = BKSCP326
+Team = BKS
+
+Name = METZ, ANDREW
+Rating = 801
+ID# = GCEEP827
+Team = GCE
+
+Name = MILLER, ZACHARY
+Rating = 835
+ID# = ATHIR316
+Team = ATH
+
+Name = MOORE, ZANE
+Rating = 824
+ID# = RIKEL102
+Team = RIK
+
+Name = MUSTONEN, BENJAMIN
+Rating = 769
+ID# = HTRHR612
+Team = HTR
+
+Name = NAGLER, JOHN
+Rating = 600
+ID# = NONE
+Team = 
+
+Name = NICHOLS, BRESLIN
+Rating = 846
+ID# = WNTEV571
+Team = WNT
+
+Name = NICHOLS, ELDON
+Rating = 732
+ID# = WNTET320
+Team = WNT
+
+Name = NICHOLS, RIVER
+Rating = 689
+ID# = WNTCN880
+Team = WNT
+
+Name = OSMAN, MOHAMED
+Rating = 865
+ID# = MDTDU637
+Team = MDT
+
+Name = PATTON, JULIE
+Rating = 749
+ID# = HSOIP483
+Team = HSO
+
+Name = PINNAMANENI, SUHAS
+Rating = 815
+ID# = SPLBN847
+Team = SPL
+
+Name = PULANCO, PIOLO
+Rating = 867
+ID# = ASOGL497
+Team = ASO
+
+Name = SANCHEZ, FAITH
+Rating = 717
+ID# = HSOGM117
+Team = HSO
+
+Name = SANCHEZ, REYNA
+Rating = 728
+ID# = HSOIN903
+Team = HSO
+
+Name = SASTRY, NIKITA
+Rating = 892
+ID# = BTNGT563
+Team = BTN
+
+Name = SCHAAL, ELIJAH
+Rating = 771
+ID# = HTRCM265
+Team = HTR
+
+Name = SHEPSKI, CASIMIR (CASH)
+Rating = 662
+ID# = WNTFN283
+Team = WNT
+
+Name = ST. AMAND, CARSON
+Rating = 631
+ID# = WNTFL538
+Team = WNT
+
+Name = STEDMAN, SOPHIA
+Rating = 616
+ID# = RGMGW739
+Team = RGM
+
+Name = TAN, KATHERINE
+Rating = 712
+ID# = ORNDW342
+Team = ORN
+
+Name = TANG, ZOEY
+Rating = 611
+ID# = HCHDV657
+Team = HCH
+
+Name = TAYLOR, LIAM
+Rating = 751
+ID# = WNTFW688
+Team = WNT
+
+Name = TRUEWORTHY, AIDAN
+Rating = 715
+ID# = HTRGN882
+Team = HTR
+
+Name = VALLADARES, ETHAN
+Rating = 779
+ID# = SWMGP446
+Team = SWM
+
+Name = VAN DER LEE, TRYSTAN
+Rating = 895
+ID# = HCHDL030
+Team = HCH
+
+Name = WAGH, PRANAV
+Rating = 650
+ID# = SCLGT993
+Team = SCL
+
+Name = WASHINGTON, CALEB
+Rating = 600
+ID# = NONE
+Team = 
+
+Name = WILCOX, VALEN
+Rating = 700
+ID# = NONE
+Team = 
+
+Name = WOODWARD, TRENT
+Rating = 623
+ID# = MTZCR776
+Team = MTZ
+
+Name = WRIGHT, CONNER
+Rating = 600
+ID# = NONE
+Team = 
+
