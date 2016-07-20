@@ -1,12 +1,12 @@
 #include "stdafx.h"
 #include "DatFile.h"
+#include <sstream>
 
-std::string trim(const std::string& str,
-	const std::string& whitespace)
+std::wstring trim(const std::wstring& str, const std::wstring& whitespace)
 {
 	const size_t strBegin = str.find_first_not_of(whitespace);
-	if (strBegin == std::string::npos)
-		return ""; // no content
+	if (strBegin == std::wstring::npos)
+		return L""; // no content
 
 	const size_t strEnd = str.find_last_not_of(whitespace);
 	const size_t strRange = strEnd - strBegin + 1;
@@ -14,23 +14,23 @@ std::string trim(const std::string& str,
 	return str.substr(strBegin, strRange);
 }
 
-std::string read_fixed(std::istream &in, unsigned length) {
-	char buf[128] = "";
+std::wstring read_fixed(std::wistream &in, unsigned length) {
+	wchar_t buf[128] = L"";
 	in.read(buf, length);
-	return trim(std::string(buf));
+	return trim(std::wstring(buf));
 }
 
-char read_fixed_char(std::istream &in, unsigned length) {
-	std::string temp = read_fixed(in, length);
+wchar_t read_fixed_char(std::wistream &in, unsigned length) {
+	std::wstring temp = read_fixed(in, length);
 	return temp[0];
 }
 
-unsigned read_fixed_unsigned(std::istream &in, unsigned length) {
-	std::string temp = read_fixed(in, length);
-	return std::atoi(temp.c_str());
+unsigned read_fixed_unsigned(std::wistream &in, unsigned length) {
+	std::wstring temp = read_fixed(in, length);
+	return _ttoi(temp.c_str());
 }
 
-std::istream& operator >> (std::istream &in, Player &p) {
+std::wistream& operator >> (std::wistream &in, Player &p) {
 	p.last_name = read_fixed(in, 25);
 	p.first_name = read_fixed(in, 25);
 	p.school_code = read_fixed(in, 4);
@@ -49,11 +49,21 @@ std::istream& operator >> (std::istream &in, Player &p) {
 	p.uscf_first_name = read_fixed(in, 25);
 	p.uscf_id = read_fixed(in, 9);
 	p.uscf_exp_date = read_fixed(in, 9);
-	p.uscf_rating = read_fixed_unsigned(in, 6);
+	p.uscf_rating = read_fixed(in, 6);
+	unsigned uscf_rating = _ttoi(p.uscf_rating.c_str());
+	if (uscf_rating == 0) {
+		p.uscf_rating = L"";
+	}
+	else {
+		std::wstringstream ss;
+		ss << uscf_rating;
+		p.uscf_rating = ss.str();
+	}
+//	p.uscf_rating = read_fixed_unsigned(in, 6);
 	p.uscf_prov_codes = read_fixed(in, 5);
 	p.uscf_rating_date = read_fixed(in, 9);
 	p.state = read_fixed(in, 3);
-	char c;
+	wchar_t c;
 	//std::cout << "New line code is " << (int)'\n' << std::endl;
 	do {
 		in.get(c);
@@ -63,7 +73,7 @@ std::istream& operator >> (std::istream &in, Player &p) {
 	return in;
 }
 
-std::ostream& operator<<(std::ostream &os, Player &p) {
+std::wostream& operator<<(std::wostream &os, Player &p) {
 	os << p.last_name << " ";
 	os << p.first_name << " ";
 	os << p.school_code << " ";

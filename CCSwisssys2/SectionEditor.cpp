@@ -45,10 +45,10 @@ BOOL SectionEditor::OnInitDialog() {
 	max_grade_combo.SetCurSel(0);
 
 	if (m_s->usedRatings()) {
-		std::stringstream ss;
+		std::wstringstream ss;
 		ss << m_s->lower_rating_limit;
 		min_rating_edit.SetWindowText(CString(ss.str().c_str()));
-		ss.str("");
+		ss.str(L"");
 		ss << m_s->upper_rating_limit;
 		max_rating_edit.SetWindowText(CString(ss.str().c_str()));
 	}

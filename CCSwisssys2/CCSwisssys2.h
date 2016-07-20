@@ -10,7 +10,7 @@
 #include "resource.h"       // main symbols
 
 void SetupGradeCombobox(CComboBox &box);
-#include "c:\cygwin64\home\taanders\chess\oscf\allstars\DatFile.h"
+#include "DatFile.h"
 #include <map>
 #include <sstream>
 #include <algorithm>

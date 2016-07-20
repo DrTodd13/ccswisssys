@@ -86,6 +86,9 @@
     <None Include="res\CCSwisssys2.rc2">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\..\..\..\..\..\..\cygwin64\home\taanders\chess\oscf\allstars\rate16-387.dat">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CCSwisssys2.rc">

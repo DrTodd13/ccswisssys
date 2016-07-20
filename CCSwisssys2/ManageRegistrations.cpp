@@ -48,26 +48,6 @@ BEGIN_MESSAGE_MAP(ManageRegistrations, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST2, &ManageRegistrations::OnNMDblclkList2)
 END_MESSAGE_MAP()
 
-std::wstring stringToWstring(const std::string &inputString)
-{
-	// Make room for characters
-	std::wstring destinationString(inputString.length(), L' ');
-
-	// Copy string to wstring.
-	std::copy(inputString.begin(), inputString.end(), destinationString.begin());
-	return destinationString;
-}
-
-bool findStringIC(const std::string & strHaystack, const std::string & strNeedle)
-{
-	auto it = std::search(
-		strHaystack.begin(), strHaystack.end(),
-		strNeedle.begin(), strNeedle.end(),
-		[](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
-	);
-	return (it != strHaystack.end());
-}
-
 bool findStringIC(const std::wstring & strHaystack, const std::wstring & strNeedle)
 {
 	auto it = std::search(
@@ -98,9 +78,10 @@ void addToList(CListCtrl &the_list,
 	std::wstring &ws_first, 
 	int nwsrs_rating, 
 	std::wstring &ws_id, 
-	char grade,
-	std::wstring &ws_school,
-	int uscf_rating,
+	wchar_t grade,
+	std::wstring &ws_school_code,
+	std::wstring &ws_school_name,
+	std::wstring &ws_uscf_rating,
 	std::wstring &ws_uscf_id,
 	int itemData) {
 
@@ -114,26 +95,18 @@ void addToList(CListCtrl &the_list,
 	nItem = the_list.InsertItem(&lvItem);
 
 	the_list.SetItemText(nItem, 1, &ws_first[0]);
-	std::stringstream ss;
+	std::wstringstream ss;
 	ss << nwsrs_rating;
 	the_list.SetItemText(nItem, 2, CString(ss.str().c_str()));
-	ss.str("");
+	ss.str(L"");
 
 	the_list.SetItemText(nItem, 3, &ws_id[0]);
 	the_list.SetItemText(nItem, 4, getGradeString(grade));
-	the_list.SetItemText(nItem, 5, &ws_school[0]);
-
-	ss << uscf_rating;
-	if (uscf_rating == 0) {
-		ss.str("");
-		the_list.SetItemText(nItem, 6, CString(ss.str().c_str()));
-	}
-	else {
-		the_list.SetItemText(nItem, 6, CString(ss.str().c_str()));
-	}
-	ss.str("");
-
-	the_list.SetItemText(nItem, 7, &ws_uscf_id[0]);
+	the_list.SetItemText(nItem, 5, &ws_school_code[0]);
+	the_list.SetItemText(nItem, 5, &ws_school_code[0]);
+	the_list.SetItemText(nItem, 6, &ws_school_name[0]);
+	the_list.SetItemText(nItem, 7, &ws_uscf_rating[0]);
+	the_list.SetItemText(nItem, 8, &ws_uscf_id[0]);
 
 	the_list.SetItemData(nItem, (DWORD_PTR)itemData);
 }
@@ -153,11 +126,25 @@ void ManageRegistrations::OnAnyChange()
 	int grade_sel = grade_combo_box.GetCurSel();
 
 	std::wstring s_last, s_first, s_id, s_school_code, s_school_name;
-	s_last = stringToWstring(CStringToString(cs_last));
-	s_first = stringToWstring(CStringToString(cs_first));
-	s_id = stringToWstring(CStringToString(cs_id));
-	s_school_code = stringToWstring(CStringToString(cs_school_code));
-	s_school_name = stringToWstring(CStringToString(cs_school_name));
+	s_last = CStringToWString(cs_last);
+	s_first = CStringToWString(cs_first);
+	s_id = CStringToWString(cs_id);
+	s_school_code = CStringToWString(cs_school_code);
+	s_school_name = CStringToWString(cs_school_name);
+
+	std::set<std::wstring> code_set;
+	if (!s_school_name.empty()) {
+		code_set = pDoc->school_codes.getPotentialSet(s_school_name);
+		if (code_set.size() == 1) {
+			auto first = code_set.begin();
+			CString cs_code(first->c_str());
+			school_code_edit.SetWindowTextW(cs_code);
+		}
+		else if (code_set.size() == 0) {
+			cs_school_code = L"";
+			school_code_edit.SetWindowTextW(cs_school_code);
+		}
+	}
 
 	int start, end;
 	if (s_last.length() == 0) return;
@@ -173,11 +160,17 @@ void ManageRegistrations::OnAnyChange()
 		if (insensitiveCompare(rated_players[i].ws_last, s_last) &&
 			findStringIC(rated_players[i].ws_first, s_first) &&
 			findStringIC(rated_players[i].ws_id, s_id) &&
-			findStringIC(rated_players[i].ws_school, s_school_code)) {
+			findStringIC(rated_players[i].ws_school_code, s_school_code)) {
 
 			if (grade_sel > 0) {
-				char sel_grade = 'A' + grade_sel - 1;
+				wchar_t sel_grade = 'A' + grade_sel - 1;
 				if (rated_players[i].grade != sel_grade) {
+					continue;
+				}
+			}
+
+			if (!code_set.empty()) {
+				if (code_set.find(rated_players[i].ws_school_code) == code_set.end()) {
 					continue;
 				}
 			}
@@ -189,8 +182,9 @@ void ManageRegistrations::OnAnyChange()
 				rated_players[i].nwsrs_rating,
 				rated_players[i].ws_id,
 				rated_players[i].grade,
-				rated_players[i].ws_school,
-				rated_players[i].uscf_rating,
+				rated_players[i].ws_school_code,
+				rated_players[i].ws_school_name,
+				rated_players[i].ws_uscf_rating,
 				rated_players[i].ws_uscf_id,
 				i);
 		}
@@ -273,7 +267,7 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	// TODO: Add your control notification handler code here
-	std::stringstream ss;
+	std::wstringstream ss;
 //	ss << "OnNMBlkclkList3 subItem = " << pNMItemActivate->iSubItem;
 //	MessageBox(CString(ss.str().c_str()), _T("Information"));
 	unsigned pindex = (unsigned)PossiblePlayers.GetItemData(pNMItemActivate->iItem);
@@ -288,14 +282,24 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 		rated_players[pindex].nwsrs_rating,
 		rated_players[pindex].ws_id,
 		rated_players[pindex].grade,
-		rated_players[pindex].ws_school,
-		rated_players[pindex].uscf_rating,
+		rated_players[pindex].ws_school_code,
+		rated_players[pindex].ws_school_name,
+		rated_players[pindex].ws_uscf_rating,
 		rated_players[pindex].ws_uscf_id,
 		entry);
 
-		entry++;
+	entry++;
 
-		*pResult = 0;
+	LastNameEdit.SetWindowText(L"");
+	FirstNameEdit.SetWindowText(L"");
+	NWSRS_ID_Edit.SetWindowText(L"");
+	school_code_edit.SetWindowText(L"");
+	school_name_edit.SetWindowText(L"");
+	grade_combo_box.SetCurSel(-1);
+
+	LastNameEdit.SetFocus();
+
+	*pResult = 0;
 }
 
 
@@ -359,17 +363,24 @@ BOOL ManageRegistrations::OnInitDialog()
 
 	lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
 	lvColumn.fmt = LVCFMT_LEFT;
-	lvColumn.cx = 70;
-	lvColumn.pszText = _T("USCF Rating");
+	lvColumn.cx = 80;
+	lvColumn.pszText = _T("School Name");
 	RegisteredPlayers.InsertColumn(6, &lvColumn);
 	PossiblePlayers.InsertColumn(6, &lvColumn);
 
 	lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
 	lvColumn.fmt = LVCFMT_LEFT;
-	lvColumn.cx = 80;
-	lvColumn.pszText = _T("USCF ID");
+	lvColumn.cx = 70;
+	lvColumn.pszText = _T("USCF Rating");
 	RegisteredPlayers.InsertColumn(7, &lvColumn);
 	PossiblePlayers.InsertColumn(7, &lvColumn);
+
+	lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
+	lvColumn.fmt = LVCFMT_LEFT;
+	lvColumn.cx = 80;
+	lvColumn.pszText = _T("USCF ID");
+	RegisteredPlayers.InsertColumn(8, &lvColumn);
+	PossiblePlayers.InsertColumn(8, &lvColumn);
 
 	RegisteredPlayers.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	PossiblePlayers.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
@@ -380,7 +391,7 @@ BOOL ManageRegistrations::OnInitDialog()
 
 	SetupGradeCombobox(grade_combo_box);
 
-	std::ifstream infile(pDoc->ratings_file);
+	std::wifstream infile(pDoc->ratings_file);
 	Player p;
 
 	int player_index = 0;
@@ -392,8 +403,7 @@ BOOL ManageRegistrations::OnInitDialog()
 		return TRUE;
 	}
 
-	school_codes.Load(CStringToString(pDoc->school_code_file));
-	if (school_codes.empty()) {
+	if (pDoc->school_codes.empty()) {
 		MessageBox(_T("Ratings and school code file must be loaded first."), _T("Error"));
 		EndDialog(0);
 		return TRUE;
@@ -402,13 +412,14 @@ BOOL ManageRegistrations::OnInitDialog()
 	while (!infile.eof()) {
 		infile >> p;
 		if (!infile.eof()) {
-			std::wstring ws_last = stringToWstring(p.last_name);
-			std::wstring ws_first = stringToWstring(p.first_name);
-			std::wstring ws_id = stringToWstring(p.id);
-			std::wstring ws_school = stringToWstring(p.school_code);
-			std::wstring ws_uscf_id = stringToWstring(p.uscf_id);
+			std::wstring ws_last = p.last_name;
+			std::wstring ws_first = p.first_name;
+			std::wstring ws_id = p.id;
+			std::wstring ws_school_code = p.school_code;
+			std::wstring ws_school_name = pDoc->school_codes.findName(ws_school_code);
+			std::wstring ws_uscf_id = p.uscf_id;
 
-			rated_players.push_back(MRPlayer(ws_last,ws_first,ws_id,ws_school,ws_uscf_id,p.nwsrs_rating,p.uscf_rating,p.grade));
+			rated_players.push_back(MRPlayer(ws_last,ws_first,ws_id,ws_school_code,ws_school_name,ws_uscf_id,p.nwsrs_rating,p.uscf_rating,p.grade));
 
 			wchar_t start = toupper(ws_last[0]);
 
@@ -425,21 +436,26 @@ BOOL ManageRegistrations::OnInitDialog()
 		cur += 1;
 	}
 
-	for (player_index = 0; player_index < pDoc->mrplayers.size(); ++player_index) {
+	unsigned mrindex;
+
+	for (mrindex = 0; mrindex < pDoc->mrplayers.size(); ++mrindex) {
 		addToList(RegisteredPlayers,
-			player_index,
-			pDoc->mrplayers[player_index].ws_last,
-			pDoc->mrplayers[player_index].ws_first,
-			pDoc->mrplayers[player_index].nwsrs_rating,
-			pDoc->mrplayers[player_index].ws_id,
-			pDoc->mrplayers[player_index].grade,
-			pDoc->mrplayers[player_index].ws_school,
-			pDoc->mrplayers[player_index].uscf_rating,
-			pDoc->mrplayers[player_index].ws_uscf_id,
-			player_index);
+			mrindex,
+			pDoc->mrplayers[mrindex].ws_last,
+			pDoc->mrplayers[mrindex].ws_first,
+			pDoc->mrplayers[mrindex].nwsrs_rating,
+			pDoc->mrplayers[mrindex].ws_id,
+			pDoc->mrplayers[mrindex].grade,
+			pDoc->mrplayers[mrindex].ws_school_code,
+			pDoc->mrplayers[mrindex].ws_school_name,
+			pDoc->mrplayers[mrindex].ws_uscf_rating,
+			pDoc->mrplayers[mrindex].ws_uscf_id,
+			mrindex);
 	}
 
-	return TRUE;  // return TRUE unless you set the focus to a control
+	LastNameEdit.SetFocus();
+
+	return FALSE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
 

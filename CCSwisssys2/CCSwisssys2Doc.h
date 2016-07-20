@@ -15,9 +15,8 @@ typedef int SECTION_TYPE;
 #define	SWISS 0
 #define ROUND_ROBIN 1
 
-CString getGradeString(char grade);
+CString getGradeString(wchar_t grade);
 CString getSectionTypeString(int type);
-std::string CStringToString(const CString &cs);
 std::wstring CStringToWString(const CString &cs);
 
 class SectionPlayerInfo {
@@ -26,13 +25,13 @@ public:
 	CString first_name;
 	CString full_id;
 	int rating;
-	char grade;
+	wchar_t grade;
 	CString school;
 	CString school_code;
 	CString uscf_id;
 	CString uscf_rating;
 
-	SectionPlayerInfo(const CString &ln, const CString &fn, const CString &fi, int r, char g, const CString &s, const CString &sc, const CString &uscfid, const CString &uscfrating) : last_name(ln), first_name(fn), full_id(fi), rating(r), grade(g), school(s), school_code(sc), uscf_id(uscfid), uscf_rating(uscfrating) {}
+	SectionPlayerInfo(const CString &ln, const CString &fn, const CString &fi, int r, wchar_t g, const CString &s, const CString &sc, const CString &uscfid, const CString &uscfrating) : last_name(ln), first_name(fn), full_id(fi), rating(r), grade(g), school(s), school_code(sc), uscf_id(uscfid), uscf_rating(uscfrating) {}
 };
 
 class Section {
@@ -40,8 +39,8 @@ public:
 	CString name;
 	int lower_rating_limit;
 	int upper_rating_limit;
-	char lower_grade_limit;
-	char upper_grade_limit;
+	wchar_t lower_grade_limit;
+	wchar_t upper_grade_limit;
 	SECTION_TYPE sec_type;
 	std::vector<SectionPlayerInfo> players;
 
@@ -51,7 +50,7 @@ public:
 		players.clear();
 	}
 
-	bool includes(int rating, char grade) const {
+	bool includes(int rating, wchar_t grade) const {
 		return (rating >= lower_rating_limit) && (rating <= upper_rating_limit) && (grade >= lower_grade_limit) && (grade <= upper_grade_limit);
 	}
 
@@ -105,21 +104,24 @@ public:
 	std::wstring ws_last;
 	std::wstring ws_first;
 	std::wstring ws_id;
-	std::wstring ws_school;
+	std::wstring ws_school_code;
+	std::wstring ws_school_name;
 	std::wstring ws_uscf_id;
-	unsigned nwsrs_rating, uscf_rating;
-	char grade;
+	unsigned nwsrs_rating;
+	std::wstring ws_uscf_rating;
+	wchar_t grade;
 
 	MRPlayer() {}
 
-	MRPlayer(std::wstring &l, std::wstring &f, std::wstring &i, std::wstring &s, std::wstring &u, unsigned nw, unsigned ur, char g) :
+	MRPlayer(std::wstring &l, std::wstring &f, std::wstring &i, std::wstring &s, std::wstring &sn, std::wstring &u, unsigned nw, std::wstring &ur, wchar_t g) :
 		ws_last(l),
 		ws_first(f),
 		ws_id(i),
-		ws_school(s),
+		ws_school_code(s),
+		ws_school_name(sn),
 		ws_uscf_id(u),
 		nwsrs_rating(nw),
-		uscf_rating(ur),
+		ws_uscf_rating(ur),
 		grade(g) {}
 
 	void Serialize(CArchive& ar) {
@@ -128,25 +130,31 @@ public:
 			CString cs_last(ws_last.c_str());
 			CString cs_first(ws_first.c_str());
 			CString cs_id(ws_id.c_str());
-			CString cs_school(ws_school.c_str());
+			CString cs_school_code(ws_school_code.c_str());
+			CString cs_school_name(ws_school_name.c_str());
 			CString cs_uscf_id(ws_uscf_id.c_str());
+			CString cs_uscf_rating(ws_uscf_rating.c_str());
 
-			ar << cs_last << cs_first << cs_id << cs_school << cs_uscf_id << nwsrs_rating << uscf_rating << grade;
+			ar << cs_last << cs_first << cs_id << cs_school_code << cs_school_name << cs_uscf_id << nwsrs_rating << cs_uscf_rating << grade;
 		}
 		else
 		{
 			CString cs_last;
 			CString cs_first;
 			CString cs_id;
-			CString cs_school;
+			CString cs_school_code;
+			CString cs_school_name;
 			CString cs_uscf_id;
+			CString cs_uscf_rating;
 
-			ar >> cs_last >> cs_first >> cs_id >> cs_school >> cs_uscf_id >> nwsrs_rating >> uscf_rating >> grade;
+			ar >> cs_last >> cs_first >> cs_id >> cs_school_code >> cs_school_name >> cs_uscf_id >> nwsrs_rating >> cs_uscf_rating >> grade;
 			ws_last = cs_last;
 			ws_first = cs_first;
 			ws_id = cs_id;
-			ws_school = cs_school;
+			ws_school_code = cs_school_code;
+			ws_school_name = cs_school_name;
 			ws_uscf_id = cs_uscf_id;
+			ws_uscf_rating = cs_uscf_rating;
 		}
 	}
 };
@@ -188,7 +196,7 @@ public:
 		}
 	}
 
-	int foundIn(int cc_rating, char grade_code) {
+	int foundIn(int cc_rating, wchar_t grade_code) {
 		int found = -1;
 		for (unsigned i = 0; i < size(); ++i) {
 			if (operator[](i).includes(cc_rating, grade_code)) {
@@ -258,7 +266,7 @@ public:
 
 class AllCodesEntry {
 protected:
-	std::vector<std::string> fields;
+	std::vector<std::wstring> fields;
 	void valid(void) const {
 		if (fields.size() < 5) {
 			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
@@ -267,27 +275,51 @@ protected:
 	}
 
 public:
-	AllCodesEntry(const std::vector<std::string> &f) : fields(f) { valid(); }
+	AllCodesEntry(const std::vector<std::wstring> &f) : fields(f) { valid(); }
 
-	std::string getSchoolCode(void) const { return fields[0]; }
-	std::string getSchoolName(void) const { return fields[1]; }
-	std::string getSchoolType(void) const { return fields[2]; }
-	std::string getSchoolCity(void) const { return fields[3]; }
-	std::string getSchoolState(void) const { return fields[4]; }
+	std::wstring getSchoolCode(void) const { return fields[0]; }
+	std::wstring getSchoolName(void) const { return fields[1]; }
+	std::wstring getSchoolType(void) const { return fields[2]; }
+	std::wstring getSchoolCity(void) const { return fields[3]; }
+	std::wstring getSchoolState(void) const { return fields[4]; }
 };
 
-bool findStringIC(const std::string & strHaystack, const std::string & strNeedle);
+bool findStringIC(const std::wstring & strHaystack, const std::wstring & strNeedle);
 
 class AllCodes : public std::vector<AllCodesEntry> {
+protected:
+	std::map<std::wstring, unsigned> map_id_to_index;
+
 public:
 	AllCodes(void) {}
 
-	void Load(const std::string filename) {
-			auto ccret = load_csv_file(filename, true);
+	void Load(const std::wstring filename) {
+		auto ccret = load_csvw_file(filename, true);
 
 		unsigned i;
 		for (i = 0; i < ccret.size(); ++i) {
 			push_back(AllCodesEntry(ccret[i]));
+			map_id_to_index.insert(std::pair<std::wstring, unsigned>(ccret[i][0], i));
+		}
+	}
+
+	int find(const std::wstring &code) {
+		auto iter = map_id_to_index.find(code);
+		if (iter == map_id_to_index.end()) {
+			return -1;
+		}
+		else {
+			return iter->second;
+		}
+	}
+
+	std::wstring findName(const std::wstring &code) {
+		int index = find(code);
+		if (index == -1) {
+			return L"";
+		}
+		else {
+			return operator[](index).getSchoolName();
 		}
 	}
 
@@ -295,8 +327,8 @@ public:
 		std::set<std::wstring> ret;
 		unsigned i;
 		for (i = 0; i < size(); ++i) {
-			if (findStringIC(operator[](i), partial)) {
-				ret.insert()
+			if (findStringIC(operator[](i).getSchoolName(), partial)) {
+				ret.insert(operator[](i).getSchoolCode());
 			}
 		}
 		return ret;
@@ -305,7 +337,7 @@ public:
 
 class ConstantContactEntry {
 protected:
-	std::vector<std::string> fields;
+	std::vector<std::wstring> fields;
 	void valid(void) const {
 		if (fields.size() < 18) {
 			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
@@ -313,19 +345,19 @@ protected:
 		}
 	}
 public:
-	ConstantContactEntry(const std::vector<std::string> &f) : fields(f) { valid(); }
+	ConstantContactEntry(const std::vector<std::wstring> &f) : fields(f) { valid(); }
 
-	std::string getFirstName(void)   const { valid(); return fields[0]; }
-	std::string getLastName(void)    const { valid(); return fields[1]; }
-	std::string getEmail(void)       const { valid(); return fields[2]; }
+	std::wstring getFirstName(void)   const { valid(); return fields[0]; }
+	std::wstring getLastName(void)    const { valid(); return fields[1]; }
+	std::wstring getEmail(void)       const { valid(); return fields[2]; }
 	bool didAdultCheck(void)         const { valid(); return !fields[10].empty(); }
-	std::string getSchool(void)      const { valid(); return fields[11]; }
-	std::string getGrade(void)       const { valid(); return fields[12]; }
-	std::string getSection(void)     const { valid(); return fields[13]; }
-	std::string getNwsrsId(void)     const { valid(); return fields[14]; }
-	std::string getNwsrsRating(void) const { valid(); return fields[15]; }
-	std::string getUscfId(void)      const { valid(); return fields[16]; }
-	std::string getUscfRating(void)  const { valid(); return fields[17]; }
+	std::wstring getSchool(void)      const { valid(); return fields[11]; }
+	std::wstring getGrade(void)       const { valid(); return fields[12]; }
+	std::wstring getSection(void)     const { valid(); return fields[13]; }
+	std::wstring getNwsrsId(void)     const { valid(); return fields[14]; }
+	std::wstring getNwsrsRating(void) const { valid(); return fields[15]; }
+	std::wstring getUscfId(void)      const { valid(); return fields[16]; }
+	std::wstring getUscfRating(void)  const { valid(); return fields[17]; }
 
 	bool isParent(void) const {
 		return didAdultCheck() && getSchool().empty() && getGrade().empty() && getSection().empty() && getNwsrsId().empty();
@@ -335,27 +367,27 @@ public:
 		return !didAdultCheck() && !getSchool().empty() && !getGrade().empty() && !getSection().empty() && !getNwsrsId().empty();
 	}
 
-	char getGradeCode(void) const {
+	wchar_t getGradeCode(void) const {
 		auto gg = getGrade();
-		if (gg == "K") { return 'A'; }
-		if (gg == "1") { return 'B'; }
-		if (gg == "2") { return 'C'; }
-		if (gg == "3") { return 'D'; }
-		if (gg == "4") { return 'E'; }
-		if (gg == "5") { return 'F'; }
-		if (gg == "6") { return 'G'; }
-		if (gg == "7") { return 'H'; }
-		if (gg == "8") { return 'I'; }
-		if (gg == "9") { return 'J'; }
-		if (gg == "10") { return 'K'; }
-		if (gg == "11") { return 'L'; }
-		if (gg == "12") { return 'M'; }
+		if (gg == L"K") { return L'A'; }
+		if (gg == L"1") { return L'B'; }
+		if (gg == L"2") { return L'C'; }
+		if (gg == L"3") { return L'D'; }
+		if (gg == L"4") { return L'E'; }
+		if (gg == L"5") { return L'F'; }
+		if (gg == L"6") { return L'G'; }
+		if (gg == L"7") { return L'H'; }
+		if (gg == L"8") { return L'I'; }
+		if (gg == L"9") { return L'J'; }
+		if (gg == L"10") { return L'K'; }
+		if (gg == L"11") { return L'L'; }
+		if (gg == L"12") { return L'M'; }
 		MessageBox(NULL, _T("Don't know how to convert some grade string into grade code."), _T("ERROR"), MB_OK);
 		exit(-1);
 	}
 };
 
-std::vector< ConstantContactEntry > load_constant_contact_file(const std::string &filename);
+std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename);
 
 class CCCSwisssys2Doc : public CDocument
 {
@@ -370,6 +402,7 @@ public:
 	CString school_code_file;
 	Sections sections;
 	SerializedVector<MRPlayer> mrplayers;
+	AllCodes school_codes;
 
 // Operations
 public:

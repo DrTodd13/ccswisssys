@@ -30,7 +30,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -216,6 +216,7 @@
     <ClCompile Include="tokenize_csv.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\..\..\..\cygwin64\home\taanders\chess\oscf\allstars\rate16-387.dat" />
     <None Include="CCSwisssys2.reg" />
     <None Include="res\CCSwisssys2.rc2" />
   </ItemGroup>

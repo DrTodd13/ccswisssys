@@ -80,7 +80,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 	}
 }
 
-CString getGradeString(char grade) {
+CString getGradeString(wchar_t grade) {
 	switch (grade) {
 	case 'A': return CString("A - Kindergarten");
 	case 'B': return CString("B - 1st Grade");
@@ -112,13 +112,13 @@ CString getSectionTypeString(int type) {
 	}
 }
 
-std::vector< ConstantContactEntry > load_constant_contact_file(const std::string &filename) {
-	auto ccret = load_csv_file(filename, true);
+std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename) {
+	auto ccret = load_csvw_file(filename, true);
 
 	std::vector< ConstantContactEntry > ret;
 	unsigned i;
 	for (i = 0; i < ccret.size(); ++i) {
-		if (ccret[i][23] == "Registered") {
+		if (ccret[i][23] == L"Registered") {
 			ret.push_back(ConstantContactEntry(ccret[i]));
 		}
 	}

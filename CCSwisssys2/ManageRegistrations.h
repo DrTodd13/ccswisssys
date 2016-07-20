@@ -23,7 +23,6 @@ protected:
 	CCCSwisssys2Doc *pDoc;
 	std::vector<MRPlayer> rated_players;
 	int ending_index[27];
-	AllCodes school_codes;
 
 	void OnAnyChange();
 

@@ -2,5 +2,5 @@
 #include <string>
 #include <fstream>
 
-std::vector< std::vector<std::string> > load_csv_file(const std::string &filename, bool skip_header = false);
-std::vector<std::string> tokenize_csv(const std::string &s);
+std::vector< std::vector<std::wstring> > load_csvw_file(const std::wstring &filename, bool skip_header = false);
+std::vector<std::wstring> tokenize_csv(const std::wstring &s);

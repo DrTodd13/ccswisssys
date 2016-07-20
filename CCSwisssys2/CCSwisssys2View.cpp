@@ -196,6 +196,13 @@ void CCCSwisssys2View::OnInitialUpdate()
 	refillSections(pDoc->sections);
 	section_list.SetSelectionMark(-1);
 	section_players.SetSelectionMark(-1);
+
+	if (pDoc->school_code_file != L"") {
+		pDoc->school_codes.Load(CStringToWString(pDoc->school_code_file));
+		if (pDoc->school_codes.empty()) {
+			MessageBox(_T("No school codes found in file.  Please select a code file in csv format."), _T("Error"));
+		}
+	}
 }
 
 
@@ -281,10 +288,10 @@ void addToSectionList(CListCtrl &section_list, Section &newSection, int position
 	nItem = section_list.InsertItem(&lvItem);
 
 	if (newSection.usedRatings()) {
-		std::stringstream ss;
+		std::wstringstream ss;
 		ss << newSection.lower_rating_limit;
 		section_list.SetItemText(nItem, 1, CString(ss.str().c_str()));
-		ss.str("");
+		ss.str(L"");
 		ss << newSection.upper_rating_limit;
 		section_list.SetItemText(nItem, 2, CString(ss.str().c_str()));
 	}
@@ -396,7 +403,7 @@ void CCCSwisssys2View::OnBnClickedButton5()
 			nItem = section_list.InsertItem(&lvItem);
 
 			if (newSection.usedRatings()) {
-				std::stringstream ss;
+				std::wstringstream ss;
 				ss << newSection.lower_rating_limit;
 				section_list.SetItemText(nItem, 1, CString(ss.str().c_str()));
 				ss.str("");
@@ -415,18 +422,13 @@ void CCCSwisssys2View::OnBnClickedButton5()
 	}
 }
 
-std::string CStringToString(const CString &cs) {
-	LPCWSTR temp1 = cs.GetString();
-	return std::string(CW2A(temp1));
-}
-
 std::wstring CStringToWString(const CString &cs) {
 	LPCWSTR temp1 = cs.GetString();
 	return std::wstring(temp1);
 }
 
-std::string toUpper(const std::string &s) {
-	std::string ret = s;
+std::wstring toUpper(const std::wstring &s) {
+	std::wstring ret = s;
 
 	for (unsigned j = 0; j < s.size(); ++j) {
 		ret[j] = toupper(ret[j]);
@@ -435,14 +437,14 @@ std::string toUpper(const std::string &s) {
 	return ret;
 }
 
-std::string intToString(unsigned v) {
-	std::stringstream ss;
+std::wstring intToString(unsigned v) {
+	std::wstringstream ss;
 	ss << v;
 	return ss.str();
 }
 
-void updateUscfFromRatingFile(std::string &uscf_id, std::string &uscf_rating, const Player &p, std::ofstream &normal_log, bool &warning_condition) {
-	std::string temp_rating = intToString(p.uscf_rating);
+void updateUscfFromRatingFile(std::wstring &uscf_id, std::wstring &uscf_rating, const Player &p, std::wofstream &normal_log, bool &warning_condition) {
+	std::wstring temp_rating = p.uscf_rating;
 
 	if (uscf_id.size() != 0 && uscf_id != p.uscf_id) {
 		warning_condition = true;
@@ -465,21 +467,21 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	pDoc->sections.clearPlayers();
 	section_players.DeleteAllItems();
 
-	std::ifstream cc_file(pDoc->constant_contact_file);
+	std::wifstream cc_file(pDoc->constant_contact_file);
 	if (!cc_file) {
 		MessageBox(_T("Could not load constant contact registration file."), _T("Constant contact file incorrect."));
 		return;
 	}
 	cc_file.close();
 
-	std::ifstream rfile(pDoc->ratings_file);
+	std::wifstream rfile(pDoc->ratings_file);
 	if (!rfile) {
 		MessageBox(_T("Could not load ratings file."), _T("Ratings data file not found."));
 		return;
 	}
 	rfile.close();
 
-	std::string ccsstr = CStringToString(pDoc->constant_contact_file);
+	std::wstring ccsstr = CStringToWString(pDoc->constant_contact_file);
 	auto entries = load_constant_contact_file(ccsstr);
 
 	unsigned num_parents = 0, num_players = 0;
@@ -503,10 +505,10 @@ void CCCSwisssys2View::OnBnClickedButton6()
 		return;
 	}
 
-	std::ifstream infile(pDoc->ratings_file);
+	std::wifstream infile(pDoc->ratings_file);
 	Player p;
-	std::map<std::string, unsigned> nwsrs_map;
-	std::map<std::string, unsigned> uscf_map;
+	std::map<std::wstring, unsigned> nwsrs_map;
+	std::map<std::wstring, unsigned> uscf_map;
 	std::vector<Player> rated_players;
 
 	unsigned player_index = 0;
@@ -515,9 +517,9 @@ void CCCSwisssys2View::OnBnClickedButton6()
 		infile >> p;
 		if (!infile.eof()) {
 			rated_players.push_back(p);
-			nwsrs_map.insert(std::pair<std::string, unsigned>(p.getFullId(), player_index));
+			nwsrs_map.insert(std::pair<std::wstring, unsigned>(p.getFullId(), player_index));
 			if (!p.uscf_id.empty()) {
-				uscf_map.insert(std::pair<std::string, unsigned>(p.uscf_id, player_index));
+				uscf_map.insert(std::pair<std::wstring, unsigned>(p.uscf_id, player_index));
 			}
 			++player_index;
 		}
@@ -529,31 +531,31 @@ void CCCSwisssys2View::OnBnClickedButton6()
 
 	std::wstring output_dir = pDoc->getOutputLocation();
 	std::wstring logfilename = output_dir + _T("\\ccswslog.txt");
-	std::ofstream normal_log(logfilename);
+	std::wofstream normal_log(logfilename);
 
 	for (i = 0; i < entries.size(); ++i) {
 		if (entries[i].isPlayer()) {
-			std::string last_name = entries[i].getLastName();
-			std::string first_name = entries[i].getFirstName();
-			std::string school = entries[i].getSchool();
-			std::string full_id = entries[i].getNwsrsId();
-			std::string given_rating = entries[i].getNwsrsRating();
-			std::string upper_last = last_name;
-			std::string upper_first = first_name;
-			std::string uscf_id = entries[i].getUscfId();
-			std::string uscf_rating = entries[i].getUscfRating();
+			std::wstring last_name = entries[i].getLastName();
+			std::wstring first_name = entries[i].getFirstName();
+			std::wstring school = entries[i].getSchool();
+			std::wstring full_id = entries[i].getNwsrsId();
+			std::wstring given_rating = entries[i].getNwsrsRating();
+			std::wstring upper_last = last_name;
+			std::wstring upper_first = first_name;
+			std::wstring uscf_id = entries[i].getUscfId();
+			std::wstring uscf_rating = entries[i].getUscfRating();
 
 			upper_last = toUpper(upper_last);
 			upper_first = toUpper(upper_first);
 			full_id = toUpper(full_id);
 			given_rating = toUpper(given_rating);
 
-			std::string last_four_id;
+			std::wstring last_four_id;
 			if (full_id.length() >= 4) {
 				last_four_id = full_id.substr(full_id.length() - 4);
 			}
 
-			std::string school_code;
+			std::wstring school_code;
 			if (full_id.length() == 8) {
 				school_code = full_id.substr(0, 3);
 			}
@@ -563,18 +565,18 @@ void CCCSwisssys2View::OnBnClickedButton6()
 			auto rentry = nwsrs_map.find(full_id);
 			unsigned cc_rating = 4000;
 			unsigned nwsrs_rating;
-			char grade_code = entries[i].getGradeCode();
+			wchar_t grade_code = entries[i].getGradeCode();
 
 			if (rentry != nwsrs_map.end()) {
 				cc_rating = rated_players[rentry->second].get_higher_rating();
-				if (rated_players[rentry->second].uscf_id != "") {
+				if (rated_players[rentry->second].uscf_id != L"") {
 					updateUscfFromRatingFile(uscf_id, uscf_rating, rated_players[rentry->second], normal_log, warning_condition);
 				}
 				nwsrs_rating = rated_players[rentry->second].nwsrs_rating;
 			}
 			else {
-				if (full_id == "NONE" || full_id == "N/A") {
-					if (given_rating != "N/A" && given_rating != "NONE") {
+				if (full_id == L"NONE" || full_id == L"N/A") {
+					if (given_rating != L"N/A" && given_rating != L"NONE") {
 						// No ID but specified a rating.
 						warning_condition = true;
 						normal_log << "WARNING: rating was specified but not ID, will ignore specified rating for " << last_name << " " << first_name << " rating = " << given_rating << " " << grade_code << " " << school << std::endl;
@@ -591,7 +593,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 							//rated_players[j].first_name == upper_first &&
 							rated_players[j].id == last_four_id) {
 							cc_rating = rated_players[j].get_higher_rating();
-							if (rated_players[j].uscf_id != "") {
+							if (rated_players[j].uscf_id != L"") {
 								updateUscfFromRatingFile(uscf_id, uscf_rating, rated_players[j], normal_log, warning_condition);
 							}
 							nwsrs_rating = rated_players[j].nwsrs_rating;
@@ -630,10 +632,33 @@ void CCCSwisssys2View::OnBnClickedButton6()
 			}
 			else {
 				pDoc->sections[target_section].players.push_back(SectionPlayerInfo(cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str())));
-				normal_log << "Went in section " << CStringToString(pDoc->sections[target_section].name) << " " << full_id << " " << last_name << " " << first_name << " " << cc_rating << " " << grade_code << " " << school << " uscf rating and id " << uscf_rating << " " << uscf_id << std::endl;
+				normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << cs_full_id << " " << cs_last_name << " " << cs_first_name << " " << cc_rating << " " << grade_code << " " << school_code << " uscf rating and id " << uscf_rating << " " << uscf_id << std::endl;
 			}
 		}
 	}
+	for (i = 0; i < pDoc->mrplayers.size(); ++i) {
+		MRPlayer &this_player = pDoc->mrplayers[i];
+		int target_section = pDoc->sections.foundIn(pDoc->mrplayers[i].nwsrs_rating, pDoc->mrplayers[i].grade);
+		if (target_section == -1) {
+			normal_log << "ERROR: Doesn't belong in any section. " << this_player.ws_id << " " << this_player.nwsrs_rating << " " << this_player.ws_last << " " << this_player.ws_first << " " << " " << this_player.grade << " " << this_player.ws_school_code << " " << this_player.ws_school_name << std::endl;
+		}
+		else if (target_section < -1) {
+			normal_log << "ERROR: Player can go in multiple sections. " << this_player.ws_id << " " << this_player.nwsrs_rating << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " " << this_player.ws_school_name << std::endl;
+		}
+		else {
+			CString cs_last(this_player.ws_last.c_str());
+			CString cs_first(this_player.ws_first.c_str());
+			CString cs_id(this_player.ws_id.c_str());
+			CString cs_school_name(this_player.ws_school_name.c_str());
+			CString cs_school_code(this_player.ws_school_code.c_str());
+			CString cs_uscf_id(this_player.ws_uscf_id.c_str());
+			CString cs_uscf_rating(this_player.ws_first.c_str());
+
+			pDoc->sections[target_section].players.push_back(SectionPlayerInfo(cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating));
+			normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << this_player.ws_id << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " uscf rating and id " << this_player.ws_uscf_rating << " " << this_player.ws_uscf_id << std::endl;
+		}
+	}
+
 	normal_log.close();
 
 	if (error_condition) {
@@ -649,7 +674,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	ShellExecute(NULL, _T("open"), _T("c:\\windows\\notepad.exe"), (LPCWSTR)logfilename.c_str(), _T(""), SW_SHOWNORMAL);
 
 	for (i = 0; i < pDoc->sections.size(); ++i) {
-		std::stringstream ss;
+		std::wstringstream ss;
 		ss << pDoc->sections[i].players.size();
 		section_list.SetItemText(i, 6, CString(ss.str().c_str()));
 	}
@@ -689,10 +714,10 @@ void CCCSwisssys2View::OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult)
 			nItem = section_players.InsertItem(&lvItem);
 
 			section_players.SetItemText(i, 1, pDoc->sections[selectedItem].players[i].first_name.GetBuffer());
-			std::stringstream ss;
+			std::wstringstream ss;
 			ss << pDoc->sections[selectedItem].players[i].rating;
 			section_players.SetItemText(i, 2, CString(ss.str().c_str()));
-			ss.str("");
+			ss.str(L"");
 
 			section_players.SetItemText(i, 3, pDoc->sections[selectedItem].players[i].full_id.GetBuffer());
 			section_players.SetItemText(i, 4, getGradeString(pDoc->sections[selectedItem].players[i].grade));
@@ -716,20 +741,20 @@ void CCCSwisssys2View::OnBnClickedButton7()
 			continue;
 		}
 			
-		std::string filename = "Section_" + CStringToString(pDoc->sections[j].name) + ".txt";
-		std::ofstream section_file(filename);
+		std::wstring filename = L"Section_" + CStringToWString(pDoc->sections[j].name) + L".txt";
+		std::wofstream section_file(filename);
 
 		for (unsigned i = 0; i < pDoc->sections[j].players.size(); ++i) {
-			section_file << "Name = " << toUpper(CStringToString(pDoc->sections[j].players[i].last_name)) << ", " <<
-				toUpper(CStringToString(pDoc->sections[j].players[i].first_name)) << std::endl;
+			section_file << L"Name = " << toUpper(CStringToWString(pDoc->sections[j].players[i].last_name)) << L", " <<
+				toUpper(CStringToWString(pDoc->sections[j].players[i].first_name)) << std::endl;
 			section_file << "Rating = " << pDoc->sections[j].players[i].rating << std::endl;
-			section_file << "ID# = " << CStringToString(pDoc->sections[j].players[i].full_id) << std::endl;
-			section_file << "Team = " << CStringToString(pDoc->sections[j].players[i].school_code) << std::endl;
+			section_file << "ID# = " << CStringToWString(pDoc->sections[j].players[i].full_id) << std::endl;
+			section_file << "Team = " << CStringToWString(pDoc->sections[j].players[i].school_code) << std::endl;
 			if (!pDoc->sections[j].players[i].uscf_id.IsEmpty()) {
-				section_file << "ID#2 = " << CStringToString(pDoc->sections[j].players[i].uscf_id) << std::endl;
+				section_file << "ID#2 = " << CStringToWString(pDoc->sections[j].players[i].uscf_id) << std::endl;
 			}
 			if (!pDoc->sections[j].players[i].uscf_rating.IsEmpty()) {
-				section_file << "Rating#2 = " << CStringToString(pDoc->sections[j].players[i].uscf_rating) << std::endl;
+				section_file << "Rating#2 = " << CStringToWString(pDoc->sections[j].players[i].uscf_rating) << std::endl;
 			}
 			section_file << std::endl;
 
@@ -753,9 +778,16 @@ void CCCSwisssys2View::OnBnClickedButton8()
 	{
 		CString PathName = FileDialog.GetPathName();
 		// Do something with 'PathName'
-		GetDocument()->school_code_file = PathName;
+		auto pDoc = GetDocument();
+
+		pDoc->school_code_file = PathName;
 
 		SchoolCodesEdit.SetWindowText(PathName);
+
+		pDoc->school_codes.Load(CStringToWString(pDoc->school_code_file));
+		if (pDoc->school_codes.empty()) {
+			MessageBox(_T("No school codes found in file.  Please select a code file in csv format."), _T("Error"));
+		}
 	}
 }
 
@@ -841,7 +873,7 @@ int CALLBACK section_players_compare(LPARAM l1, LPARAM l2, LPARAM lsort) {
 	case 5:
 		return listCompareItem(p1->school, p2->school);
 	case 6:
-		return listCompareItemInt(std::stoi(CStringToString(p1->uscf_rating)), std::stoi(CStringToString(p2->uscf_rating)));
+		return listCompareItemInt(std::stoi(CStringToWString(p1->uscf_rating)), std::stoi(CStringToWString(p2->uscf_rating)));
 	case 7:
 		return listCompareItem(p1->uscf_id, p2->uscf_id);
 	default:

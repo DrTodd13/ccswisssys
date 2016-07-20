@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "tokenize_csv.h"
 
-std::vector< std::vector<std::string> > load_csv_file(const std::string &filename, bool skip_header) {
-	std::ifstream infile(filename);
-	std::vector< std::vector<std::string> > ret;
+std::vector< std::vector<std::wstring> > load_csvw_file(const std::wstring &filename, bool skip_header) {
+	std::wifstream infile(filename);
+	std::vector< std::vector<std::wstring> > ret;
 
 	if (!infile) {
 		return ret;
@@ -12,7 +12,7 @@ std::vector< std::vector<std::string> > load_csv_file(const std::string &filenam
 	unsigned cur_line = 1;
 
 	while (!infile.eof()) {
-		std::string whole_line;
+		std::wstring whole_line;
 		getline(infile, whole_line);
 		if (infile.eof()) break;
 
@@ -26,15 +26,15 @@ std::vector< std::vector<std::string> > load_csv_file(const std::string &filenam
 			continue;
 		}
 
-		std::vector<std::string> elems;
+		std::vector<std::wstring> elems;
 
 		unsigned i;
 		bool in_quote = false;
-		std::string cur_str = "";
+		std::wstring cur_str = L"";
 		bool line_done = false;
 		while (!line_done) {
 			for (i = 0; i < whole_line.size(); ++i) {
-				char cur = whole_line[i];
+				wchar_t cur = whole_line[i];
 
 				if (cur == '"') {
 					in_quote = !in_quote;
@@ -46,7 +46,7 @@ std::vector< std::vector<std::string> > load_csv_file(const std::string &filenam
 				else {
 					if (cur == ',') {
 						elems.push_back(cur_str);
-						cur_str = "";
+						cur_str = L"";
 					}
 					else {
 						cur_str += cur;
@@ -74,14 +74,14 @@ std::vector< std::vector<std::string> > load_csv_file(const std::string &filenam
 }
 
 
-std::vector<std::string> tokenize_csv(const std::string &s) {
-	std::vector<std::string> elems;
+std::vector<std::wstring> tokenize_csv(const std::wstring &s) {
+	std::vector<std::wstring> elems;
 
 	unsigned i;
 	bool in_quote = false;
-	std::string cur_str = "";
+	std::wstring cur_str = L"";
 	for (i = 0; i < s.size(); ++i) {
-		char cur = s[i];
+		wchar_t cur = s[i];
 
 		if (cur == '"') {
 			in_quote = !in_quote;
@@ -93,7 +93,7 @@ std::vector<std::string> tokenize_csv(const std::string &s) {
 		else {
 			if (cur == ',') {
 				elems.push_back(cur_str);
-				cur_str = "";
+				cur_str = L"";
 			}
 			else {
 				cur_str += cur;
