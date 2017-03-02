@@ -29,10 +29,13 @@ public:
 	CEdit min_rating_edit;
 	CEdit max_rating_edit;
 	CComboBox section_type_combo;
+	CEdit num_subsections_edit;
 
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCancel();
 	CComboBox min_grade_combo;
 	CComboBox max_grade_combo;
+	CComboBox num_subsections_combo;
+	afx_msg void OnEnChangeSubsections();
 };

@@ -42,6 +42,7 @@ public:
 
 protected:
 	void refillSections(Sections &s);
+	unsigned createSectionWorksheet(const std::wstring &output_dir, std::wstring &sec_name, const Section &sec, int subsec);
 
 // Generated message map functions
 protected:
@@ -70,6 +71,7 @@ public:
 	afx_msg void OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedButton9();
+	afx_msg void OnBnClickedButton10();
 };
 
 #ifndef _DEBUG  // debug version in CCSwisssys2View.cpp

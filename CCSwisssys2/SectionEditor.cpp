@@ -35,14 +35,30 @@ void SetupGradeCombobox(CComboBox &box) {
 	box.AddString(_T("N - Adult"));
 }
 
+void SetupSubsectionCombobox(CComboBox &box) {
+	box.AddString(_T("1"));
+	box.AddString(_T("2"));
+	box.AddString(_T("3"));
+	box.AddString(_T("4"));
+	box.AddString(_T("5"));
+	box.AddString(_T("6"));
+	box.AddString(_T("7"));
+	box.AddString(_T("8"));
+	box.AddString(_T("9"));
+	box.AddString(_T("10"));
+}
+
 BOOL SectionEditor::OnInitDialog() {
 	CDialog::OnInitDialog();
 
 	section_name_edit.SetWindowText(m_s->name);
 	SetupGradeCombobox(min_grade_combo);
 	SetupGradeCombobox(max_grade_combo);
+	SetupSubsectionCombobox(num_subsections_combo);
 	min_grade_combo.SetCurSel(0);
 	max_grade_combo.SetCurSel(0);
+	num_subsections_combo.SetCurSel(m_s->num_subsections - 1);
+	//	section_name_edit.SetWindowText(m_s->subsections);
 
 	if (m_s->usedRatings()) {
 		std::wstringstream ss;
@@ -76,12 +92,14 @@ void SectionEditor::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO1, section_type_combo);
 	DDX_Control(pDX, IDC_COMBO2, min_grade_combo);
 	DDX_Control(pDX, IDC_COMBO3, max_grade_combo);
+	DDX_Control(pDX, IDC_COMBO4, num_subsections_combo);
 }
 
 
 BEGIN_MESSAGE_MAP(SectionEditor, CDialog)
 	ON_BN_CLICKED(IDOK, &SectionEditor::OnBnClickedOk)
 	ON_BN_CLICKED(IDCANCEL, &SectionEditor::OnBnClickedCancel)
+	ON_EN_CHANGE(IDC_EDIT4, &SectionEditor::OnEnChangeSubsections)
 END_MESSAGE_MAP()
 
 
@@ -96,13 +114,14 @@ void SectionEditor::OnBnClickedOk()
 {
 	// TODO: Add your control notification handler code here
 	CString new_section_name, new_min_rating, new_max_rating;
-	int min_grade_sel, max_grade_sel, new_section_type_sel;
+	int min_grade_sel, max_grade_sel, new_section_type_sel, num_subsections_sel;
 
 	section_name_edit.GetWindowText(new_section_name);
 	min_rating_edit.GetWindowText(new_min_rating);
 	max_rating_edit.GetWindowText(new_max_rating);
 	min_grade_sel = min_grade_combo.GetCurSel();
 	max_grade_sel = max_grade_combo.GetCurSel();
+	num_subsections_sel = num_subsections_combo.GetCurSel() + 1;
 	new_section_type_sel = section_type_combo.GetCurSel();
 	int new_min_int, new_max_int;
 	
@@ -171,6 +190,7 @@ void SectionEditor::OnBnClickedOk()
 		m_s->upper_grade_limit = 'A' + max_grade_sel - 1;
 	}
 	m_s->sec_type = SECTION_TYPE(new_section_type_sel);
+	m_s->num_subsections = num_subsections_sel;
 
 	CDialog::OnOK();
 }
@@ -180,4 +200,15 @@ void SectionEditor::OnBnClickedCancel()
 {
 	// TODO: Add your control notification handler code here
 	CDialog::OnCancel();
+}
+
+
+void SectionEditor::OnEnChangeSubsections()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialog::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
 }

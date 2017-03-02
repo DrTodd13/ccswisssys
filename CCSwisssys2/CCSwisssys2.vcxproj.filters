@@ -105,5 +105,11 @@
     <Image Include="res\Toolbar.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Artua-Mac-Chess.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\Artua-Mac-Chess.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -94,11 +94,13 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>STATIC_JS_API;XP_WIN;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2010;C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Pathcch.lib</AdditionalDependencies>
+      <AdditionalDependencies>xlslib_lib.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2012\bin\Win32_MSVC2012.Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -139,13 +141,15 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>STATIC_JS_API;XP_WIN;WINVER=0x0501;_WIN32_WINNT=0x501;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2010;C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Pathcch.lib</AdditionalDependencies>
+      <AdditionalDependencies>xlslib_lib.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2012\bin\Win32_MSVC2010.Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -224,6 +228,8 @@
     <ResourceCompile Include="CCSwisssys2.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Artua-Mac-Chess.ico" />
+    <Image Include="res\Artua-Mac-Chess.ico" />
     <Image Include="res\CCSwisssys2.ico" />
     <Image Include="res\CCSwisssys2Doc.ico" />
     <Image Include="res\Toolbar.bmp" />

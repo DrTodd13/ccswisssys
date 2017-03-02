@@ -7,8 +7,10 @@
 
 #include <vector>
 #include "tokenize_csv.h"
-#include <Pathcch.h>
+//#include <Pathcch.h>
+#include <Shlwapi.h>
 #include <set>
+#include <algorithm>
 
 typedef int SECTION_TYPE;
 
@@ -18,6 +20,8 @@ typedef int SECTION_TYPE;
 CString getGradeString(wchar_t grade);
 CString getSectionTypeString(int type);
 std::wstring CStringToWString(const CString &cs);
+int LevenshteinDistance(const std::wstring &s, const std::wstring &t);
+std::wstring toUpper(const std::wstring &s);
 
 class SectionPlayerInfo {
 public:
@@ -30,8 +34,14 @@ public:
 	CString school_code;
 	CString uscf_id;
 	CString uscf_rating;
+	int subsection;
 
-	SectionPlayerInfo(const CString &ln, const CString &fn, const CString &fi, int r, wchar_t g, const CString &s, const CString &sc, const CString &uscfid, const CString &uscfrating) : last_name(ln), first_name(fn), full_id(fi), rating(r), grade(g), school(s), school_code(sc), uscf_id(uscfid), uscf_rating(uscfrating) {}
+	SectionPlayerInfo(const CString &ln, const CString &fn, const CString &fi, int r, wchar_t g, const CString &s, const CString &sc, const CString &uscfid, const CString &uscfrating, int sub=1) : last_name(ln), first_name(fn), full_id(fi), rating(r), grade(g), school(s), school_code(sc), uscf_id(uscfid), uscf_rating(uscfrating), subsection(sub) {}
+};
+
+struct SortByRatingDescending
+{
+	bool operator()(const SectionPlayerInfo &L, const SectionPlayerInfo &R) { return L.rating > R.rating; }
 };
 
 class Section {
@@ -43,9 +53,47 @@ public:
 	wchar_t upper_grade_limit;
 	SECTION_TYPE sec_type;
 	std::vector<SectionPlayerInfo> players;
+	int num_subsections;
 
-	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('M'), sec_type(SWISS) {}
+	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('M'), sec_type(SWISS), num_subsections(1) {}
 	
+	void makeSubsections() {
+		if (num_subsections == 1) return;
+
+		// Overall structure is to sort by rating.
+		// Then for the most part go through that sorted list and put each player in the next
+		// next subsection modulo the number of subsections.
+		// We'll try to keep even number in subsections.
+		std::sort(players.begin(), players.end(), SortByRatingDescending());
+		int num_players = players.size();
+		// Get the number of players per subsection under a strict division.
+		int player_per_subsection = num_players / num_subsections;
+		// If that number is odd then subtract one so that the base number each section gets is even.
+		if (player_per_subsection % 2 == 1) {
+			player_per_subsection -= 1;
+		}
+		int first_allocation = player_per_subsection * num_subsections;
+
+		unsigned i;
+		// The simple part where we allocation players round-robin based on rating.
+		for (i = 0; i < first_allocation; ++i) {
+			players[i].subsection = (i % num_subsections) + 1;
+		}
+		int next_subsection = 0;
+		// Now allocate players two at a time to keep even numbers in sections.
+		for (i = first_allocation; i < players.size(); i+=2) {
+			// If only one player left then break.
+			if (i + 1 >= players.size()) break;
+			players[i].subsection = next_subsection + 1;
+			players[i+1].subsection = next_subsection + 1;
+			next_subsection = (next_subsection + 1) % num_subsections;
+		}
+		// If a single player was left then add to some subsection.
+		if (i < players.size()) {
+			players[i].subsection = next_subsection + 1;
+		}
+	}
+
 	void clearPlayers(void) {
 		players.clear();
 	}
@@ -65,11 +113,11 @@ public:
 	void Serialize(CArchive& ar) {
 		if (ar.IsStoring())
 		{
-			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type;
+			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections;
 		}
 		else
 		{
-			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type;
+			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections;
 		}
 
 	}
@@ -196,6 +244,12 @@ public:
 		}
 	}
 
+	void makeSubsections() {
+		for (unsigned i = 0; i < size(); ++i) {
+			operator[](i).makeSubsections();
+		}
+	}
+
 	int foundIn(int cc_rating, wchar_t grade_code) {
 		int found = -1;
 		for (unsigned i = 0; i < size(); ++i) {
@@ -303,7 +357,7 @@ public:
 		}
 	}
 
-	int find(const std::wstring &code) {
+	int find(const std::wstring &code) const {
 		auto iter = map_id_to_index.find(code);
 		if (iter == map_id_to_index.end()) {
 			return -1;
@@ -313,7 +367,7 @@ public:
 		}
 	}
 
-	std::wstring findName(const std::wstring &code) {
+	std::wstring findName(const std::wstring &code) const {
 		int index = find(code);
 		if (index == -1) {
 			return L"";
@@ -323,7 +377,45 @@ public:
 		}
 	}
 
-	std::set<std::wstring> getPotentialSet(const std::wstring &partial) {
+	std::wstring findCodeFromSchool(const std::wstring &s, std::wofstream &normal_log) const {
+#if 1
+		if (s.length() == 3) {
+			std::wstring supper = toUpper(s);
+			int index = find(supper);
+			if (index != -1) {
+				return supper;
+			}
+		}
+
+		int best_index = 0;
+		int best_value = LevenshteinDistance(s, operator[](0).getSchoolName());
+		//normal_log << s << ". " << operator[](0).getSchoolName() << ". " << best_value << " " << best_index << std::endl;
+		for (int i = 1; i < size(); ++i) {
+			int nv = LevenshteinDistance(s, operator[](i).getSchoolName());
+			//normal_log << s << ". " << operator[](i).getSchoolName() << ". " << best_value << " " << best_index << " " << nv << std::endl;
+			if (nv < best_value) {
+				best_value = nv;
+				best_index = i;
+			}
+		}
+		return operator[](best_index).getSchoolCode();
+#else
+		auto fset = getPotentialSet(s);
+		if (fset.empty()) {
+			return L"";
+		}
+		else {
+			if (fset.size() == 1) {
+				return *fset.begin();
+			}
+			else {
+				return L"";
+			}
+		}
+#endif
+	}
+
+	std::set<std::wstring> getPotentialSet(const std::wstring &partial) const {
 		std::set<std::wstring> ret;
 		unsigned i;
 		for (i = 0; i < size(); ++i) {
@@ -335,9 +427,26 @@ public:
 	}
 };
 
+extern std::wstring REG_STR;
+extern std::wstring ADULT_STR;
+
+enum {
+	FIRST_NAME = 0,
+	LAST_NAME = 1,
+	ADULT_CHECK = 2,
+	STUDENT_SCHOOL = 3,
+	STUDENT_GRADE = 4,
+	STUDENT_NWSRS_ID = 5,
+	STUDENT_USCF_ID = 6,
+	REGISTERED = 7
+};
+
+wchar_t getGradeCode(const std::wstring &s);
+
 class ConstantContactEntry {
 protected:
 	std::vector<std::wstring> fields;
+	int * m_locations;
 	void valid(void) const {
 		if (fields.size() < 18) {
 			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
@@ -345,49 +454,54 @@ protected:
 		}
 	}
 public:
-	ConstantContactEntry(const std::vector<std::wstring> &f) : fields(f) { valid(); }
+	ConstantContactEntry(const std::vector<std::wstring> &f, int * locations) : fields(f), m_locations(locations) { valid(); }
 
-	std::wstring getFirstName(void)   const { valid(); return fields[0]; }
-	std::wstring getLastName(void)    const { valid(); return fields[1]; }
+	std::wstring getFirstName(void)   const { valid(); return fields[m_locations[FIRST_NAME]]; }
+	std::wstring getLastName(void)    const { valid(); return fields[m_locations[LAST_NAME]]; }
+	/*
 	std::wstring getEmail(void)       const { valid(); return fields[2]; }
-	bool didAdultCheck(void)         const { valid(); return !fields[10].empty(); }
-	std::wstring getSchool(void)      const { valid(); return fields[11]; }
-	std::wstring getGrade(void)       const { valid(); return fields[12]; }
-	std::wstring getSection(void)     const { valid(); return fields[13]; }
-	std::wstring getNwsrsId(void)     const { valid(); return fields[14]; }
-	std::wstring getNwsrsRating(void) const { valid(); return fields[15]; }
-	std::wstring getUscfId(void)      const { valid(); return fields[16]; }
-	std::wstring getUscfRating(void)  const { valid(); return fields[17]; }
+	std::wstring getPhone(void)       const { valid(); return fields[3]; }
+	std::wstring getAddress1(void)    const { valid(); return fields[4]; }
+	std::wstring getCity(void)        const { valid(); return fields[5]; }
+	std::wstring getState(void)       const { valid(); return fields[6]; }
+	std::wstring getZip(void)         const { valid(); return fields[7]; }
+	std::wstring getCellPhone(void)   const { valid(); return fields[8]; }
+	std::wstring getVolunteer(void)   const { valid(); return fields[9]; }
+	std::wstring getQuestions(void)   const { valid(); return fields[10]; }
+	*/
+	bool didAdultCheck(void)          const { valid(); return fields[m_locations[ADULT_CHECK]] == ADULT_STR; }
+	std::wstring getSchool(void)      const { valid(); return fields[m_locations[STUDENT_SCHOOL]]; }
+	std::wstring getGrade(void)       const { valid(); return fields[m_locations[STUDENT_GRADE]]; }
+	//std::wstring getSection(void)     const { valid(); return fields[13]; }
+	std::wstring getNwsrsId(void)     const { valid(); return fields[m_locations[STUDENT_NWSRS_ID]]; }
+	//std::wstring getNwsrsRating(void) const { valid(); return fields[m_locations[STUDENT_NWSRS_RATING]]; }
+	std::wstring getUscfId(void)      const { valid(); return fields[m_locations[STUDENT_USCF_ID]]; }
+	//std::wstring getUscfRating(void)  const { valid(); return fields[m_locations[STUDENT_USCF_RATING]]; }
+
+	bool isRegistered(void) const {
+		valid();
+		return fields[m_locations[REGISTERED]] == REG_STR;
+	}
 
 	bool isParent(void) const {
-		return didAdultCheck() && getSchool().empty() && getGrade().empty() && getSection().empty() && getNwsrsId().empty();
+		return didAdultCheck();
+//		return didAdultCheck() && getSchool().empty() && getGrade().empty() && getNwsrsId().empty();
 	}
 
 	bool isPlayer(void) const {
-		return !didAdultCheck() && !getSchool().empty() && !getGrade().empty() && !getSection().empty() && !getNwsrsId().empty();
+		return !didAdultCheck() && !getNwsrsId().empty();
 	}
 
 	wchar_t getGradeCode(void) const {
-		auto gg = getGrade();
-		if (gg == L"K") { return L'A'; }
-		if (gg == L"1") { return L'B'; }
-		if (gg == L"2") { return L'C'; }
-		if (gg == L"3") { return L'D'; }
-		if (gg == L"4") { return L'E'; }
-		if (gg == L"5") { return L'F'; }
-		if (gg == L"6") { return L'G'; }
-		if (gg == L"7") { return L'H'; }
-		if (gg == L"8") { return L'I'; }
-		if (gg == L"9") { return L'J'; }
-		if (gg == L"10") { return L'K'; }
-		if (gg == L"11") { return L'L'; }
-		if (gg == L"12") { return L'M'; }
-		MessageBox(NULL, _T("Don't know how to convert some grade string into grade code."), _T("ERROR"), MB_OK);
-		exit(-1);
+		return ::getGradeCode(getGrade());
 	}
 };
 
-std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename);
+std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename,
+	const std::map<std::wstring, unsigned> &nwsrs_map,
+	const std::map<std::wstring, unsigned> &uscf_map,
+	const std::vector<Player> &rated_players,
+	const AllCodes &school_codes);
 
 class CCCSwisssys2Doc : public CDocument
 {
@@ -408,10 +522,28 @@ public:
 public:
 
 	std::wstring getOutputLocation() const {
-		std::wstring copy = CStringToWString(constant_contact_file);
-		wchar_t *buf = _wcsdup(copy.c_str());
-		HRESULT res = PathCchRemoveFileSpec(buf, copy.length());
-		return std::wstring(buf);
+		if (constant_contact_file.IsEmpty()) {
+			std::wstring copy = CStringToWString(this->m_strPathName);
+			wchar_t *buf = _wcsdup(copy.c_str());
+//			HRESULT res = PathCchRemoveFileSpec(buf, copy.length());
+			HRESULT res = PathRemoveFileSpec(buf);
+			return std::wstring(buf);
+		}
+		else {
+			std::wstring copy = CStringToWString(constant_contact_file);
+			wchar_t *buf = _wcsdup(copy.c_str());
+//			HRESULT res = PathCchRemoveFileSpec(buf, copy.length());
+			HRESULT res = PathRemoveFileSpec(buf);
+			return std::wstring(buf);
+		}
+	}
+
+	std::wstring getFileBase() const {
+		CString cur_path = GetPathName();
+		if (cur_path.IsEmpty()) return L"";
+		std::wstring copy = CStringToWString(cur_path);
+		size_t lastindex = copy.find_last_of(L".");
+		return copy.substr(0, lastindex);
 	}
 
 // Overrides
@@ -442,3 +574,4 @@ protected:
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
 };
+

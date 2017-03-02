@@ -15,6 +15,7 @@ ManageRegistrations::ManageRegistrations(CCCSwisssys2Doc *doc, CWnd* pParent /*=
 	: CDialogEx(IDD_MANAGE_REGISTRATIONS, pParent)
 {
 	pDoc = doc;
+	inProcessingChange = false;
 }
 
 ManageRegistrations::~ManageRegistrations()
@@ -113,6 +114,13 @@ void addToList(CListCtrl &the_list,
 
 void ManageRegistrations::OnAnyChange()
 {
+	if (inProcessingChange) {
+		return;
+	}
+	else {
+		inProcessingChange = true;
+	}
+
 	PossiblePlayers.SetSelectionMark(-1);
 	PossiblePlayers.DeleteAllItems();
 
@@ -147,7 +155,10 @@ void ManageRegistrations::OnAnyChange()
 	}
 
 	int start, end;
-	if (s_last.length() == 0) return;
+	if (s_last.length() == 0) {
+		inProcessingChange = false;
+		return;
+	}
 
 	wchar_t s = toupper(s_last[0]);
 	start = ending_index[s - 'A'] + 1;
@@ -189,6 +200,8 @@ void ManageRegistrations::OnAnyChange()
 				i);
 		}
 	}
+
+	inProcessingChange = false;
 }
 
 void ManageRegistrations::OnEnChangeEdit1()
@@ -254,6 +267,93 @@ void ManageRegistrations::OnEnChangeEdit5()
 void ManageRegistrations::OnBnClickedButton1()
 {
 	// TODO: Add your control notification handler code here
+	CString cs_last, cs_first, cs_id, cs_school_code, cs_school_name;
+
+	LastNameEdit.GetWindowText(cs_last);
+	FirstNameEdit.GetWindowText(cs_first);
+	NWSRS_ID_Edit.GetWindowText(cs_id);
+	school_code_edit.GetWindowText(cs_school_code);
+	school_name_edit.GetWindowText(cs_school_name);
+	int grade_sel = grade_combo_box.GetCurSel();
+
+	std::wstring s_last, s_first, s_id, s_school_code, s_school_name;
+	s_last = CStringToWString(cs_last);
+	s_first = CStringToWString(cs_first);
+	s_id = CStringToWString(cs_id);
+	s_school_code = CStringToWString(cs_school_code);
+	s_school_name = CStringToWString(cs_school_name);
+
+	std::set<std::wstring> code_set;
+	if (!s_school_name.empty()) {
+		code_set = pDoc->school_codes.getPotentialSet(s_school_name);
+		if (code_set.size() == 1) {
+			auto first = code_set.begin();
+			CString cs_code(first->c_str());
+			school_code_edit.SetWindowTextW(cs_code);
+		}
+		else if (code_set.size() == 0) {
+			cs_school_code = L"";
+			school_code_edit.SetWindowTextW(cs_school_code);
+		}
+	}
+
+	int start, end;
+	bool found_possibility = false;
+	if (s_last.length() != 0) {
+		wchar_t s = toupper(s_last[0]);
+		start = ending_index[s - 'A'] + 1;
+		end = ending_index[s - 'A' + 1];
+
+		int entry = 0;
+
+		int i;
+		for (i = start; i <= end; ++i) {
+			if (insensitiveCompare(rated_players[i].ws_last, s_last) &&
+				findStringIC(rated_players[i].ws_first, s_first) &&
+				findStringIC(rated_players[i].ws_id, s_id) &&
+				findStringIC(rated_players[i].ws_school_code, s_school_code)) {
+
+				if (grade_sel > 0) {
+					wchar_t sel_grade = 'A' + grade_sel - 1;
+					if (rated_players[i].grade != sel_grade) {
+						continue;
+					}
+				}
+
+				if (!code_set.empty()) {
+					if (code_set.find(rated_players[i].ws_school_code) == code_set.end()) {
+						continue;
+					}
+				}
+
+				found_possibility = true;
+			}
+		}
+	}
+
+	if (found_possibility) {
+		MessageBox(_T("Possible matches with existing players.  Please double-click one of them or continue entering complete information for new player."), _T("Error"));
+		return;
+	}
+
+	//CString cs_last, cs_first, cs_id, cs_school_code, cs_school_name;
+
+	if (cs_last.IsEmpty()) {
+		MessageBox(_T("Please enter a last name and try again."), _T("Error"));
+		return;
+	}
+	if (cs_first.IsEmpty()) {
+		MessageBox(_T("Please enter a first name and try again."), _T("Error"));
+		return;
+	}
+	if (cs_school_code.IsEmpty()) {
+		MessageBox(_T("Please enter a school code and try again."), _T("Error"));
+		return;
+	}
+	if (grade_sel <= 0) {
+		MessageBox(_T("Please enter the new player's grade and try again."), _T("Error"));
+		return;
+	}
 }
 
 
@@ -414,7 +514,7 @@ BOOL ManageRegistrations::OnInitDialog()
 		if (!infile.eof()) {
 			std::wstring ws_last = p.last_name;
 			std::wstring ws_first = p.first_name;
-			std::wstring ws_id = p.id;
+			std::wstring ws_id = p.school_code + p.id;
 			std::wstring ws_school_code = p.school_code;
 			std::wstring ws_school_name = pDoc->school_codes.findName(ws_school_code);
 			std::wstring ws_uscf_id = p.uscf_id;

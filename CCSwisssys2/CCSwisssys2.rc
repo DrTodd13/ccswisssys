@@ -68,7 +68,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\CCSwisssys2.ico"
+IDR_MAINFRAME           ICON                    "res\\Artua-Mac-Chess.ico"
 
 IDR_CCSwisssys2TYPE     ICON                    "res\\CCSwisssys2Doc.ico"
 
@@ -178,7 +178,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
 
-IDD_CCSWISSSYS2_FORM DIALOGEX 0, 0, 569, 438
+IDD_CCSWISSSYS2_FORM DIALOGEX 0, 0, 569, 406
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
@@ -196,11 +196,12 @@ BEGIN
     CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_ARROWKEYS,486,212,10,14
     PUSHBUTTON      "Create Sections from Registration and Ratings Data!",IDC_BUTTON6,19,237,455,14
     CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER,19,256,455,137
-    PUSHBUTTON      "Create SwissSys Files",IDC_BUTTON7,486,298,57,50,BS_MULTILINE
+    PUSHBUTTON      "Create SwissSys Club Files for Import",IDC_BUTTON7,486,272,57,50,BS_MULTILINE
     LTEXT           "School Codes File",IDC_STATIC,20,75,56,8
     EDITTEXT        IDC_EDIT3,18,88,459,14,ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "Browse",IDC_BUTTON8,486,87,50,14
     PUSHBUTTON      "Manage Additional Registrations not in Constant Contact",IDC_BUTTON9,17,112,458,14
+    PUSHBUTTON      "Create Swisssys Tournament",IDC_BUTTON10,487,328,56,48,BS_MULTILINE
 END
 
 IDD_SECTION_EDITOR DIALOGEX 0, 0, 309, 176
@@ -213,15 +214,17 @@ BEGIN
     LTEXT           "Section Name",IDC_STATIC,14,15,46,8
     EDITTEXT        IDC_EDIT1,73,12,196,14,ES_AUTOHSCROLL
     LTEXT           "Minimum Rating",IDC_STATIC,15,34,54,8
-    EDITTEXT        IDC_EDIT2,73,31,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,73,31,40,14,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Maximum Rating",IDC_STATIC,15,51,53,8
-    EDITTEXT        IDC_EDIT3,73,49,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT3,73,49,40,14,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Minimum Grade",IDC_STATIC,14,69,55,8
     LTEXT           "Maximum Grade",IDC_STATIC,15,87,52,8
     LTEXT           "Section Type",IDC_STATIC,14,105,47,8
     COMBOBOX        IDC_COMBO1,73,102,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO2,73,67,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO3,73,84,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Number of Subsections (Split a large section into multiple sub-sections by distributing players round-robin by rating.)",IDC_STATIC,14,123,168,29
+    COMBOBOX        IDC_COMBO4,184,121,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_MANAGE_REGISTRATIONS DIALOGEX 0, 0, 493, 384
@@ -310,7 +313,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 562
         TOPMARGIN, 7
-        BOTTOMMARGIN, 431
+        BOTTOMMARGIN, 399
     END
 
     IDD_SECTION_EDITOR, DIALOG
