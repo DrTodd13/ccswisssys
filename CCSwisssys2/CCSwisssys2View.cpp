@@ -15,6 +15,7 @@
 #include <fstream>
 #include <algorithm>
 #include "ManageRegistrations.h"
+#include "SchoolSelector.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -455,6 +456,10 @@ std::wstring CStringToWString(const CString &cs) {
 	return std::wstring(temp1);
 }
 
+CString WStringToCString(const std::wstring &ws) {
+	return CString(ws.c_str());
+}
+
 std::wstring intToString(unsigned v) {
 	std::wstringstream ss;
 	ss << v;
@@ -526,6 +531,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	std::wifstream infile(pDoc->ratings_file);
 	Player p;
 	std::map<std::wstring, unsigned> nwsrs_map;
+	std::map<std::wstring, unsigned> nwsrs_four_map;
 	std::map<std::wstring, unsigned> uscf_map;
 	std::vector<Player> rated_players;
 
@@ -536,6 +542,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 		if (!infile.eof()) {
 			rated_players.push_back(p);
 			nwsrs_map.insert(std::pair<std::wstring, unsigned>(p.getFullId(), player_index));
+			nwsrs_four_map.insert(std::pair<std::wstring, unsigned>(p.id, player_index));
 			if (!p.uscf_id.empty()) {
 				uscf_map.insert(std::pair<std::wstring, unsigned>(p.uscf_id, player_index));
 			}
@@ -557,7 +564,12 @@ void CCCSwisssys2View::OnBnClickedButton6()
 
 	if (use_cc) {
 		std::wstring ccsstr = CStringToWString(pDoc->constant_contact_file);
-		auto entries = load_constant_contact_file(ccsstr, nwsrs_map, uscf_map, rated_players, pDoc->school_codes);
+		auto entries = load_constant_contact_file(ccsstr, nwsrs_map, uscf_map, rated_players, pDoc->school_codes, normal_log);
+		if (entries.size() == 0) {
+			MessageBox(_T("No players loaded from constant contact file."), _T("ERROR"));
+			return;
+		}
+
 
 		unsigned num_parents = 0, num_players = 0;
 
@@ -610,8 +622,12 @@ void CCCSwisssys2View::OnBnClickedButton6()
 				full_id = toUpper(full_id);
 				//given_rating = toUpper(given_rating);
 
-				if (upper_last == L"BEAUCHET") {
-					upper_last = L"BEAUCHET";
+				if (upper_first == L"TANISH") {
+					upper_first = L"TANISH";
+				}
+
+				if (full_id == L"NONE" || (full_id.size() != 0 && full_id.size() != 4 && full_id.size() != 8)) {
+					full_id = L"";
 				}
 
 				std::wstring last_four_id;
@@ -626,12 +642,45 @@ void CCCSwisssys2View::OnBnClickedButton6()
 
 				if (school.length() == 3) {
 					school_code = toUpper(school);
-					full_id.replace(0, 3, school_code); // Update school code in their ID.
+					if (full_id.length() == 8) {
+						full_id.replace(0, 3, school_code); // Update school code in their ID.
+					}
 				}
-				school = L"";
 
-				if (school == L"" && school_code != L"") {
+				if (school_code != L"") {
 					school = pDoc->school_codes.findName(school_code);
+				}
+				else {
+					school_code = pDoc->school_codes.findCodeFromSchoolExact(school);
+					if (school_code == L"") {
+						school_code = pDoc->school_codes.findCodeFromSchoolExactNoSchool(school);
+						if (school_code == L"") {
+							auto prev_iter = pDoc->saved_school_corrections.find(school);
+							if (prev_iter != pDoc->saved_school_corrections.end()) {
+								school_code = prev_iter->second;
+								school = pDoc->school_codes.findName(school_code);
+							}
+							else {
+								if (school == L"") {
+									error_condition = true;
+									normal_log << "ERROR: no school or NWSRS ID entered for player " << last_name << " " << first_name << " " << std::endl;
+									continue;
+								}
+								else {
+									SchoolSelector ss_dialog(pDoc, school, school_code);
+
+									if (ss_dialog.DoModal() == IDOK) {
+										school = pDoc->school_codes.findName(school_code);
+									}
+									else {
+										error_condition = true;
+										normal_log << "ERROR: no school code correction entered for " << school << " for player " << last_name << " " << first_name << " " << std::endl;
+										continue;
+									}
+								}
+							}
+						}
+					}
 				}
 
 				CString cs_full_id = CString(full_id.c_str());
@@ -652,16 +701,18 @@ void CCCSwisssys2View::OnBnClickedButton6()
 						if (exact_match != -1) {
 							warning_condition = true;
 							normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
+
+							full_id = rated_players[exact_match].getFullId();
+							nwsrs_rating = rated_players[exact_match].nwsrs_rating;
 						}
-						std::wstring school_code = pDoc->school_codes.findCodeFromSchool(school, normal_log);
-						if (school_code == L"") {
+						else {
+							full_id = school_code + grade_code;
+							cc_rating = (grade_code - 'A') * 100;
+							nwsrs_rating = cc_rating;
+
 							warning_condition = true;
-							normal_log << "WARNING: a match for school name " << school << " was not found.  Using a generic school code instead.  Fix this during reporting process or in swisssys for player " << last_name << " " << first_name << " " << grade_code << " " << std::endl;
-							school_code = L"XXX";
+							normal_log << "INFO: new tournament player without a previous ID " << first_name << " " << last_name << ", grade: " << grade_code << ", school: " << school << std::endl;
 						}
-						full_id = school_code + grade_code + L"XXXX";
-						cc_rating = (grade_code - 'A') * 100;
-						nwsrs_rating = cc_rating;
 					}
 					else {
 						// They have an ID but the exact ID wasn't found in the list.  So, search by name
@@ -719,6 +770,19 @@ void CCCSwisssys2View::OnBnClickedButton6()
 			}
 		}
 		pDoc->sections.makeSubsections();
+	}
+
+	if (pDoc->school_codes.m_new_schools.size() > 0) {
+		warning_condition = true;
+		normal_log << "\nNew school codes created for this tournament.  New school information is below:" << std::endl;
+		for (i = 0; i < pDoc->school_codes.m_new_schools.size(); ++i) {
+			normal_log << pDoc->school_codes.m_new_schools[i].getSchoolCode() << "," <<
+				pDoc->school_codes.m_new_schools[i].getSchoolName() << "," <<
+				pDoc->school_codes.m_new_schools[i].getSchoolType() << "," <<
+				pDoc->school_codes.m_new_schools[i].getSchoolCity() << "," <<
+				pDoc->school_codes.m_new_schools[i].getSchoolState() << std::endl;
+		}
+		normal_log << std::endl;
 	}
 
 	for (i = 0; i < pDoc->mrplayers.size(); ++i) {

@@ -61,6 +61,26 @@ std::wstring ADULT_STR = std::wstring(L"Adult Contact");
 
 // CCCSwisssys2Doc serialization
 
+void Serialize(std::map<std::wstring, std::wstring> &the_map, CArchive& ar) {
+	if (ar.IsStoring())
+	{
+		ar << the_map.size();
+		for (auto iter = the_map.begin(); iter != the_map.end(); ++iter) {
+			ar << WStringToCString(iter->first) << WStringToCString(iter->second);
+		}
+	}
+	else
+	{
+		size_t the_size;
+		ar >> the_size;
+		for (size_t i = 0; i < the_size; ++i) {
+			CString a, b;
+			ar >> a >> b;
+			the_map.insert(std::pair<std::wstring, std::wstring>(CStringToWString(a),CStringToWString(b)));
+		}
+	}
+}
+
 void CCCSwisssys2Doc::Serialize(CArchive& ar)
 {
 	if (ar.IsStoring())
@@ -70,15 +90,31 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		ar << school_code_file;
 		sections.Serialize(ar);
 		mrplayers.Serialize(ar);
+		::Serialize(saved_school_corrections, ar);
+		school_codes.Serialize(ar);
 	}
 	else
 	{
+		sections.clear();
+		mrplayers.clear();
+
 		ar >> ratings_file;
 		ar >> constant_contact_file;
 		ar >> school_code_file;
 		sections.Serialize(ar);
 		mrplayers.Serialize(ar);
+		::Serialize(saved_school_corrections, ar);
+		school_codes.Serialize(ar);
 	}
+}
+
+std::wstring removeSubstring(const std::wstring &in, const std::wstring &pattern) {
+	std::wstring ret = in;
+	std::string::size_type i = ret.find(pattern);
+	if (i != std::string::npos) {
+		ret.erase(i, pattern.length());
+	}
+	return ret;
 }
 
 CString getGradeString(wchar_t grade) {
@@ -241,28 +277,68 @@ public:
 		if (idres == nwsrs_map.end()) return false;
 
 		if (school_codes.find(field) != -1) return true;
-		// FIX FIX FIX...could try to do something here about searching for school name.
+		if (school_codes.findCodeFromSchoolExact(field) != L"") return true;
+		// FIX FIX FIX...could try to do something here about searching for a very close school name match.
 		return false;
 	}
 };
 
 wchar_t getGradeCode(const std::wstring &s) {
-	if (s == L"K") { return L'A'; }
-	if (s == L"k") { return L'A'; }
-	if (s == L"1") { return L'B'; }
-	if (s == L"2") { return L'C'; }
-	if (s == L"3") { return L'D'; }
-	if (s == L"4") { return L'E'; }
-	if (s == L"5") { return L'F'; }
-	if (s == L"6") { return L'G'; }
-	if (s == L"7") { return L'H'; }
-	if (s == L"8") { return L'I'; }
-	if (s == L"9") { return L'J'; }
-	if (s == L"10") { return L'K'; }
-	if (s == L"11") { return L'L'; }
-	if (s == L"12") { return L'M'; }
+	std::wstring up = toUpper(s);
+
+	if (up == L"K") { return L'A'; }
+	if (up == L"KINDERGARTEN") { return L'A'; }
+	if (up == L"1") { return L'B'; }
+	if (up == L"1ST") { return L'B'; }
+	if (up == L"FIRST") { return L'B'; }
+	if (up == L"2") { return L'C'; }
+	if (up == L"2ND") { return L'C'; }
+	if (up == L"SECOND") { return L'C'; }
+	if (up == L"3") { return L'D'; }
+	if (up == L"3RD") { return L'D'; }
+	if (up == L"THIRD") { return L'D'; }
+	if (up == L"4") { return L'E'; }
+	if (up == L"4TH") { return L'E'; }
+	if (up == L"FOURTH") { return L'E'; }
+	if (up == L"5") { return L'F'; }
+	if (up == L"5TH") { return L'F'; }
+	if (up == L"FIFTH") { return L'F'; }
+	if (up == L"6") { return L'G'; }
+	if (up == L"6TH") { return L'G'; }
+	if (up == L"SIXTH") { return L'G'; }
+	if (up == L"7") { return L'H'; }
+	if (up == L"7TH") { return L'H'; }
+	if (up == L"SEVENTH") { return L'H'; }
+	if (up == L"8") { return L'I'; }
+	if (up == L"8TH") { return L'I'; }
+	if (up == L"EIGHTH") { return L'I'; }
+	if (up == L"9") { return L'J'; }
+	if (up == L"9TH") { return L'J'; }
+	if (up == L"NINTH") { return L'J'; }
+	if (up == L"10") { return L'K'; }
+	if (up == L"10TH") { return L'K'; }
+	if (up == L"TENTH") { return L'K'; }
+	if (up == L"11") { return L'L'; }
+	if (up == L"11TH") { return L'L'; }
+	if (up == L"ELEVENTH") { return L'L'; }
+	if (up == L"12") { return L'M'; }
+	if (up == L"12TH") { return L'M'; }
+	if (up == L"TWELTH") { return L'M'; }
+	if (up.size() > 1) {
+		std::wstring first_char = up.substr(0, up.length() - 1);
+		return getGradeCode(first_char);
+	}
 	MessageBox(NULL, _T("Don't know how to convert some grade string into grade code."), _T("ERROR"), MB_OK);
 	exit(-1);
+}
+
+bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_player_fields) {
+	for (auto iter = empty_player_fields->begin(); iter != empty_player_fields->end(); ++iter) {
+		if (fields[*iter] != L"") {
+			return true;
+		}
+	}
+	return false;
 }
 
 /*
@@ -270,16 +346,24 @@ Scans the whole constant contact information for fields having exactly the text 
 If only one such field exists then it becomes the field.  If there are more than one then if one predominates the other
 by like 95% then it becomes the field but a warning should be issued.
 */
-int findFieldWithOperator(std::vector< std::vector<std::wstring> > &cc, const FindFieldOperator &matcher, int regcheck = -1, int adultcheck = -1, double cutoff=0.95) {
+int findFieldWithOperator(
+	std::wofstream &normal_log,
+	std::vector< std::vector<std::wstring> > &cc, 
+	const FindFieldOperator &matcher, 
+	int regcheck = -1, 
+	std::set<int> *empty_player_fields = NULL, 
+	double cutoff=0.95) {
+
 	unsigned i,j;
 	std::map<int, int> register_fields;
 
 	for (i = 0; i < cc.size(); ++i) {
-		for (j = 0; j < cc[i].size(); ++j) {
-			if (regcheck != -1 && cc[i][regcheck] != REG_STR) continue;
-			if (adultcheck != -1 && cc[i][adultcheck] == ADULT_STR) continue;
+		if (regcheck != -1 && cc[i][regcheck] != REG_STR) continue;
+		if (empty_player_fields != NULL && doAdultCheck(cc[i], empty_player_fields)) continue;
 
+		for (j = 0; j < cc[i].size(); ++j) {
 			if (matcher(cc[i][j], cc[i])) {
+//				normal_log << "findFieldWithOperator match " << cc[i][j] << " " << j << " for player " << cc[i][0] << " " << cc[i][1] << std::endl;
 				auto rfiter = register_fields.find(j);
 				if (rfiter == register_fields.end()) {
 					register_fields.insert(std::pair<int, int>(j, 1));
@@ -293,21 +377,60 @@ int findFieldWithOperator(std::vector< std::vector<std::wstring> > &cc, const Fi
 
 	int count = 0;
 	for (auto iter = register_fields.begin(); iter != register_fields.end(); ++iter) {
+//		normal_log << "findFieldWithOperator found " << iter->second << " possibilities for field " << iter->first << std::endl;
 		count += iter->second;
 	}
 	for (auto iter = register_fields.begin(); iter != register_fields.end(); ++iter) {
-		if ((iter->second / (double)count) > cutoff) {
+		double ratio = iter->second / (double)count;
+//		normal_log << "findFieldWithOperator ratio " << ratio << " for field " << iter->first << std::endl;
+		if (ratio > cutoff) {
 			return iter->first;
 		}
 	}
 	return -1;
 }
 
+std::set<int> findEmptyPlayerFields(std::vector< std::vector<std::wstring> > &cc, 
+	const std::map<std::wstring, unsigned> &nwsrs_map, 
+	int regcheck, int nwsrsid, std::wofstream &normal_log) {
+
+	unsigned i, j;
+	std::set<int> ret;
+
+    // Add all fields except registration and nwsrs id as potential all empty for players.
+	for (i = 0; i < cc[0].size(); ++i) {
+		if (i != regcheck && i != nwsrsid) {
+			ret.insert(i);
+		}
+	}
+
+	std::map<int, int> register_fields;
+
+	for (i = 0; i < cc.size(); ++i) {
+		if (cc[i][regcheck] != REG_STR) continue;
+		//normal_log << "checking " << i << " " << cc[i][0] << " " << cc[i][1] << " " << cc[i][nwsrsid] << std::endl;
+		if (nwsrs_map.find(cc[i][nwsrsid]) == nwsrs_map.end()) continue;
+		//normal_log << "is a player" << std::endl;
+
+		// For every field for registered players, if the field is not empty then remove it from the
+		// set of fields that are always empty for players.
+		for (j = 0; j < cc[i].size(); ++j) {
+			if (cc[i][j] != L"") {
+				//normal_log << "erase " << i << " " << j << cc[i][0] << " " << cc[i][1] << " [" << cc[i][j] << "]" << std::endl;
+				ret.erase(j);
+			}
+		}
+	}
+
+	return ret;
+}
+
 std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename,
 	const std::map<std::wstring, unsigned> &nwsrs_map,
 	const std::map<std::wstring, unsigned> &uscf_map,
 	const std::vector<Player> &rated_players,
-	const AllCodes &school_codes) {
+	const AllCodes &school_codes,
+	std::wofstream &normal_log) {
 
 	auto ccret = load_csvw_file(filename, true);
 
@@ -317,19 +440,54 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 		dynamic_locations[i] = -1;
 	}
 
-	dynamic_locations[REGISTERED] = findFieldWithOperator(ccret, FindFieldByString(std::wstring(REG_STR)));
-	dynamic_locations[ADULT_CHECK] = findFieldWithOperator(ccret, FindFieldByString(std::wstring(ADULT_STR)), dynamic_locations[REGISTERED]);
-	dynamic_locations[STUDENT_NWSRS_ID] = findFieldWithOperator(ccret, FindNwsrsIdField(nwsrs_map), dynamic_locations[REGISTERED], dynamic_locations[ADULT_CHECK]);
-	dynamic_locations[FIRST_NAME] = findFieldWithOperator(ccret, FindFirstName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], dynamic_locations[ADULT_CHECK], 0.5);
-	dynamic_locations[LAST_NAME] = findFieldWithOperator(ccret, FindLastName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], dynamic_locations[ADULT_CHECK], 0.5);
-	dynamic_locations[STUDENT_USCF_ID] = findFieldWithOperator(ccret, FindUscfId(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], dynamic_locations[ADULT_CHECK]);
-	dynamic_locations[STUDENT_GRADE] = findFieldWithOperator(ccret, FindGradeField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], dynamic_locations[ADULT_CHECK]);
-	dynamic_locations[STUDENT_SCHOOL] = findFieldWithOperator(ccret, FindSchoolField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID], school_codes), dynamic_locations[REGISTERED], dynamic_locations[ADULT_CHECK]);
-
 	std::vector< ConstantContactEntry > ret;
+
+	dynamic_locations[REGISTERED] = findFieldWithOperator(normal_log, ccret, FindFieldByString(std::wstring(REG_STR)));
+	if (dynamic_locations[REGISTERED] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect REGISTERED field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+	dynamic_locations[STUDENT_NWSRS_ID] = findFieldWithOperator(normal_log, ccret, FindNwsrsIdField(nwsrs_map), dynamic_locations[REGISTERED]);
+	if (dynamic_locations[STUDENT_NWSRS_ID] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect NWSRS ID field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	std::set<int> *empty_player_fields = new std::set<int>;
+	*empty_player_fields = findEmptyPlayerFields(ccret, nwsrs_map, dynamic_locations[REGISTERED], dynamic_locations[STUDENT_NWSRS_ID], normal_log);
+//	for (auto iter = empty_player_fields->begin(); iter != empty_player_fields->end(); ++iter) {
+//		normal_log << "Empty player field " << *iter << std::endl;
+//	}
+
+	//	dynamic_locations[ADULT_CHECK] = findFieldWithOperator(ccret, FindFieldByString(std::wstring(ADULT_STR)), dynamic_locations[REGISTERED]);
+	dynamic_locations[FIRST_NAME] = findFieldWithOperator(normal_log, ccret, FindFirstName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.5);
+	if (dynamic_locations[FIRST_NAME] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect FIRST NAME field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[LAST_NAME] = findFieldWithOperator(normal_log, ccret, FindLastName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.5);
+	if (dynamic_locations[LAST_NAME] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect LAST NAME field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[STUDENT_USCF_ID] = findFieldWithOperator(normal_log, ccret, FindUscfId(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields);
+	dynamic_locations[STUDENT_GRADE] = findFieldWithOperator(normal_log, ccret, FindGradeField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields);
+	if (dynamic_locations[STUDENT_GRADE] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect GRADE field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[STUDENT_SCHOOL] = findFieldWithOperator(normal_log, ccret, FindSchoolField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID], school_codes), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
+	if (dynamic_locations[STUDENT_SCHOOL] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect SCHOOL field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
 	for (i = 0; i < ccret.size(); ++i) {
 		if (ccret[i][dynamic_locations[REGISTERED]] == REG_STR) {
-			ret.push_back(ConstantContactEntry(ccret[i], dynamic_locations));
+			ret.push_back(ConstantContactEntry(ccret[i], dynamic_locations, empty_player_fields));
 		}
 	}
 	return ret;

@@ -20,6 +20,7 @@ typedef int SECTION_TYPE;
 CString getGradeString(wchar_t grade);
 CString getSectionTypeString(int type);
 std::wstring CStringToWString(const CString &cs);
+CString WStringToCString(const std::wstring &ws);
 int LevenshteinDistance(const std::wstring &s, const std::wstring &t);
 std::wstring toUpper(const std::wstring &s);
 
@@ -119,7 +120,6 @@ public:
 		{
 			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections;
 		}
-
 	}
 
 	bool rating_conflict(const Section &other) const {
@@ -318,24 +318,83 @@ public:
 38 ...
 */
 
+std::wstring removeSubstring(const std::wstring &in, const std::wstring &pattern);
+
 class AllCodesEntry {
 protected:
 	std::vector<std::wstring> fields;
 	void valid(void) const {
 		if (fields.size() < 5) {
-			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
 			exit(-1);
 		}
 	}
 
+	void internalCstr(const std::vector<std::wstring> &f) {
+		fields = f;
+		valid();
+		std::wstring snup = toUpper(getSchoolName());
+		fields.push_back(snup);
+		fields.push_back(removeSubstring(snup, L" SCHOOL"));
+	}
+
 public:
-	AllCodesEntry(const std::vector<std::wstring> &f) : fields(f) { valid(); }
+	AllCodesEntry() {}
+
+	AllCodesEntry(const std::vector<std::wstring> &f) { 
+		internalCstr(f);
+	}
+
+	AllCodesEntry(
+		const std::wstring &code, 
+		const std::wstring &name, 
+		const std::wstring &type, 
+		const std::wstring &city, 
+		const std::wstring &state) {
+
+		std::vector<std::wstring> fields;
+		fields.push_back(code);
+		fields.push_back(name);
+		fields.push_back(type);
+		fields.push_back(city);
+		fields.push_back(state);
+		internalCstr(fields);
+	}
+
+	virtual void Serialize(CArchive& ar) {
+		if (ar.IsStoring())
+		{
+			for (unsigned i = 0; i < 5; ++i) {
+				ar << WStringToCString(fields[i]);
+			}
+		}
+		else
+		{
+			std::vector<std::wstring> new_fields;
+
+			for (unsigned i = 0; i < 5; ++i) {
+				CString one;
+				ar >> one;
+				new_fields.push_back(CStringToWString(one));
+			}
+
+			internalCstr(new_fields);
+		}
+	}
 
 	std::wstring getSchoolCode(void) const { return fields[0]; }
 	std::wstring getSchoolName(void) const { return fields[1]; }
+	std::wstring getSchoolNameUpper(void) const { return fields[5]; }
+	std::wstring getSchoolNameUpperNoSchool(void) const { return fields[6]; }
 	std::wstring getSchoolType(void) const { return fields[2]; }
 	std::wstring getSchoolCity(void) const { return fields[3]; }
 	std::wstring getSchoolState(void) const { return fields[4]; }
+};
+
+class AllCodesEntryCodeCompare {
+public:
+	bool operator()(const AllCodesEntry &a, const AllCodesEntry &b) {
+		return a.getSchoolCode() < b.getSchoolCode();
+	}
 };
 
 bool findStringIC(const std::wstring & strHaystack, const std::wstring & strNeedle);
@@ -344,8 +403,23 @@ class AllCodes : public std::vector<AllCodesEntry> {
 protected:
 	std::map<std::wstring, unsigned> map_id_to_index;
 
+	void sortAndIndex() {
+		std::sort(begin(), end(), AllCodesEntryCodeCompare());
+
+		map_id_to_index.clear();
+		for (size_t i = 0; i < size(); ++i) {
+			map_id_to_index.insert(std::pair<std::wstring, unsigned>(operator[](i).getSchoolCode(), i));
+		}
+	}
+
 public:
+	SerializedVector<AllCodesEntry> m_new_schools;
+
 	AllCodes(void) {}
+
+	virtual void Serialize(CArchive& ar) {
+		m_new_schools.Serialize(ar);
+	}
 
 	void Load(const std::wstring filename) {
 		auto ccret = load_csvw_file(filename, true);
@@ -355,6 +429,23 @@ public:
 			push_back(AllCodesEntry(ccret[i]));
 			map_id_to_index.insert(std::pair<std::wstring, unsigned>(ccret[i][0], i));
 		}
+
+		for (i = 0; i < m_new_schools.size(); ++i) {
+			if (find(m_new_schools[i].getSchoolCode()) != -1) {
+				m_new_schools.clear();
+			}
+			else {
+				push_back(m_new_schools[i]);
+			}
+		}
+
+		sortAndIndex();
+	}
+
+	void addSchool(const AllCodesEntry &entry) {
+		m_new_schools.push_back(entry);
+		push_back(entry);
+		sortAndIndex();
 	}
 
 	int find(const std::wstring &code) const {
@@ -375,6 +466,45 @@ public:
 		else {
 			return operator[](index).getSchoolName();
 		}
+	}
+
+	// See if there is exactly one exact match for the school in the list.
+	std::wstring findCodeFromSchoolExact(const std::wstring &s) const {
+		std::wstring sup = toUpper(s);
+
+		std::wstring ret = L"";
+
+		for (int i = 1; i < size(); ++i) {
+			if (sup == operator[](i).getSchoolNameUpper()) {
+				if (ret == L"") {
+					ret = operator[](i).getSchoolCode();
+				}
+				else {
+					return L"";
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	std::wstring findCodeFromSchoolExactNoSchool(const std::wstring &s) const {
+		std::wstring sup = toUpper(s);
+
+		std::wstring ret = L"";
+
+		for (int i = 1; i < size(); ++i) {
+			if (sup == operator[](i).getSchoolNameUpperNoSchool()) {
+				if (ret == L"") {
+					ret = operator[](i).getSchoolCode();
+				}
+				else {
+					return L"";
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	std::wstring findCodeFromSchool(const std::wstring &s, std::wofstream &normal_log) const {
@@ -433,28 +563,31 @@ extern std::wstring ADULT_STR;
 enum {
 	FIRST_NAME = 0,
 	LAST_NAME = 1,
-	ADULT_CHECK = 2,
-	STUDENT_SCHOOL = 3,
-	STUDENT_GRADE = 4,
-	STUDENT_NWSRS_ID = 5,
-	STUDENT_USCF_ID = 6,
-	REGISTERED = 7
+//	ADULT_CHECK = 2,
+	STUDENT_SCHOOL = 2,
+	STUDENT_GRADE = 3,
+	STUDENT_NWSRS_ID = 4,
+	STUDENT_USCF_ID = 5,
+	REGISTERED = 6
 };
 
 wchar_t getGradeCode(const std::wstring &s);
+
+bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_player_fields);
 
 class ConstantContactEntry {
 protected:
 	std::vector<std::wstring> fields;
 	int * m_locations;
+	std::set<int> *m_empty_player_fields;
 	void valid(void) const {
-		if (fields.size() < 18) {
+		//if (fields.size() < 18) {
 			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
-			exit(-1);
-		}
+		//	exit(-1);
+		//}
 	}
 public:
-	ConstantContactEntry(const std::vector<std::wstring> &f, int * locations) : fields(f), m_locations(locations) { valid(); }
+	ConstantContactEntry(const std::vector<std::wstring> &f, int * locations, std::set<int> * epf) : fields(f), m_locations(locations), m_empty_player_fields(epf) { valid(); }
 
 	std::wstring getFirstName(void)   const { valid(); return fields[m_locations[FIRST_NAME]]; }
 	std::wstring getLastName(void)    const { valid(); return fields[m_locations[LAST_NAME]]; }
@@ -469,13 +602,23 @@ public:
 	std::wstring getVolunteer(void)   const { valid(); return fields[9]; }
 	std::wstring getQuestions(void)   const { valid(); return fields[10]; }
 	*/
-	bool didAdultCheck(void)          const { valid(); return fields[m_locations[ADULT_CHECK]] == ADULT_STR; }
+	//bool didAdultCheck(void)          const { valid(); return fields[m_locations[ADULT_CHECK]] == ADULT_STR; }
+	bool didAdultCheck(void)          const { 
+		valid(); 
+		return doAdultCheck(fields, m_empty_player_fields);
+	}
 	std::wstring getSchool(void)      const { valid(); return fields[m_locations[STUDENT_SCHOOL]]; }
 	std::wstring getGrade(void)       const { valid(); return fields[m_locations[STUDENT_GRADE]]; }
 	//std::wstring getSection(void)     const { valid(); return fields[13]; }
 	std::wstring getNwsrsId(void)     const { valid(); return fields[m_locations[STUDENT_NWSRS_ID]]; }
 	//std::wstring getNwsrsRating(void) const { valid(); return fields[m_locations[STUDENT_NWSRS_RATING]]; }
-	std::wstring getUscfId(void)      const { valid(); return fields[m_locations[STUDENT_USCF_ID]]; }
+	std::wstring getUscfId(void)      const { 
+		valid(); 
+		if (m_locations[STUDENT_USCF_ID] >= 0) {
+			return fields[m_locations[STUDENT_USCF_ID]];
+		}
+		else return L"";
+	}
 	//std::wstring getUscfRating(void)  const { valid(); return fields[m_locations[STUDENT_USCF_RATING]]; }
 
 	bool isRegistered(void) const {
@@ -501,7 +644,8 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 	const std::map<std::wstring, unsigned> &nwsrs_map,
 	const std::map<std::wstring, unsigned> &uscf_map,
 	const std::vector<Player> &rated_players,
-	const AllCodes &school_codes);
+	const AllCodes &school_codes,
+	std::wofstream &normal_log);
 
 class CCCSwisssys2Doc : public CDocument
 {
@@ -517,6 +661,7 @@ public:
 	Sections sections;
 	SerializedVector<MRPlayer> mrplayers;
 	AllCodes school_codes;
+	std::map<std::wstring, std::wstring> saved_school_corrections;
 
 // Operations
 public:
