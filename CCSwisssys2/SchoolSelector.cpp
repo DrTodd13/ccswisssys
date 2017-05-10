@@ -11,11 +11,12 @@
 
 IMPLEMENT_DYNAMIC(SchoolSelector, CDialogEx)
 
-SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, std::wstring &out_code, CWnd* pParent /*=NULL*/)
-	: CDialogEx(IDD_DIALOG2, pParent), m_out_code(out_code)
+SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, CWnd* pParent /*=NULL*/)
+	: CDialogEx(IDD_SCHOOL_EDITOR, pParent), m_out_code(out_code)
 {
 	pDoc = doc;
 	m_school = school;
+	m_possible = in_code;
 }
 
 SchoolSelector::~SchoolSelector()
@@ -26,7 +27,8 @@ void SchoolSelector::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT1, cedit_input_school);
-    DDX_Control(pDX, IDC_EDIT2, cedit_code);
+	DDX_Control(pDX, IDC_EDIT5, cedit_possible);
+	DDX_Control(pDX, IDC_EDIT2, cedit_code);
 	DDX_Control(pDX, IDC_EDIT3, cedit_name);
 	DDX_Control(pDX, IDC_EDIT4, cedit_city);
 	DDX_Control(pDX, IDC_COMBO2, ccombo_type);
@@ -148,15 +150,29 @@ BOOL SchoolSelector::OnInitDialog()
 	}
 
 	cedit_input_school.SetWindowTextW(WStringToCString(m_school));
+	cedit_possible.SetWindowTextW(WStringToCString(m_possible));
 	SetupStateCombobox(ccombo_state);
 	SetupTypeCombobox(ccombo_type);
 
 	auto first_char = toUpper(m_school)[0];
-	size_t i = 0;
-	for (; i < pDoc->school_codes.size(); ++i) {
-		if (first_char == toUpper(pDoc->school_codes[i].getSchoolCode())[0])
-		{
-			break;
+	size_t i = pDoc->school_codes.size();
+	auto upper_possible = toUpper(m_possible);
+
+	if (m_possible.length() == 3) {
+		for (i=0; i < pDoc->school_codes.size(); ++i) {
+			if (upper_possible == toUpper(pDoc->school_codes[i].getSchoolCode()))
+			{
+				break;
+			}
+		}
+	}
+
+	if (i == pDoc->school_codes.size()) {
+		for (i = 0; i < pDoc->school_codes.size(); ++i) {
+			if (first_char == toUpper(pDoc->school_codes[i].getSchoolCode())[0])
+			{
+				break;
+			}
 		}
 	}
 

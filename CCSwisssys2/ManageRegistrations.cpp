@@ -5,6 +5,7 @@
 #include "CCSwisssys2.h"
 #include "ManageRegistrations.h"
 #include "afxdialogex.h"
+#include "SchoolSelector.h"
 
 
 // ManageRegistrations dialog
@@ -359,7 +360,24 @@ void ManageRegistrations::OnBnClickedButton1()
 
 void ManageRegistrations::OnBnClickedButton2()
 {
-	// TODO: Add your control notification handler code here
+	CString cs_school_code, cs_school_name;
+	school_code_edit.GetWindowText(cs_school_code);
+	school_name_edit.GetWindowText(cs_school_name);
+
+	std::wstring s_school_code, s_school_name;
+	s_school_code = CStringToWString(cs_school_code);
+	s_school_name = CStringToWString(cs_school_name);
+
+	SchoolSelector ss_dialog(pDoc, s_school_name, s_school_code, s_school_code);
+
+	if (ss_dialog.DoModal() == IDOK) {
+		s_school_name = pDoc->school_codes.findName(s_school_code);
+
+		cs_school_code = WStringToCString(s_school_code);
+		cs_school_name = WStringToCString(s_school_name);
+		school_code_edit.SetWindowTextW(cs_school_code);
+		school_name_edit.SetWindowTextW(cs_school_name);
+	}
 }
 
 
@@ -514,7 +532,7 @@ BOOL ManageRegistrations::OnInitDialog()
 		if (!infile.eof()) {
 			std::wstring ws_last = p.last_name;
 			std::wstring ws_first = p.first_name;
-			std::wstring ws_id = p.school_code + p.id;
+			std::wstring ws_id = p.school_code + p.grade + p.id;
 			std::wstring ws_school_code = p.school_code;
 			std::wstring ws_school_name = pDoc->school_codes.findName(ws_school_code);
 			std::wstring ws_uscf_id = p.uscf_id;

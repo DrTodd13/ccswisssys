@@ -18,6 +18,7 @@ typedef int SECTION_TYPE;
 #define ROUND_ROBIN 1
 
 CString getGradeString(wchar_t grade);
+CString getGradeStringShort(wchar_t grade);
 CString getSectionTypeString(int type);
 std::wstring CStringToWString(const CString &cs);
 CString WStringToCString(const std::wstring &ws);
@@ -319,6 +320,7 @@ public:
 */
 
 std::wstring removeSubstring(const std::wstring &in, const std::wstring &pattern);
+std::wstring removeSchoolSubstr(const std::wstring &name);
 
 class AllCodesEntry {
 protected:
@@ -334,7 +336,7 @@ protected:
 		valid();
 		std::wstring snup = toUpper(getSchoolName());
 		fields.push_back(snup);
-		fields.push_back(removeSubstring(snup, L" SCHOOL"));
+		fields.push_back(removeSchoolSubstr(snup));
 	}
 
 public:
@@ -488,8 +490,22 @@ public:
 		return ret;
 	}
 
+	bool isExactNoSchool(const std::wstring &s, const std::wstring &cur_code) const {
+		std::wstring sup = removeSchoolSubstr(toUpper(s));
+
+		for (int i = 1; i < size(); ++i) {
+			if (sup == operator[](i).getSchoolNameUpperNoSchool()) {
+				if (operator[](i).getSchoolCode() == cur_code) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	std::wstring findCodeFromSchoolExactNoSchool(const std::wstring &s) const {
-		std::wstring sup = toUpper(s);
+		std::wstring sup = removeSchoolSubstr(toUpper(s));
 
 		std::wstring ret = L"";
 
@@ -658,6 +674,7 @@ public:
 	CString ratings_file;
 	CString constant_contact_file;
 	CString school_code_file;
+	CString restricted_file;
 	Sections sections;
 	SerializedVector<MRPlayer> mrplayers;
 	AllCodes school_codes;

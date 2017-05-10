@@ -72,6 +72,8 @@ public:
 	afx_msg void OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedButton9();
 	afx_msg void OnBnClickedButton10();
+	afx_msg void OnBnClickedButton11();
+	CEdit restricted_edit;
 };
 
 #ifndef _DEBUG  // debug version in CCSwisssys2View.cpp

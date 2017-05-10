@@ -44,6 +44,7 @@ BEGIN_MESSAGE_MAP(CCCSwisssys2View, CFormView)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST2, &CCCSwisssys2View::OnLvnColumnclickList2)
 	ON_BN_CLICKED(IDC_BUTTON9, &CCCSwisssys2View::OnBnClickedButton9)
 	ON_BN_CLICKED(IDC_BUTTON10, &CCCSwisssys2View::OnBnClickedButton10)
+	ON_BN_CLICKED(IDC_BUTTON11, &CCCSwisssys2View::OnBnClickedButton11)
 END_MESSAGE_MAP()
 
 // CCCSwisssys2View construction/destruction
@@ -68,6 +69,7 @@ void CCCSwisssys2View::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST2, section_players);
 	DDX_Control(pDX, IDC_EDIT3, SchoolCodesEdit);
 	DDX_Control(pDX, IDC_SPIN1, section_spin_button);
+	DDX_Control(pDX, IDC_EDIT5, restricted_edit);
 }
 
 BOOL CCCSwisssys2View::PreCreateWindow(CREATESTRUCT& cs)
@@ -208,6 +210,7 @@ void CCCSwisssys2View::OnInitialUpdate()
 	ratings_file_edit.SetWindowText(pDoc->ratings_file);
 	constant_contact_file_edit.SetWindowText(pDoc->constant_contact_file);
 	SchoolCodesEdit.SetWindowTextW(pDoc->school_code_file);
+	restricted_edit.SetWindowTextW(pDoc->restricted_file);
 	refillSections(pDoc->sections);
 	section_list.SetSelectionMark(-1);
 	section_players.SetSelectionMark(-1);
@@ -509,6 +512,10 @@ int findExactMatch(const std::wstring &last, const std::wstring &first, wchar_t 
 	return -1;
 }
 
+std::wstring getLastFour(const std::wstring &full) {
+	return full.substr(full.length() - 4);
+}
+
 // Click on the button to load sections from constant contact file.
 void CCCSwisssys2View::OnBnClickedButton6()
 {
@@ -534,6 +541,9 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	std::map<std::wstring, unsigned> nwsrs_four_map;
 	std::map<std::wstring, unsigned> uscf_map;
 	std::vector<Player> rated_players;
+	std::set<std::wstring> restricted_set;
+
+	bool error_condition = false, warning_condition = false, info_condition = false;
 
 	unsigned player_index = 0;
 
@@ -550,6 +560,23 @@ void CCCSwisssys2View::OnBnClickedButton6()
 		}
 	}
 
+	if (pDoc->restricted_file != L"") {
+		std::wifstream rfile(pDoc->restricted_file);
+		std::wstring rid;
+		while (!rfile.eof()) {
+			rfile >> rid;
+			if (!rfile.eof()) {
+				if (rid.length() == 8) {
+					restricted_set.insert(getLastFour(rid));
+				}
+				else {
+					error_condition = true;
+					normal_log << "ERROR: 8-digit ID not found in restricted file.  Found the following instead: " << rid << std::endl;
+				}
+			}
+		}
+	}
+
 	std::wifstream cc_file(pDoc->constant_contact_file);
 	bool use_cc = true;
 	if (!cc_file) {
@@ -559,7 +586,6 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	}
 	cc_file.close();
 
-	bool error_condition = false, warning_condition = false;
 	unsigned i;
 
 	if (use_cc) {
@@ -622,9 +648,9 @@ void CCCSwisssys2View::OnBnClickedButton6()
 				full_id = toUpper(full_id);
 				//given_rating = toUpper(given_rating);
 
-				if (upper_first == L"TANISH") {
-					upper_first = L"TANISH";
-				}
+				//if (upper_first == L"ANDERSON") {
+				//	upper_first = L"ANDERSON";
+				//}
 
 				if (full_id == L"NONE" || (full_id.size() != 0 && full_id.size() != 4 && full_id.size() != 8)) {
 					full_id = L"";
@@ -632,19 +658,22 @@ void CCCSwisssys2View::OnBnClickedButton6()
 
 				std::wstring last_four_id;
 				if (full_id.length() >= 4) {
-					last_four_id = full_id.substr(full_id.length() - 4);
+					last_four_id = getLastFour(full_id);
 				}
 
-				std::wstring school_code;
+				std::wstring school_code = L"";
+
+				std::wstring ratings_school_code = L"";
 				if (full_id.length() == 8) {
-					school_code = full_id.substr(0, 3);
+					ratings_school_code = full_id.substr(0, 3);
+				}
+
+				if (school == L"") {
+					school = ratings_school_code;
 				}
 
 				if (school.length() == 3) {
 					school_code = toUpper(school);
-					if (full_id.length() == 8) {
-						full_id.replace(0, 3, school_code); // Update school code in their ID.
-					}
 				}
 
 				if (school_code != L"") {
@@ -655,11 +684,14 @@ void CCCSwisssys2View::OnBnClickedButton6()
 					if (school_code == L"") {
 						school_code = pDoc->school_codes.findCodeFromSchoolExactNoSchool(school);
 						if (school_code == L"") {
-							auto prev_iter = pDoc->saved_school_corrections.find(school);
-							if (prev_iter != pDoc->saved_school_corrections.end()) {
-								school_code = prev_iter->second;
-								school = pDoc->school_codes.findName(school_code);
+							if (pDoc->school_codes.isExactNoSchool(school, ratings_school_code)) {
+								school_code = ratings_school_code;
 							}
+//							auto prev_iter = pDoc->saved_school_corrections.find(school);
+//							if (prev_iter != pDoc->saved_school_corrections.end()) {
+//								school_code = prev_iter->second;
+//								school = pDoc->school_codes.findName(school_code);
+//							}
 							else {
 								if (school == L"") {
 									error_condition = true;
@@ -667,7 +699,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 									continue;
 								}
 								else {
-									SchoolSelector ss_dialog(pDoc, school, school_code);
+									SchoolSelector ss_dialog(pDoc, school, ratings_school_code, school_code);
 
 									if (ss_dialog.DoModal() == IDOK) {
 										school = pDoc->school_codes.findName(school_code);
@@ -681,6 +713,13 @@ void CCCSwisssys2View::OnBnClickedButton6()
 							}
 						}
 					}
+				}
+
+				if (full_id.length() == 8 && ratings_school_code != school_code) {
+					info_condition = true;
+					normal_log << "INFO: change of school from " << ratings_school_code << " to " << school_code << " for player " << first_name << " " << last_name << std::endl;
+
+					full_id.replace(0, 3, school_code); // Update school code in their ID.
 				}
 
 				CString cs_full_id = CString(full_id.c_str());
@@ -703,6 +742,8 @@ void CCCSwisssys2View::OnBnClickedButton6()
 							normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
 
 							full_id = rated_players[exact_match].getFullId();
+							cc_rating = rated_players[exact_match].get_higher_rating();
+							updateUscfFromRatingFile(uscf_id, uscf_rating, rated_players[exact_match], normal_log, warning_condition);
 							nwsrs_rating = rated_players[exact_match].nwsrs_rating;
 						}
 						else {
@@ -710,7 +751,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 							cc_rating = (grade_code - 'A') * 100;
 							nwsrs_rating = cc_rating;
 
-							warning_condition = true;
+							info_condition = true;
 							normal_log << "INFO: new tournament player without a previous ID " << first_name << " " << last_name << ", grade: " << grade_code << ", school: " << school << std::endl;
 						}
 					}
@@ -764,7 +805,13 @@ void CCCSwisssys2View::OnBnClickedButton6()
 					normal_log << "ERROR: Player can go in multiple sections. " << full_id << " " << last_name << " " << first_name << " " << cc_rating << " " << grade_code << " " << school << std::endl;
 				}
 				else {
-					pDoc->sections[target_section].players.push_back(SectionPlayerInfo(cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str())));
+					if (restricted_set.size() == 0 || restricted_set.find(getLastFour(full_id)) != restricted_set.end()) {
+						pDoc->sections[target_section].players.push_back(SectionPlayerInfo(cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str())));
+					}
+					else {
+						error_condition = true;
+						normal_log << "ERROR: Player in constant contact not in the restricted tournament id list. " << full_id << " " << last_name << " " << first_name << " " << cc_rating << " " << grade_code << " " << school << std::endl;
+					}
 					//normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << full_id << " " << last_name << " " << first_name << " " << cc_rating << " " << grade_code << " " << school_code << " uscf rating and id " << uscf_rating << " " << uscf_id << std::endl;
 				}
 			}
@@ -773,7 +820,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	}
 
 	if (pDoc->school_codes.m_new_schools.size() > 0) {
-		warning_condition = true;
+		info_condition = true;
 		normal_log << "\nNew school codes created for this tournament.  New school information is below:" << std::endl;
 		for (i = 0; i < pDoc->school_codes.m_new_schools.size(); ++i) {
 			normal_log << pDoc->school_codes.m_new_schools[i].getSchoolCode() << "," <<
@@ -797,16 +844,22 @@ void CCCSwisssys2View::OnBnClickedButton6()
 			normal_log << "ERROR: Player can go in multiple sections. " << this_player.ws_id << " " << this_player.nwsrs_rating << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " " << this_player.ws_school_name << std::endl;
 		}
 		else {
-			CString cs_last(this_player.ws_last.c_str());
-			CString cs_first(this_player.ws_first.c_str());
-			CString cs_id(this_player.ws_id.c_str());
-			CString cs_school_name(this_player.ws_school_name.c_str());
-			CString cs_school_code(this_player.ws_school_code.c_str());
-			CString cs_uscf_id(this_player.ws_uscf_id.c_str());
-			CString cs_uscf_rating(this_player.ws_uscf_rating.c_str());
+			if (restricted_set.size() == 0 || restricted_set.find(getLastFour(this_player.ws_id)) != restricted_set.end()) {
+				CString cs_last(this_player.ws_last.c_str());
+				CString cs_first(this_player.ws_first.c_str());
+				CString cs_id(this_player.ws_id.c_str());
+				CString cs_school_name(this_player.ws_school_name.c_str());
+				CString cs_school_code(this_player.ws_school_code.c_str());
+				CString cs_uscf_id(this_player.ws_uscf_id.c_str());
+				CString cs_uscf_rating(this_player.ws_uscf_rating.c_str());
 
-			pDoc->sections[target_section].players.push_back(SectionPlayerInfo(cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating));
-			//normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << this_player.ws_id << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " uscf rating and id " << this_player.ws_uscf_rating << " " << this_player.ws_uscf_id << std::endl;
+				pDoc->sections[target_section].players.push_back(SectionPlayerInfo(cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating));
+				//normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << this_player.ws_id << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " uscf rating and id " << this_player.ws_uscf_rating << " " << this_player.ws_uscf_id << std::endl;
+			}
+			else {
+				error_condition = true;
+				normal_log << "ERROR: Player in constant contact not in the restricted tournament id list. " << this_player.ws_id << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_name << std::endl;
+			}
 		}
 	}
 
@@ -816,13 +869,16 @@ void CCCSwisssys2View::OnBnClickedButton6()
 		MessageBox(_T("Some players not added to a section.  Please read the log."), _T("Error"));
 	}
 	else if (warning_condition) {
-		MessageBox(_T("Some potential issues were found.  Please read the log."), _T("Warning"));
+		MessageBox(_T("Some potential issues were found.  Please read the log and report to ratings coordinator."), _T("Warning"));
+	}
+	else if (info_condition) {
+		MessageBox(_T("Log contains information to report to ratings coordinator.  Please review the log."), _T("Warning"));
 	}
 	else {
 		MessageBox(_T("All players added to sections successfully."), _T("Success"));
 	}
 
-	if (error_condition || warning_condition) {
+	if (error_condition || warning_condition || info_condition) {
 		ShellExecute(NULL, _T("open"), _T("c:\\windows\\notepad.exe"), (LPCWSTR)logfilename.c_str(), _T(""), SW_SHOWNORMAL);
 	}
 
@@ -921,17 +977,21 @@ void CCCSwisssys2View::OnBnClickedButton7()
 
 		for (i = 0; i < pDoc->sections[j].players.size(); ++i) {
 			std::wofstream &section_file = section_files[pDoc->sections[j].players[i].subsection - 1];
-			section_file << L"Name = " << toUpper(CStringToWString(pDoc->sections[j].players[i].last_name)) << L", " <<
+			section_file << L"NAME = " << toUpper(CStringToWString(pDoc->sections[j].players[i].last_name)) << L", " <<
 				toUpper(CStringToWString(pDoc->sections[j].players[i].first_name)) << std::endl;
-			section_file << "Rating = " << pDoc->sections[j].players[i].rating << std::endl;
+			section_file << "RATING = " << pDoc->sections[j].players[i].rating << std::endl;
 			section_file << "ID# = " << CStringToWString(pDoc->sections[j].players[i].full_id) << std::endl;
-			section_file << "Team = " << CStringToWString(pDoc->sections[j].players[i].school_code) << std::endl;
+			std::wstring school_code_ws = CStringToWString(pDoc->sections[j].players[i].school_code);
+			if (school_code_ws != L"HSO") {
+				section_file << "TEAM = " << school_code_ws << std::endl;
+			}
 			if (!pDoc->sections[j].players[i].uscf_id.IsEmpty()) {
 				section_file << "ID2 = " << CStringToWString(pDoc->sections[j].players[i].uscf_id) << std::endl;
 			}
 			if (!pDoc->sections[j].players[i].uscf_rating.IsEmpty()) {
 				section_file << "RTNG2 = " << CStringToWString(pDoc->sections[j].players[i].uscf_rating) << std::endl;
 			}
+			section_file << "AGE = " << CStringToWString(getGradeStringShort(pDoc->sections[j].players[i].grade));
 			section_file << std::endl;
 
 			++total_placed;
@@ -1262,6 +1322,9 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 			players->label(cur_row, 8, toString(school_code_ws));
 		}
 
+		std::wstring grade_ws = CStringToWString(getGradeStringShort(sec.players[i].grade));
+		players->label(cur_row, 11, toString(grade_ws));
+
 		players->number(cur_row, 28, 0);
 		players->label(cur_row, 31, "FALSE");
 		players->number(cur_row, 38, 0);
@@ -1355,5 +1418,22 @@ void CCCSwisssys2View::OnBnClickedButton10()
 	}
 	else {
 		MessageBox(_T("Swisssys tournament created successfully."), _T("Information"));
+	}
+}
+
+
+void CCCSwisssys2View::OnBnClickedButton11()
+{
+	CFileDialog FileDialog(TRUE, _T("txt"));
+
+	if (FileDialog.DoModal() == IDOK)
+	{
+		CString PathName = FileDialog.GetPathName();
+		// Do something with 'PathName'
+		GetDocument()->restricted_file = PathName;
+
+		//MessageBox((LPCTSTR)PathName, _T("Ratings Filename"));
+		restricted_edit.SetWindowText(PathName);
+		GetDocument()->SetModifiedFlag();
 	}
 }

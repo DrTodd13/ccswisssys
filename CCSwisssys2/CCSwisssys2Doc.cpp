@@ -46,6 +46,7 @@ BOOL CCCSwisssys2Doc::OnNewDocument()
 	ratings_file = "";
 	constant_contact_file = "";
 	school_code_file = "";
+	restricted_file = "";
 	sections.clear();
 	mrplayers.clear();
 
@@ -88,6 +89,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		ar << ratings_file;
 		ar << constant_contact_file;
 		ar << school_code_file;
+		ar << restricted_file;
 		sections.Serialize(ar);
 		mrplayers.Serialize(ar);
 		::Serialize(saved_school_corrections, ar);
@@ -101,6 +103,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		ar >> ratings_file;
 		ar >> constant_contact_file;
 		ar >> school_code_file;
+		ar >> restricted_file;
 		sections.Serialize(ar);
 		mrplayers.Serialize(ar);
 		::Serialize(saved_school_corrections, ar);
@@ -114,6 +117,29 @@ std::wstring removeSubstring(const std::wstring &in, const std::wstring &pattern
 	if (i != std::string::npos) {
 		ret.erase(i, pattern.length());
 	}
+	return ret;
+}
+
+void removeSubstringInplace(std::wstring &in, const std::wstring &pattern) {
+	std::string::size_type i = in.find(pattern);
+	if (i != std::string::npos) {
+		in.erase(i, pattern.length());
+	}
+}
+
+std::wstring removeSchoolSubstr(const std::wstring &name) {
+	std::wstring ret = name;
+	removeSubstringInplace(ret, L" ELEMENTARY SCHOOL");
+	removeSubstringInplace(ret, L" ELEMENTARY");
+	removeSubstringInplace(ret, L" MIDDLE SCHOOL");
+	removeSubstringInplace(ret, L" HIGH SCHOOL");
+	removeSubstringInplace(ret, L" JR HIGH");
+	removeSubstringInplace(ret, L" JR. HIGH");
+	removeSubstringInplace(ret, L" JR HS");
+	removeSubstringInplace(ret, L" MS");
+	removeSubstringInplace(ret, L" HS");
+	removeSubstringInplace(ret, L" SCHOOL");
+	removeSubstringInplace(ret, L" K-8");
 	return ret;
 }
 
@@ -133,6 +159,28 @@ CString getGradeString(wchar_t grade) {
 	case 'L': return CString("L - 11th Grade");
 	case 'M': return CString("M - 12th Grade");
 	case 'N': return CString("N - Adult");
+	default:
+		assert(0);
+		return CString("Unknown grade.");
+	}
+}
+
+CString getGradeStringShort(wchar_t grade) {
+	switch (grade) {
+	case 'A': return CString("K");
+	case 'B': return CString("1");
+	case 'C': return CString("2");
+	case 'D': return CString("3");
+	case 'E': return CString("4");
+	case 'F': return CString("5");
+	case 'G': return CString("6");
+	case 'H': return CString("7");
+	case 'I': return CString("8");
+	case 'J': return CString("9");
+	case 'K': return CString("10");
+	case 'L': return CString("11");
+	case 'M': return CString("12");
+	case 'N': return CString("Adult");
 	default:
 		assert(0);
 		return CString("Unknown grade.");
@@ -473,7 +521,8 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 	}
 
 	dynamic_locations[STUDENT_USCF_ID] = findFieldWithOperator(normal_log, ccret, FindUscfId(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields);
-	dynamic_locations[STUDENT_GRADE] = findFieldWithOperator(normal_log, ccret, FindGradeField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields);
+//	normal_log << "Finding grade code" << std::endl;
+	dynamic_locations[STUDENT_GRADE] = findFieldWithOperator(normal_log, ccret, FindGradeField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
 	if (dynamic_locations[STUDENT_GRADE] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect GRADE field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
@@ -492,8 +541,6 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 	}
 	return ret;
 }
-
-//int allstars2016[] = { 0, 1, 11, 13, 12, 15, 17, 22 };
 
 #ifdef SHARED_HANDLERS
 

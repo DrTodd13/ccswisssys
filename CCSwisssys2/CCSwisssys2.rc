@@ -185,9 +185,9 @@ BEGIN
     LTEXT           "Ratings File",IDC_STATIC,19,11,62,8
     EDITTEXT        IDC_EDIT1,17,23,459,14,ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "Browse",IDC_BUTTON1,487,23,50,14
-    LTEXT           "Constant Contact Registration File",IDC_STATIC,19,42,125,8
-    EDITTEXT        IDC_EDIT2,18,54,458,14,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "Browse",IDC_BUTTON2,487,54,50,14
+    LTEXT           "Constant Contact Registration File",IDC_STATIC,19,39,125,8
+    EDITTEXT        IDC_EDIT2,18,51,458,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Browse",IDC_BUTTON2,487,51,50,14
     LTEXT           "Sections",IDC_STATIC,19,133,70,8
     CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER,19,146,456,88
     PUSHBUTTON      "Add",IDC_BUTTON3,486,149,50,14
@@ -197,11 +197,14 @@ BEGIN
     PUSHBUTTON      "Create Sections from Registration and Ratings Data!",IDC_BUTTON6,19,237,455,14
     CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER,19,256,455,137
     PUSHBUTTON      "Create SwissSys Club Files for Import",IDC_BUTTON7,486,272,57,50,BS_MULTILINE
-    LTEXT           "School Codes File",IDC_STATIC,20,75,56,8
-    EDITTEXT        IDC_EDIT3,18,88,459,14,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "Browse",IDC_BUTTON8,486,87,50,14
-    PUSHBUTTON      "Manage Additional Registrations not in Constant Contact",IDC_BUTTON9,17,112,458,14
+    LTEXT           "School Codes File",IDC_STATIC,20,69,56,8
+    EDITTEXT        IDC_EDIT3,18,79,459,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Browse",IDC_BUTTON8,486,78,50,14
+    PUSHBUTTON      "Manage Additional Registrations not in Constant Contact",IDC_BUTTON9,17,118,458,14
     PUSHBUTTON      "Create Swisssys Tournament",IDC_BUTTON10,487,328,56,48,BS_MULTILINE
+    LTEXT           "Restricted Entry?",IDC_STATIC,19,100,59,8
+    EDITTEXT        IDC_EDIT5,79,98,396,13,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Browse",IDC_BUTTON11,485,97,50,14
 END
 
 IDD_SECTION_EDITOR DIALOGEX 0, 0, 309, 176
@@ -247,9 +250,10 @@ BEGIN
     EDITTEXT        IDC_EDIT5,273,193,90,14,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO2,369,193,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Grade",IDC_STATIC,370,182,46,8
-    PUSHBUTTON      "Add New Player (as entered in the fields below)",IDC_BUTTON1,141,165,184,14
+    PUSHBUTTON      "Add New Player (as entered in the fields below)",IDC_BUTTON1,21,164,184,14
     LTEXT           "Additional Registed Players (double-click to remove)",IDC_STATIC,21,11,264,8
     LTEXT           "Players in the ratings file (double-click to add as a registered player)",IDC_STATIC,18,360,229,8
+    PUSHBUTTON      "Find School Code",IDC_BUTTON2,222,164,140,14
 END
 
 IDD_SCHOOL_EDITOR DIALOGEX 0, 0, 349, 346
@@ -260,7 +264,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,231,325,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,292,325,50,14
     LTEXT           "An exact match for the user-provided school name was not found in the NWSRS list of schools.  Please double-click the school you believe the registrant meant OR enter new school information in the fields below and click OK.  The school name they entered is below.",IDC_STATIC,15,15,319,30
-    EDITTEXT        IDC_EDIT1,15,44,277,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT1,15,44,172,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "3-character Code",IDC_STATIC,15,228,59,8
     EDITTEXT        IDC_EDIT2,83,224,40,14,ES_AUTOHSCROLL
     LTEXT           "Name",IDC_STATIC,15,242,19,8
@@ -273,6 +277,8 @@ BEGIN
     COMBOBOX        IDC_COMBO2,62,254,231,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,16,63,308,160
     LTEXT           "Must be unique and not an English word.",IDC_STATIC,131,227,131,8
+    LTEXT           "Did they mean =>",IDC_STATIC,191,46,60,8
+    EDITTEXT        IDC_EDIT5,257,44,40,14,ES_AUTOHSCROLL | ES_READONLY
 END
 
 

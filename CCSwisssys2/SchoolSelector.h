@@ -11,7 +11,7 @@ class SchoolSelector : public CDialogEx
 	DECLARE_DYNAMIC(SchoolSelector)
 
 public:
-	SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, std::wstring &out_code, CWnd* pParent = NULL);   // standard constructor
+	SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, CWnd* pParent = NULL);   // standard constructor
 	virtual ~SchoolSelector();
 
 // Dialog Data
@@ -22,6 +22,7 @@ public:
 protected:
 	CCCSwisssys2Doc *pDoc;
 	std::wstring m_school;
+	std::wstring m_possible;
 	std::wstring &m_out_code;
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -30,6 +31,7 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	CEdit cedit_input_school;
+	CEdit cedit_possible;
 	CEdit cedit_code;
 	CEdit cedit_name;
 	CEdit cedit_city;
