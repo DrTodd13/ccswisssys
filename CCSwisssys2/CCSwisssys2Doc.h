@@ -55,9 +55,10 @@ public:
 	wchar_t upper_grade_limit;
 	SECTION_TYPE sec_type;
 	std::vector<SectionPlayerInfo> players;
-	int num_subsections;
+	unsigned num_subsections;
+	bool uscf_required;
 
-	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('M'), sec_type(SWISS), num_subsections(1) {}
+	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false) {}
 	
 	void makeSubsections() {
 		if (num_subsections == 1) return;
@@ -67,21 +68,21 @@ public:
 		// next subsection modulo the number of subsections.
 		// We'll try to keep even number in subsections.
 		std::sort(players.begin(), players.end(), SortByRatingDescending());
-		int num_players = players.size();
+		unsigned num_players = players.size();
 		// Get the number of players per subsection under a strict division.
-		int player_per_subsection = num_players / num_subsections;
+		unsigned player_per_subsection = num_players / num_subsections;
 		// If that number is odd then subtract one so that the base number each section gets is even.
 		if (player_per_subsection % 2 == 1) {
 			player_per_subsection -= 1;
 		}
-		int first_allocation = player_per_subsection * num_subsections;
+		unsigned first_allocation = player_per_subsection * num_subsections;
 
 		unsigned i;
 		// The simple part where we allocation players round-robin based on rating.
 		for (i = 0; i < first_allocation; ++i) {
 			players[i].subsection = (i % num_subsections) + 1;
 		}
-		int next_subsection = 0;
+		unsigned next_subsection = 0;
 		// Now allocate players two at a time to keep even numbers in sections.
 		for (i = first_allocation; i < players.size(); i+=2) {
 			// If only one player left then break.
@@ -109,17 +110,17 @@ public:
 	}
 
 	bool usedGrade() const {
-		return lower_grade_limit != 'A' || upper_grade_limit != 'M';
+		return lower_grade_limit != 'A' || upper_grade_limit != 'N';
 	}
 
 	void Serialize(CArchive& ar) {
 		if (ar.IsStoring())
 		{
-			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections;
+			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required;
 		}
 		else
 		{
-			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections;
+			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required;
 		}
 	}
 
@@ -476,7 +477,7 @@ public:
 
 		std::wstring ret = L"";
 
-		for (int i = 1; i < size(); ++i) {
+		for (unsigned i = 1; i < size(); ++i) {
 			if (sup == operator[](i).getSchoolNameUpper()) {
 				if (ret == L"") {
 					ret = operator[](i).getSchoolCode();
@@ -493,7 +494,7 @@ public:
 	bool isExactNoSchool(const std::wstring &s, const std::wstring &cur_code) const {
 		std::wstring sup = removeSchoolSubstr(toUpper(s));
 
-		for (int i = 1; i < size(); ++i) {
+		for (unsigned i = 1; i < size(); ++i) {
 			if (sup == operator[](i).getSchoolNameUpperNoSchool()) {
 				if (operator[](i).getSchoolCode() == cur_code) {
 					return true;
@@ -509,7 +510,7 @@ public:
 
 		std::wstring ret = L"";
 
-		for (int i = 1; i < size(); ++i) {
+		for (unsigned i = 1; i < size(); ++i) {
 			if (sup == operator[](i).getSchoolNameUpperNoSchool()) {
 				if (ret == L"") {
 					ret = operator[](i).getSchoolCode();
@@ -536,7 +537,7 @@ public:
 		int best_index = 0;
 		int best_value = LevenshteinDistance(s, operator[](0).getSchoolName());
 		//normal_log << s << ". " << operator[](0).getSchoolName() << ". " << best_value << " " << best_index << std::endl;
-		for (int i = 1; i < size(); ++i) {
+		for (unsigned i = 1; i < size(); ++i) {
 			int nv = LevenshteinDistance(s, operator[](i).getSchoolName());
 			//normal_log << s << ". " << operator[](i).getSchoolName() << ". " << best_value << " " << best_index << " " << nv << std::endl;
 			if (nv < best_value) {
@@ -679,9 +680,15 @@ public:
 	SerializedVector<MRPlayer> mrplayers;
 	AllCodes school_codes;
 	std::map<std::wstring, std::wstring> saved_school_corrections;
+	std::vector<Player> rated_players;
+	std::map<std::wstring, unsigned> nwsrs_map;
+	std::map<std::wstring, unsigned> nwsrs_four_map;
+	std::map<std::wstring, unsigned> uscf_map;
 
 // Operations
 public:
+
+	bool loadRatingsFile();
 
 	std::wstring getOutputLocation() const {
 		if (constant_contact_file.IsEmpty()) {

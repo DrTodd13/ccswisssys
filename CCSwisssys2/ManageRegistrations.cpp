@@ -43,8 +43,8 @@ BEGIN_MESSAGE_MAP(ManageRegistrations, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT3, &ManageRegistrations::OnEnChangeEdit3)
 	ON_EN_CHANGE(IDC_EDIT4, &ManageRegistrations::OnEnChangeEdit4)
 	ON_EN_CHANGE(IDC_EDIT5, &ManageRegistrations::OnEnChangeEdit5)
-	ON_BN_CLICKED(IDC_BUTTON1, &ManageRegistrations::OnBnClickedButton1)
-	ON_BN_CLICKED(IDC_BUTTON2, &ManageRegistrations::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON1, &ManageRegistrations::OnAddNewPlayer)
+	ON_BN_CLICKED(IDC_BUTTON2, &ManageRegistrations::OnConstantContactFileBrowse)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST3, &ManageRegistrations::OnNMDblclkList3)
 	ON_CBN_SELCHANGE(IDC_COMBO2, &ManageRegistrations::OnCbnSelchangeCombo2)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST2, &ManageRegistrations::OnNMDblclkList2)
@@ -169,35 +169,35 @@ void ManageRegistrations::OnAnyChange()
 
 	int i;
 	for (i = start; i <= end; ++i) {
-		if (insensitiveCompare(rated_players[i].ws_last, s_last) &&
-			findStringIC(rated_players[i].ws_first, s_first) &&
-			findStringIC(rated_players[i].ws_id, s_id) &&
-			findStringIC(rated_players[i].ws_school_code, s_school_code)) {
+		if (insensitiveCompare(pDoc->rated_players[i].last_name, s_last) &&
+			findStringIC(pDoc->rated_players[i].first_name, s_first) &&
+			findStringIC(pDoc->rated_players[i].getFullId(), s_id) &&
+			findStringIC(pDoc->rated_players[i].school_code, s_school_code)) {
 
 			if (grade_sel > 0) {
 				wchar_t sel_grade = 'A' + grade_sel - 1;
-				if (rated_players[i].grade != sel_grade) {
+				if (pDoc->rated_players[i].grade != sel_grade) {
 					continue;
 				}
 			}
 
 			if (!code_set.empty()) {
-				if (code_set.find(rated_players[i].ws_school_code) == code_set.end()) {
+				if (code_set.find(pDoc->rated_players[i].school_code) == code_set.end()) {
 					continue;
 				}
 			}
 
 			addToList(PossiblePlayers, 
 				entry++,
-				rated_players[i].ws_last,
-				rated_players[i].ws_first,
-				rated_players[i].nwsrs_rating,
-				rated_players[i].ws_id,
-				rated_players[i].grade,
-				rated_players[i].ws_school_code,
-				rated_players[i].ws_school_name,
-				rated_players[i].ws_uscf_rating,
-				rated_players[i].ws_uscf_id,
+				pDoc->rated_players[i].last_name,
+				pDoc->rated_players[i].first_name,
+				pDoc->rated_players[i].nwsrs_rating,
+				pDoc->rated_players[i].getFullId(),
+				pDoc->rated_players[i].grade,
+				pDoc->rated_players[i].school_code,
+				pDoc->school_codes.findName(pDoc->rated_players[i].school_code),
+				pDoc->rated_players[i].uscf_rating,
+				pDoc->rated_players[i].uscf_id,
 				i);
 		}
 	}
@@ -265,7 +265,7 @@ void ManageRegistrations::OnEnChangeEdit5()
 }
 
 
-void ManageRegistrations::OnBnClickedButton1()
+void ManageRegistrations::OnAddNewPlayer()
 {
 	// TODO: Add your control notification handler code here
 	CString cs_last, cs_first, cs_id, cs_school_code, cs_school_name;
@@ -278,10 +278,10 @@ void ManageRegistrations::OnBnClickedButton1()
 	int grade_sel = grade_combo_box.GetCurSel();
 
 	std::wstring s_last, s_first, s_id, s_school_code, s_school_name;
-	s_last = CStringToWString(cs_last);
-	s_first = CStringToWString(cs_first);
+	s_last = toUpper(CStringToWString(cs_last));
+	s_first = toUpper(CStringToWString(cs_first));
 	s_id = CStringToWString(cs_id);
-	s_school_code = CStringToWString(cs_school_code);
+	s_school_code = toUpper(CStringToWString(cs_school_code));
 	s_school_name = CStringToWString(cs_school_name);
 
 	std::set<std::wstring> code_set;
@@ -298,6 +298,9 @@ void ManageRegistrations::OnBnClickedButton1()
 		}
 	}
 
+	wchar_t sel_grade = 'A' + grade_sel - 1;
+	unsigned init_rating = (grade_sel - 1) * 100;
+
 	int start, end;
 	bool found_possibility = false;
 	if (s_last.length() != 0) {
@@ -309,20 +312,19 @@ void ManageRegistrations::OnBnClickedButton1()
 
 		int i;
 		for (i = start; i <= end; ++i) {
-			if (insensitiveCompare(rated_players[i].ws_last, s_last) &&
-				findStringIC(rated_players[i].ws_first, s_first) &&
-				findStringIC(rated_players[i].ws_id, s_id) &&
-				findStringIC(rated_players[i].ws_school_code, s_school_code)) {
+			if (insensitiveCompare(pDoc->rated_players[i].last_name, s_last) &&
+				findStringIC(pDoc->rated_players[i].first_name, s_first) &&
+				findStringIC(pDoc->rated_players[i].getFullId(), s_id) &&
+				findStringIC(pDoc->rated_players[i].school_code, s_school_code)) {
 
 				if (grade_sel > 0) {
-					wchar_t sel_grade = 'A' + grade_sel - 1;
-					if (rated_players[i].grade != sel_grade) {
+					if (pDoc->rated_players[i].grade != sel_grade) {
 						continue;
 					}
 				}
 
 				if (!code_set.empty()) {
-					if (code_set.find(rated_players[i].ws_school_code) == code_set.end()) {
+					if (code_set.find(pDoc->rated_players[i].school_code) == code_set.end()) {
 						continue;
 					}
 				}
@@ -355,10 +357,40 @@ void ManageRegistrations::OnBnClickedButton1()
 		MessageBox(_T("Please enter the new player's grade and try again."), _T("Error"));
 		return;
 	}
+
+	unsigned entry = pDoc->mrplayers.size();
+	std::wstring new_id = s_school_code + sel_grade;
+
+	pDoc->mrplayers.push_back(MRPlayer(s_last, s_first, new_id, s_school_code, pDoc->school_codes.findName(s_school_code), std::wstring(), init_rating, std::wstring(), sel_grade));
+	unsigned pindex = pDoc->mrplayers.size() - 1;
+
+	addToList(RegisteredPlayers,
+		entry,
+		pDoc->mrplayers[pindex].ws_last,
+		pDoc->mrplayers[pindex].ws_first,
+		pDoc->mrplayers[pindex].nwsrs_rating,
+		pDoc->mrplayers[pindex].ws_id,
+		pDoc->mrplayers[pindex].grade,
+		pDoc->mrplayers[pindex].ws_school_code,
+		pDoc->school_codes.findName(pDoc->rated_players[pindex].school_code),
+		pDoc->mrplayers[pindex].ws_uscf_rating,
+		pDoc->mrplayers[pindex].ws_uscf_id,
+		entry);
+
+	entry++;
+
+	LastNameEdit.SetWindowText(L"");
+	FirstNameEdit.SetWindowText(L"");
+	NWSRS_ID_Edit.SetWindowText(L"");
+	school_code_edit.SetWindowText(L"");
+	school_name_edit.SetWindowText(L"");
+	grade_combo_box.SetCurSel(-1);
+
+	LastNameEdit.SetFocus();
 }
 
 
-void ManageRegistrations::OnBnClickedButton2()
+void ManageRegistrations::OnConstantContactFileBrowse()
 {
 	CString cs_school_code, cs_school_name;
 	school_code_edit.GetWindowText(cs_school_code);
@@ -391,19 +423,28 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 	unsigned pindex = (unsigned)PossiblePlayers.GetItemData(pNMItemActivate->iItem);
 	unsigned entry = pDoc->mrplayers.size();
 
-	pDoc->mrplayers.push_back(rated_players[pindex]);
+	pDoc->mrplayers.push_back(MRPlayer(
+		pDoc->rated_players[pindex].last_name,
+		pDoc->rated_players[pindex].first_name,
+		pDoc->rated_players[pindex].getFullId(),
+		pDoc->rated_players[pindex].school_code,
+		pDoc->school_codes.findName(pDoc->rated_players[pindex].school_code),
+		pDoc->rated_players[pindex].uscf_id,
+		pDoc->rated_players[pindex].nwsrs_rating,
+		pDoc->rated_players[pindex].uscf_rating,
+		pDoc->rated_players[pindex].grade));
 
 	addToList(RegisteredPlayers,
 		entry,
-		rated_players[pindex].ws_last,
-		rated_players[pindex].ws_first,
-		rated_players[pindex].nwsrs_rating,
-		rated_players[pindex].ws_id,
-		rated_players[pindex].grade,
-		rated_players[pindex].ws_school_code,
-		rated_players[pindex].ws_school_name,
-		rated_players[pindex].ws_uscf_rating,
-		rated_players[pindex].ws_uscf_id,
+		pDoc->rated_players[pindex].last_name,
+		pDoc->rated_players[pindex].first_name,
+		pDoc->rated_players[pindex].nwsrs_rating,
+		pDoc->rated_players[pindex].getFullId(),
+		pDoc->rated_players[pindex].grade,
+		pDoc->rated_players[pindex].school_code,
+		pDoc->school_codes.findName(pDoc->rated_players[pindex].school_code),
+		pDoc->rated_players[pindex].uscf_rating,
+		pDoc->rated_players[pindex].uscf_id,
 		entry);
 
 	entry++;
@@ -509,19 +550,21 @@ BOOL ManageRegistrations::OnInitDialog()
 
 	SetupGradeCombobox(grade_combo_box);
 
-	std::wifstream infile(pDoc->ratings_file);
-	Player p;
-
-	int player_index = 0;
-	wchar_t cur = 'A' - 1;
-
-	if (!infile) {
+	if (pDoc->school_codes.empty()) {
 		MessageBox(_T("Ratings and school code file must be loaded first."), _T("Error"));
 		EndDialog(0);
 		return TRUE;
 	}
 
-	if (pDoc->school_codes.empty()) {
+	wchar_t cur = 'A' - 1;
+
+#if 0
+	std::wifstream infile(pDoc->ratings_file);
+	Player p;
+
+	int player_index = 0;
+
+	if (!infile) {
 		MessageBox(_T("Ratings and school code file must be loaded first."), _T("Error"));
 		EndDialog(0);
 		return TRUE;
@@ -537,7 +580,7 @@ BOOL ManageRegistrations::OnInitDialog()
 			std::wstring ws_school_name = pDoc->school_codes.findName(ws_school_code);
 			std::wstring ws_uscf_id = p.uscf_id;
 
-			rated_players.push_back(MRPlayer(ws_last,ws_first,ws_id,ws_school_code,ws_school_name,ws_uscf_id,p.nwsrs_rating,p.uscf_rating,p.grade));
+			rated_players.push_back(MRPlayer(ws_last, ws_first, ws_id, ws_school_code, ws_school_name, ws_uscf_id, p.nwsrs_rating, p.uscf_rating, p.grade));
 
 			wchar_t start = toupper(ws_last[0]);
 
@@ -553,6 +596,22 @@ BOOL ManageRegistrations::OnInitDialog()
 		ending_index[cur - 'A' + 1] = player_index - 1;
 		cur += 1;
 	}
+#else
+	unsigned player_index = 0;
+	for(; player_index < pDoc->rated_players.size(); ++player_index) {
+		wchar_t start = toupper(pDoc->rated_players[player_index].last_name[0]);
+
+		while (cur < start) {
+			ending_index[cur - 'A' + 1] = player_index - 1;
+			cur += 1;
+		}
+	}
+	while (cur <= 'Z') {
+		ending_index[cur - 'A' + 1] = player_index - 1;
+		cur += 1;
+	}
+#endif
+
 
 	unsigned mrindex;
 

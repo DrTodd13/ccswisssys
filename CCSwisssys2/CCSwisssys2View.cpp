@@ -27,24 +27,25 @@
 IMPLEMENT_DYNCREATE(CCCSwisssys2View, CFormView)
 
 BEGIN_MESSAGE_MAP(CCCSwisssys2View, CFormView)
-	ON_BN_CLICKED(IDC_BUTTON1, &CCCSwisssys2View::OnBnClickedButton1)
-	ON_BN_CLICKED(IDC_BUTTON2, &CCCSwisssys2View::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON1, &CCCSwisssys2View::OnRatingsFileBrowse)
+	ON_BN_CLICKED(IDC_BUTTON2, &CCCSwisssys2View::OnConstantContactFileBrowse)
 	ON_EN_CHANGE(IDC_EDIT1, &CCCSwisssys2View::OnEnChangeEdit1)
 	ON_EN_CHANGE(IDC_EDIT2, &CCCSwisssys2View::OnEnChangeEdit2)
-	ON_BN_CLICKED(IDC_BUTTON3, &CCCSwisssys2View::OnBnClickedButton3)
-	ON_BN_CLICKED(IDC_BUTTON4, &CCCSwisssys2View::OnBnClickedButton4)
-	ON_BN_CLICKED(IDC_BUTTON5, &CCCSwisssys2View::OnBnClickedButton5)
-	ON_BN_CLICKED(IDC_BUTTON6, &CCCSwisssys2View::OnBnClickedButton6)
-	ON_NOTIFY(HDN_ITEMCLICK, 0, &CCCSwisssys2View::OnHdnItemclickList1)
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, &CCCSwisssys2View::OnLvnItemchangedList1)
-	ON_BN_CLICKED(IDC_BUTTON7, &CCCSwisssys2View::OnBnClickedButton7)
-	ON_BN_CLICKED(IDC_BUTTON8, &CCCSwisssys2View::OnBnClickedButton8)
+	ON_BN_CLICKED(IDC_BUTTON3, &CCCSwisssys2View::OnAddSection)
+	ON_BN_CLICKED(IDC_BUTTON4, &CCCSwisssys2View::OnDeleteSection)
+	ON_BN_CLICKED(IDC_BUTTON5, &CCCSwisssys2View::OnEditSection)
+	ON_BN_CLICKED(IDC_BUTTON6, &CCCSwisssys2View::OnCreateSections)
+	ON_NOTIFY(HDN_ITEMCLICK, 0, &CCCSwisssys2View::OnSectionColumnClick)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, &CCCSwisssys2View::OnSectionClick)
+	ON_BN_CLICKED(IDC_BUTTON7, &CCCSwisssys2View::OnCreateClubFiles)
+	ON_BN_CLICKED(IDC_BUTTON8, &CCCSwisssys2View::OnSchoolCodesFileBrowse)
 	ON_EN_CHANGE(IDC_EDIT3, &CCCSwisssys2View::OnEnChangeEdit3)
-	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CCCSwisssys2View::OnDeltaposSpin1)
-	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST2, &CCCSwisssys2View::OnLvnColumnclickList2)
-	ON_BN_CLICKED(IDC_BUTTON9, &CCCSwisssys2View::OnBnClickedButton9)
-	ON_BN_CLICKED(IDC_BUTTON10, &CCCSwisssys2View::OnBnClickedButton10)
-	ON_BN_CLICKED(IDC_BUTTON11, &CCCSwisssys2View::OnBnClickedButton11)
+	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CCCSwisssys2View::OnSectionReorder)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST2, &CCCSwisssys2View::OnSectionPlayersColumnSort)
+	ON_BN_CLICKED(IDC_BUTTON9, &CCCSwisssys2View::OnManageAdditionalRegistrations)
+	ON_BN_CLICKED(IDC_BUTTON10, &CCCSwisssys2View::OnCreateSwisssysTourney)
+	ON_BN_CLICKED(IDC_BUTTON11, &CCCSwisssys2View::OnRestrictFileBrowse)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &CCCSwisssys2View::OnDoubleClickSectionList)
 END_MESSAGE_MAP()
 
 // CCCSwisssys2View construction/destruction
@@ -52,8 +53,9 @@ END_MESSAGE_MAP()
 CCCSwisssys2View::CCCSwisssys2View()
 	: CFormView(IDD_CCSWISSSYS2_FORM)
 {
-	// TODO: add construction code here
 	first_time = true;
+	reset_section_sort();
+	last_section_sort = -1;
 }
 
 CCCSwisssys2View::~CCCSwisssys2View()
@@ -248,7 +250,7 @@ CCCSwisssys2Doc* CCCSwisssys2View::GetDocument() const // non-debug version is i
 // CCCSwisssys2View message handlers
 
 
-void CCCSwisssys2View::OnBnClickedButton1()
+void CCCSwisssys2View::OnRatingsFileBrowse()
 {
 	CFileDialog FileDialog(TRUE, _T("dat"));
 
@@ -261,11 +263,17 @@ void CCCSwisssys2View::OnBnClickedButton1()
 		//MessageBox((LPCTSTR)PathName, _T("Ratings Filename"));
 		ratings_file_edit.SetWindowText(PathName);
 		GetDocument()->SetModifiedFlag();
+#if 1
+		if (!GetDocument()->ratings_file.IsEmpty() && !GetDocument()->loadRatingsFile()) {
+			GetDocument()->ratings_file = L"";
+			ratings_file_edit.SetWindowText(L"");
+		}
+#endif
 	}
 }
 
 
-void CCCSwisssys2View::OnBnClickedButton2()
+void CCCSwisssys2View::OnConstantContactFileBrowse()
 {
 	CFileDialog FileDialog(TRUE, _T("csv"));
 
@@ -288,6 +296,12 @@ void CCCSwisssys2View::OnEnChangeEdit1()
 	ratings_file_edit.GetWindowText(sWindowText);
 	GetDocument()->ratings_file = sWindowText;
 	GetDocument()->SetModifiedFlag();
+#if 1
+	if (!GetDocument()->ratings_file.IsEmpty() && !GetDocument()->loadRatingsFile()) {
+		GetDocument()->ratings_file = L"";
+		ratings_file_edit.SetWindowText(L"");
+	}
+#endif
 }
 
 
@@ -345,7 +359,7 @@ void CCCSwisssys2View::refillSections(Sections &s) {
 }
 
 // When they click the add section button.
-void CCCSwisssys2View::OnBnClickedButton3()
+void CCCSwisssys2View::OnAddSection()
 {
 	Section newSection;
 	while (true) {
@@ -377,7 +391,7 @@ void CCCSwisssys2View::OnBnClickedButton3()
 }
 
 // Click on the delete section button.
-void CCCSwisssys2View::OnBnClickedButton4()
+void CCCSwisssys2View::OnDeleteSection()
 {
 	int selected_row = section_list.GetSelectionMark();
 	if (selected_row >= 0) {
@@ -391,7 +405,7 @@ void CCCSwisssys2View::OnBnClickedButton4()
 
 
 // Click on the edit section button.
-void CCCSwisssys2View::OnBnClickedButton5()
+void CCCSwisssys2View::OnEditSection()
 {
 	int selected_row = section_list.GetSelectionMark();
 	if (selected_row >= 0) {
@@ -517,7 +531,7 @@ std::wstring getLastFour(const std::wstring &full) {
 }
 
 // Click on the button to load sections from constant contact file.
-void CCCSwisssys2View::OnBnClickedButton6()
+void CCCSwisssys2View::OnCreateSections()
 {
 	auto pDoc = GetDocument();
 
@@ -535,18 +549,19 @@ void CCCSwisssys2View::OnBnClickedButton6()
 	std::wstring logfilename = output_dir + _T("\\ccswslog.txt");
 	std::wofstream normal_log(logfilename);
 
-	std::wifstream infile(pDoc->ratings_file);
 	Player p;
-	std::map<std::wstring, unsigned> nwsrs_map;
-	std::map<std::wstring, unsigned> nwsrs_four_map;
-	std::map<std::wstring, unsigned> uscf_map;
-	std::vector<Player> rated_players;
 	std::set<std::wstring> restricted_set;
 
 	bool error_condition = false, warning_condition = false, info_condition = false;
 
 	unsigned player_index = 0;
 
+#if 0
+	std::wifstream infile(pDoc->ratings_file);
+	std::map<std::wstring, unsigned> nwsrs_map;
+	std::map<std::wstring, unsigned> nwsrs_four_map;
+	std::map<std::wstring, unsigned> uscf_map;
+	std::vector<Player> rated_players;
 	while (!infile.eof()) {
 		infile >> p;
 		if (!infile.eof()) {
@@ -559,6 +574,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 			++player_index;
 		}
 	}
+#endif
 
 	if (pDoc->restricted_file != L"") {
 		std::wifstream rfile(pDoc->restricted_file);
@@ -590,7 +606,7 @@ void CCCSwisssys2View::OnBnClickedButton6()
 
 	if (use_cc) {
 		std::wstring ccsstr = CStringToWString(pDoc->constant_contact_file);
-		auto entries = load_constant_contact_file(ccsstr, nwsrs_map, uscf_map, rated_players, pDoc->school_codes, normal_log);
+		auto entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log);
 		if (entries.size() == 0) {
 			MessageBox(_T("No players loaded from constant contact file."), _T("ERROR"));
 			return;
@@ -724,27 +740,27 @@ void CCCSwisssys2View::OnBnClickedButton6()
 
 				CString cs_full_id = CString(full_id.c_str());
 
-				auto rentry = nwsrs_map.find(full_id);
+				auto rentry = pDoc->nwsrs_map.find(full_id);
 				unsigned cc_rating = 4000;
 				unsigned nwsrs_rating;
 				wchar_t grade_code = entries[i].getGradeCode();
 
-				if (rentry != nwsrs_map.end()) {
-					cc_rating = rated_players[rentry->second].get_higher_rating();
-					updateUscfFromRatingFile(uscf_id, uscf_rating, rated_players[rentry->second], normal_log, warning_condition);
-					nwsrs_rating = rated_players[rentry->second].nwsrs_rating;
+				if (rentry != pDoc->nwsrs_map.end()) {
+					cc_rating = pDoc->rated_players[rentry->second].get_higher_rating();
+					updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[rentry->second], normal_log, warning_condition);
+					nwsrs_rating = pDoc->rated_players[rentry->second].nwsrs_rating;
 				}
 				else {
 					if (full_id == L"NONE" || full_id == L"N/A" || full_id == L"") {
-						int exact_match = findExactMatch(upper_last, upper_first, grade_code, rated_players);
+						int exact_match = findExactMatch(upper_last, upper_first, grade_code, pDoc->rated_players);
 						if (exact_match != -1) {
 							warning_condition = true;
 							normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
 
-							full_id = rated_players[exact_match].getFullId();
-							cc_rating = rated_players[exact_match].get_higher_rating();
-							updateUscfFromRatingFile(uscf_id, uscf_rating, rated_players[exact_match], normal_log, warning_condition);
-							nwsrs_rating = rated_players[exact_match].nwsrs_rating;
+							full_id = pDoc->rated_players[exact_match].getFullId();
+							cc_rating = pDoc->rated_players[exact_match].get_higher_rating();
+							updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[exact_match], normal_log, warning_condition);
+							nwsrs_rating = pDoc->rated_players[exact_match].nwsrs_rating;
 						}
 						else {
 							full_id = school_code + grade_code;
@@ -759,23 +775,23 @@ void CCCSwisssys2View::OnBnClickedButton6()
 						// They have an ID but the exact ID wasn't found in the list.  So, search by name
 						// and partial ID.
 						bool found = false;
-						for (unsigned j = 0; j < rated_players.size(); ++j) {
+						for (unsigned j = 0; j < pDoc->rated_players.size(); ++j) {
 							if (//rated_players[j].last_name == upper_last &&
 								//rated_players[j].first_name == upper_first &&
-								rated_players[j].id == last_four_id) {
-								cc_rating = rated_players[j].get_higher_rating();
-								updateUscfFromRatingFile(uscf_id, uscf_rating, rated_players[j], normal_log, warning_condition);
-								nwsrs_rating = rated_players[j].nwsrs_rating;
+								pDoc->rated_players[j].id == last_four_id) {
+								cc_rating = pDoc->rated_players[j].get_higher_rating();
+								updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[j], normal_log, warning_condition);
+								nwsrs_rating = pDoc->rated_players[j].nwsrs_rating;
 
 								//normal_log << "Found by digit ID string from ratings file " << std::endl;
-								if (rated_players[j].grade > grade_code) {
-									grade_code = rated_players[j].grade;
+								if (pDoc->rated_players[j].grade > grade_code) {
+									grade_code = pDoc->rated_players[j].grade;
 								}
 								if (school_code.length() == 3) {
 									full_id = school_code + grade_code + last_four_id;
 								}
 								else {
-									full_id = rated_players[j].school_code + rated_players[j].grade + last_four_id;
+									full_id = pDoc->rated_players[j].school_code + pDoc->rated_players[j].grade + last_four_id;
 								}
 								found = true;
 								break;
@@ -897,21 +913,24 @@ void CCCSwisssys2View::OnBnClickedButton6()
 }
 
 
-void CCCSwisssys2View::OnHdnItemclickList1(NMHDR *pNMHDR, LRESULT *pResult)
+void CCCSwisssys2View::OnSectionColumnClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMHEADER phdr = reinterpret_cast<LPNMHEADER>(pNMHDR);
-	// TODO: Add your control notification handler code here
 	*pResult = 0;
 }
 
 
-void CCCSwisssys2View::OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult)
+void CCCSwisssys2View::OnSectionClick(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	if (pNMLV->uNewState & LVIS_SELECTED) {
 		int selectedItem = pNMLV->iItem;
 		auto pDoc = GetDocument();
 		section_players.DeleteAllItems();
+
+		reset_section_sort();
+		last_section_sort = -1;
+
 		for (unsigned i = 0; i < pDoc->sections[selectedItem].players.size(); ++i) {
 			LVITEM lvItem;
 			int nItem;
@@ -948,7 +967,7 @@ void CCCSwisssys2View::OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 
-void CCCSwisssys2View::OnBnClickedButton7()
+void CCCSwisssys2View::OnCreateClubFiles()
 {
 	auto pDoc = GetDocument();
 	std::wstring output_dir = pDoc->getOutputLocation(); // pDoc->CDocument->m_strPathName
@@ -1006,7 +1025,7 @@ void CCCSwisssys2View::OnBnClickedButton7()
 }
 
 
-void CCCSwisssys2View::OnBnClickedButton8()
+void CCCSwisssys2View::OnSchoolCodesFileBrowse()
 {
 	CFileDialog FileDialog(TRUE, _T("csv"));
 
@@ -1043,7 +1062,7 @@ void CCCSwisssys2View::OnEnChangeEdit3()
 }
 
 
-void CCCSwisssys2View::OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult)
+void CCCSwisssys2View::OnSectionReorder(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
 	*pResult = 0;
@@ -1083,58 +1102,76 @@ void CCCSwisssys2View::OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 template <class T>
-int listCompareItem(T &a, T &b) {
-	if (a < b) return -1;
-	if (a > b) return 1;
+int listCompareItem(T &a, T &b, bool rev=false) {
+	if (a < b) return rev ? 1 : -1;
+	if (a > b) return rev ? -1 : 1;
 	return 0;
 }
 
-int listCompareItemInt(int a, int b) {
-	if (a < b) return -1;
-	if (a > b) return 1;
+int listCompareItemInt(int a, int b, bool rev=false) {
+	if (a < b) return rev ? 1 : -1;
+	if (a > b) return rev ? -1 : 1;
 	return 0;
 }
+
+class spc_sort_info {
+public:
+	int column;
+	bool rev;
+	spc_sort_info(int c, bool r) : column(c), rev(r) {}
+};
 
 int CALLBACK section_players_compare(LPARAM l1, LPARAM l2, LPARAM lsort) {
 	SectionPlayerInfo *p1 = (SectionPlayerInfo*)l1;
 	SectionPlayerInfo *p2 = (SectionPlayerInfo*)l2;
-	switch (lsort) {
+	spc_sort_info *sort_info = (spc_sort_info*)lsort;
+	switch (sort_info->column) {
 	case 0:
-		return listCompareItem(p1->last_name, p2->last_name);
+		return listCompareItem(p1->last_name, p2->last_name, sort_info->rev);
 	case 1:
-		return listCompareItem(p1->first_name, p2->first_name);
+		return listCompareItem(p1->first_name, p2->first_name, sort_info->rev);
 	case 2:
-		return listCompareItem(p1->rating, p2->rating);
+		return listCompareItemInt(p1->rating, p2->rating, sort_info->rev);
 	case 3:
-		return listCompareItem(p1->full_id, p2->full_id);
+		return listCompareItem(p1->full_id, p2->full_id, sort_info->rev);
 	case 4:
-		return listCompareItem(p1->grade, p2->grade);
+		return listCompareItem(p1->grade, p2->grade, sort_info->rev);
 	case 5:
-		return listCompareItem(p1->school, p2->school);
+		return listCompareItem(p1->school, p2->school, sort_info->rev);
 	case 6:
-		return listCompareItemInt(std::stoi(CStringToWString(p1->uscf_rating)), std::stoi(CStringToWString(p2->uscf_rating)));
+	  {
+		std::wstring p1_rating = CStringToWString(p1->uscf_rating);
+		if (p1_rating == L"") p1_rating = L"0";
+		std::wstring p2_rating = CStringToWString(p2->uscf_rating);
+		if (p2_rating == L"") p2_rating = L"0";
+		return listCompareItemInt(std::stoi(p1_rating), std::stoi(p2_rating), sort_info->rev);
+	  }
 	case 7:
-		return listCompareItem(p1->uscf_id, p2->uscf_id);
+		return listCompareItem(p1->uscf_id, p2->uscf_id, sort_info->rev);
 	default:
 		return 0;
 	}
 }
 
-void CCCSwisssys2View::OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult)
+void CCCSwisssys2View::OnSectionPlayersColumnSort(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	// TODO: Add your control notification handler code here
 	*pResult = 0;
-
-	section_players.SortItems(section_players_compare, pNMLV->iSubItem);
+	int column = pNMLV->iSubItem;
+	if (column == last_section_sort) {
+		section_sort[column] = !section_sort[column];
+	}
+	else {
+		reset_section_sort();
+	}
+	last_section_sort = column;
+	spc_sort_info sort_info(column, section_sort[column]);
+	section_players.SortItems(section_players_compare, (LPARAM)&sort_info);
 }
 
-
-void CCCSwisssys2View::OnBnClickedButton9()
+void CCCSwisssys2View::OnManageAdditionalRegistrations()
 {
-	// TODO: Add your control notification handler code here
 	ManageRegistrations mr_dialog(GetDocument());
-
 	mr_dialog.DoModal();
 }
 
@@ -1343,7 +1380,7 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 	return cur_row - 1;
 }
 
-void CCCSwisssys2View::OnBnClickedButton10()
+void CCCSwisssys2View::OnCreateSwisssysTourney()
 {
 	auto pDoc = GetDocument();
 	std::wstring base = pDoc->getFileBase();
@@ -1422,7 +1459,7 @@ void CCCSwisssys2View::OnBnClickedButton10()
 }
 
 
-void CCCSwisssys2View::OnBnClickedButton11()
+void CCCSwisssys2View::OnRestrictFileBrowse()
 {
 	CFileDialog FileDialog(TRUE, _T("txt"));
 
@@ -1436,4 +1473,45 @@ void CCCSwisssys2View::OnBnClickedButton11()
 		restricted_edit.SetWindowText(PathName);
 		GetDocument()->SetModifiedFlag();
 	}
+}
+
+
+void CCCSwisssys2View::OnDoubleClickSectionList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	int selected_row = pNMItemActivate->iItem;
+	if (selected_row >= 0) {
+		section_list.SetSelectionMark(-1);
+		auto pDoc = GetDocument();
+		Section newSection = pDoc->sections[selected_row];
+		while (true) {
+			SectionEditor se(&newSection);
+			INT_PTR nRet = se.DoModal();
+			if (nRet != IDOK) {
+				return;
+			}
+
+			//MessageBox(_T("Debugging"), _T("User pressed OK button on dialog."));
+
+			int conflict = pDoc->sections.conflicts(newSection, selected_row);
+
+			if (conflict >= 0) {
+				//std::wstringstream ss;
+				CString ss = _T("New section conflicts with existing section with name ") + pDoc->sections[conflict].name + _T(".");
+				//ss << "New section conflicts with existing section with name " << pDoc->sections[conflict].name << ".";
+				//MessageBox(CString(ss.str().c_str()), _T("Section Conflict"));
+				MessageBox(ss, _T("Section Conflict"));
+				continue;
+			}
+
+			pDoc->sections[selected_row] = newSection;
+
+			refillSections(pDoc->sections);
+			pDoc->SetModifiedFlag();
+			break;
+		}
+	}
+
+	*pResult = 0;
 }

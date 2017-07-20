@@ -13,7 +13,7 @@
 IMPLEMENT_DYNAMIC(SectionEditor, CDialog)
 
 SectionEditor::SectionEditor(Section *s, CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_DIALOG1, pParent), m_s(s)
+	: CDialog(IDD_SECTION_EDITOR, pParent), m_s(s)
 {
 }
 
@@ -58,6 +58,7 @@ BOOL SectionEditor::OnInitDialog() {
 	min_grade_combo.SetCurSel(0);
 	max_grade_combo.SetCurSel(0);
 	num_subsections_combo.SetCurSel(m_s->num_subsections - 1);
+	uscf_required.SetCheck(m_s->uscf_required ? BST_CHECKED : BST_UNCHECKED);
 	//	section_name_edit.SetWindowText(m_s->subsections);
 
 	if (m_s->usedRatings()) {
@@ -93,6 +94,7 @@ void SectionEditor::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO2, min_grade_combo);
 	DDX_Control(pDX, IDC_COMBO3, max_grade_combo);
 	DDX_Control(pDX, IDC_COMBO4, num_subsections_combo);
+	DDX_Control(pDX, IDC_CHECK1, uscf_required);
 }
 
 
@@ -124,6 +126,7 @@ void SectionEditor::OnBnClickedOk()
 	num_subsections_sel = num_subsections_combo.GetCurSel() + 1;
 	new_section_type_sel = section_type_combo.GetCurSel();
 	int new_min_int, new_max_int;
+	int uscf_required_int = uscf_required.GetCheck();
 	
 	if (new_section_name.GetLength() == 0) {
 		MessageBox(_T("Section name should not be empty."), _T("Section Editor Error"));
@@ -184,13 +187,14 @@ void SectionEditor::OnBnClickedOk()
 		m_s->lower_grade_limit = 'A' + min_grade_sel - 1;
 	}
 	if (max_grade_sel == 0) {
-		m_s->upper_grade_limit = 'M';
+		m_s->upper_grade_limit = 'N';
 	}
 	else {
 		m_s->upper_grade_limit = 'A' + max_grade_sel - 1;
 	}
 	m_s->sec_type = SECTION_TYPE(new_section_type_sel);
 	m_s->num_subsections = num_subsections_sel;
+	m_s->uscf_required = uscf_required_int == BST_CHECKED ? true : false;
 
 	CDialog::OnOK();
 }

@@ -49,6 +49,7 @@ BOOL CCCSwisssys2Doc::OnNewDocument()
 	restricted_file = "";
 	sections.clear();
 	mrplayers.clear();
+	rated_players.clear();
 
 	// TODO: add reinitialization code here
 	// (SDI documents will reuse this document)
@@ -372,6 +373,8 @@ wchar_t getGradeCode(const std::wstring &s) {
 	if (up == L"12") { return L'M'; }
 	if (up == L"12TH") { return L'M'; }
 	if (up == L"TWELTH") { return L'M'; }
+	if (up == L"A") { return L'N'; }
+	if (up == L"ADULT") { return L'N'; }
 	if (up.size() > 1) {
 		std::wstring first_char = up.substr(0, up.length() - 1);
 		return getGradeCode(first_char);
@@ -634,10 +637,10 @@ int LevenshteinDistance(const std::wstring &s, const std::wstring &t) {
 	// initialize v0 (the previous row of distances)
 	// this row is A[0][i]: edit distance for an empty s
 	// the distance is just the number of characters to delete from t
-	for (int i = 0; i < v0len; i++)
+	for (unsigned i = 0; i < v0len; i++)
 	   v0[i] = i;
 
-	for (int i = 0; i < slen; i++)
+	for (unsigned i = 0; i < slen; i++)
 	{
 		// calculate v1 (current row distances) from the previous row v0
 
@@ -646,14 +649,14 @@ int LevenshteinDistance(const std::wstring &s, const std::wstring &t) {
 		v1[0] = i + 1;
 
 		// use formula to fill in the rest of the row
-		for (int j = 0; j < tlen; j++)
+		for (unsigned j = 0; j < tlen; j++)
 		{
 			int cost = (supper[i] == tupper[j]) ? 0 : 1;
 			v1[j + 1] = min(min(v1[j] + 1, v0[j + 1] + 1), v0[j] + cost);
 		}
 
 		// copy v1 (current row) to v0 (previous row) for next iteration
-		for (int j = 0; j < v0len; j++)
+		for (unsigned j = 0; j < v0len; j++)
 			v0[j] = v1[j];
 	}
 
@@ -668,6 +671,33 @@ std::wstring toUpper(const std::wstring &s) {
 	}
 
 	return ret;
+}
+
+bool CCCSwisssys2Doc::loadRatingsFile() {
+	rated_players.clear();
+
+	std::wifstream infile(ratings_file);
+	unsigned player_index = 0;
+	Player p;
+
+	if (!infile) {
+		return false;
+	}
+
+	while (!infile.eof()) {
+		infile >> p;
+		if (!infile.eof()) {
+			rated_players.push_back(p);
+			nwsrs_map.insert(std::pair<std::wstring, unsigned>(p.getFullId(), player_index));
+			nwsrs_four_map.insert(std::pair<std::wstring, unsigned>(p.id, player_index));
+			if (!p.uscf_id.empty()) {
+				uscf_map.insert(std::pair<std::wstring, unsigned>(p.uscf_id, player_index));
+			}
+			++player_index;
+		}
+	}
+
+	return true;
 }
 
 // CCCSwisssys2Doc commands

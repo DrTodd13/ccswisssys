@@ -21,6 +21,18 @@ public:
 // Attributes
 public:
 	CCCSwisssys2Doc* GetDocument() const;
+	bool section_sort[8];
+	void reset_section_sort() {
+		section_sort[0] = false;
+		section_sort[1] = false;
+		section_sort[2] = true;
+		section_sort[3] = false;
+		section_sort[4] = false;
+		section_sort[5] = false;
+		section_sort[6] = true;
+		section_sort[7] = false;
+	}
+	int last_section_sort;
 
 // Operations
 public:
@@ -48,32 +60,33 @@ protected:
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedButton1();
-	afx_msg void OnBnClickedButton2();
+	afx_msg void OnRatingsFileBrowse();
+	afx_msg void OnConstantContactFileBrowse();
 	afx_msg void OnEnChangeEdit1();
 	CEdit ratings_file_edit;
 	CEdit constant_contact_file_edit;
 	afx_msg void OnEnChangeEdit2();
 	CListCtrl section_list;
-	afx_msg void OnBnClickedButton3();
-	afx_msg void OnBnClickedButton4();
-	afx_msg void OnBnClickedButton5();
-	afx_msg void OnBnClickedButton6();
+	afx_msg void OnAddSection();
+	afx_msg void OnDeleteSection();
+	afx_msg void OnEditSection();
+	afx_msg void OnCreateSections();
 	CListCtrl section_players;
 	bool first_time;
-	afx_msg void OnHdnItemclickList1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnItemchangedList1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnBnClickedButton7();
-	afx_msg void OnBnClickedButton8();
+	afx_msg void OnSectionColumnClick(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnSectionClick(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnCreateClubFiles();
+	afx_msg void OnSchoolCodesFileBrowse();
 	afx_msg void OnEnChangeEdit3();
 	CEdit SchoolCodesEdit;
 	CSpinButtonCtrl section_spin_button;
-	afx_msg void OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnLvnColumnclickList2(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnBnClickedButton9();
-	afx_msg void OnBnClickedButton10();
-	afx_msg void OnBnClickedButton11();
+	afx_msg void OnSectionReorder(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnSectionPlayersColumnSort(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnManageAdditionalRegistrations();
+	afx_msg void OnCreateSwisssysTourney();
+	afx_msg void OnRestrictFileBrowse();
 	CEdit restricted_edit;
+	afx_msg void OnDoubleClickSectionList(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 #ifndef _DEBUG  // debug version in CCSwisssys2View.cpp

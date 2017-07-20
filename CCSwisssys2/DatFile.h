@@ -60,7 +60,34 @@ public:
         return uscf_prov_codes == L"E" || uscf_prov_codes == L"P";
     }
 
-    Player(void) : grade(L'Z'), nwsrs_rating(0), num_games(0), games_ytd(0), highest_rating_this_year(0), lowest_rating(0), start_rating(0), kirks_code(0), rating_basis(L' '), uscf_rating(L""), calc_highest_rating(0) {}
+    Player(void) : 
+		grade(L'Z'), 
+		nwsrs_rating(0), 
+		num_games(0),
+		games_ytd(0), 
+		highest_rating_this_year(0), 
+		lowest_rating(0), 
+		start_rating(0), 
+		kirks_code(0), 
+		rating_basis(L' '), 
+		uscf_rating(L""), 
+		calc_highest_rating(0) {}
+	Player(std::wstring &l, std::wstring &f, std::wstring &i, std::wstring &s, unsigned nw, wchar_t g) :
+		last_name(l),
+		first_name(f),
+		id(i),
+		school_code(s),
+		nwsrs_rating(nw),
+		grade(g),
+		num_games(0),
+		games_ytd(0),
+		highest_rating_this_year(0),
+		lowest_rating(0),
+		start_rating(0),
+		kirks_code(0),
+		rating_basis(L' '),
+		uscf_rating(L""),
+		calc_highest_rating(0) {}
 };
 
 std::wstring read_fixed(std::wistream &in, unsigned length);

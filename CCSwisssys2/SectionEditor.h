@@ -17,7 +17,7 @@ public:
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_DIALOG1 };
+	enum { IDD = IDD_SECTION_EDITOR };
 #endif
 
 protected:
@@ -38,4 +38,5 @@ public:
 	CComboBox max_grade_combo;
 	CComboBox num_subsections_combo;
 	afx_msg void OnEnChangeSubsections();
+	CButton uscf_required;
 };

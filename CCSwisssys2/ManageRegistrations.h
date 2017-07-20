@@ -21,7 +21,7 @@ public:
 
 protected:
 	CCCSwisssys2Doc *pDoc;
-	std::vector<MRPlayer> rated_players;
+    //std::vector<MRPlayer> rated_players;
 	int ending_index[27];
 	bool inProcessingChange;
 
@@ -43,8 +43,8 @@ public:
 	afx_msg void OnEnChangeEdit4();
 	CEdit school_name_edit;
 	afx_msg void OnEnChangeEdit5();
-	afx_msg void OnBnClickedButton1();
-	afx_msg void OnBnClickedButton2();
+	afx_msg void OnAddNewPlayer();
+	afx_msg void OnConstantContactFileBrowse();
 	afx_msg void OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult);
 	CComboBox grade_combo_box;
 	afx_msg void OnCbnSelchangeCombo2();
