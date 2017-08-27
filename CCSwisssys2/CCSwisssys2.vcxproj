@@ -200,6 +200,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SchoolSelector.h" />
     <ClInclude Include="SectionEditor.h" />
+    <ClInclude Include="SplitSection.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tokenize_csv.h" />
@@ -213,6 +214,7 @@
     <ClCompile Include="ManageRegistrations.cpp" />
     <ClCompile Include="SchoolSelector.cpp" />
     <ClCompile Include="SectionEditor.cpp" />
+    <ClCompile Include="SplitSection.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

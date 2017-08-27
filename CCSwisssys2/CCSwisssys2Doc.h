@@ -575,7 +575,6 @@ public:
 };
 
 extern std::wstring REG_STR;
-extern std::wstring ADULT_STR;
 
 enum {
 	FIRST_NAME = 0,
@@ -619,7 +618,6 @@ public:
 	std::wstring getVolunteer(void)   const { valid(); return fields[9]; }
 	std::wstring getQuestions(void)   const { valid(); return fields[10]; }
 	*/
-	//bool didAdultCheck(void)          const { valid(); return fields[m_locations[ADULT_CHECK]] == ADULT_STR; }
 	bool didAdultCheck(void)          const { 
 		valid(); 
 		return doAdultCheck(fields, m_empty_player_fields);
@@ -657,6 +655,8 @@ public:
 	}
 };
 
+bool isNumeric(std::wstring &s);
+
 std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename,
 	const std::map<std::wstring, unsigned> &nwsrs_map,
 	const std::map<std::wstring, unsigned> &uscf_map,
@@ -684,6 +684,7 @@ public:
 	std::map<std::wstring, unsigned> nwsrs_map;
 	std::map<std::wstring, unsigned> nwsrs_four_map;
 	std::map<std::wstring, unsigned> uscf_map;
+	bool save_school_corrections;
 
 // Operations
 public:
@@ -742,5 +743,6 @@ protected:
 	// Helper function that sets search content for a Search Handler
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
+public:
 };
 

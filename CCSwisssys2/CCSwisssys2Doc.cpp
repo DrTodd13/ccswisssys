@@ -50,16 +50,12 @@ BOOL CCCSwisssys2Doc::OnNewDocument()
 	sections.clear();
 	mrplayers.clear();
 	rated_players.clear();
-
-	// TODO: add reinitialization code here
-	// (SDI documents will reuse this document)
+	save_school_corrections = true;
 
 	return TRUE;
 }
 
 std::wstring REG_STR = std::wstring(L"Registered");
-std::wstring ADULT_STR = std::wstring(L"Adult Contact");
-//std::wstring ADULT_STR = std::wstring(L"\"OK, I'll add my players below!\"");
 
 // CCCSwisssys2Doc serialization
 
@@ -95,6 +91,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		mrplayers.Serialize(ar);
 		::Serialize(saved_school_corrections, ar);
 		school_codes.Serialize(ar);
+		ar << save_school_corrections;
 	}
 	else
 	{
@@ -109,6 +106,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		mrplayers.Serialize(ar);
 		::Serialize(saved_school_corrections, ar);
 		school_codes.Serialize(ar);
+		ar >> save_school_corrections;
 	}
 }
 
@@ -510,7 +508,6 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 //		normal_log << "Empty player field " << *iter << std::endl;
 //	}
 
-	//	dynamic_locations[ADULT_CHECK] = findFieldWithOperator(ccret, FindFieldByString(std::wstring(ADULT_STR)), dynamic_locations[REGISTERED]);
 	dynamic_locations[FIRST_NAME] = findFieldWithOperator(normal_log, ccret, FindFirstName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.5);
 	if (dynamic_locations[FIRST_NAME] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect FIRST NAME field in constant contact registration file."), _T("ERROR"), MB_OK);
@@ -698,6 +695,10 @@ bool CCCSwisssys2Doc::loadRatingsFile() {
 	}
 
 	return true;
+}
+
+bool isNumeric(std::wstring &s) {
+	return (s.find_first_not_of(L"0123456789") == std::string::npos);
 }
 
 // CCCSwisssys2Doc commands

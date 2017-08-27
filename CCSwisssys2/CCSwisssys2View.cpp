@@ -16,6 +16,7 @@
 #include <algorithm>
 #include "ManageRegistrations.h"
 #include "SchoolSelector.h"
+#include "SplitSection.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,6 +47,9 @@ BEGIN_MESSAGE_MAP(CCCSwisssys2View, CFormView)
 	ON_BN_CLICKED(IDC_BUTTON10, &CCCSwisssys2View::OnCreateSwisssysTourney)
 	ON_BN_CLICKED(IDC_BUTTON11, &CCCSwisssys2View::OnRestrictFileBrowse)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &CCCSwisssys2View::OnDoubleClickSectionList)
+	ON_BN_CLICKED(IDC_SPLIT_SECTION, &CCCSwisssys2View::OnBnClickedSplitSection)
+	ON_COMMAND(ID_OPTIONS_SAVESCHOOLCORRECTIONS, &CCCSwisssys2View::OnOptionsSaveschoolcorrections)
+	ON_UPDATE_COMMAND_UI(ID_OPTIONS_SAVESCHOOLCORRECTIONS, &CCCSwisssys2View::OnUpdateOptionsSaveschoolcorrections)
 END_MESSAGE_MAP()
 
 // CCCSwisssys2View construction/destruction
@@ -338,6 +342,12 @@ void addToSectionList(CListCtrl &section_list, Section &newSection, int position
 
 	section_list.SetItemText(nItem, 5, getSectionTypeString(newSection.sec_type));
 
+	if (newSection.players.size() > 0) {
+		std::wstringstream ss;
+		ss << newSection.players.size();
+		section_list.SetItemText(nItem, 6, CString(ss.str().c_str()));
+	}
+
 	if (newSection.num_subsections > 1) {
 		std::wstringstream ss;
 		ss << newSection.num_subsections;
@@ -346,7 +356,7 @@ void addToSectionList(CListCtrl &section_list, Section &newSection, int position
 	}
 }
 
-void CCCSwisssys2View::refillSections(Sections &s) {
+void CCCSwisssys2View::refillSections(Sections &s, bool clear) {
 	unsigned i;
 	section_list.DeleteAllItems();
 	for (i = 0; i < s.size(); ++i) {
@@ -354,8 +364,10 @@ void CCCSwisssys2View::refillSections(Sections &s) {
 	}
 	section_list.SetSelectionMark(-1);
 	section_players.DeleteAllItems();
-	auto pDoc = GetDocument();
-	pDoc->sections.clearPlayers();
+	if (clear) {
+		auto pDoc = GetDocument();
+		pDoc->sections.clearPlayers();
+	}
 }
 
 // When they click the add section button.
@@ -481,10 +493,6 @@ std::wstring intToString(unsigned v) {
 	std::wstringstream ss;
 	ss << v;
 	return ss.str();
-}
-
-bool isNumeric(std::wstring &s) {
-	return (s.find_first_not_of(L"0123456789") == std::string::npos);
 }
 
 void updateUscfFromRatingFile(std::wstring &uscf_id, std::wstring &uscf_rating, const Player &p, std::wofstream &normal_log, bool &warning_condition) {
@@ -703,11 +711,11 @@ void CCCSwisssys2View::OnCreateSections()
 							if (pDoc->school_codes.isExactNoSchool(school, ratings_school_code)) {
 								school_code = ratings_school_code;
 							}
-//							auto prev_iter = pDoc->saved_school_corrections.find(school);
-//							if (prev_iter != pDoc->saved_school_corrections.end()) {
-//								school_code = prev_iter->second;
-//								school = pDoc->school_codes.findName(school_code);
-//							}
+							auto prev_iter = pDoc->saved_school_corrections.find(school);
+							if (prev_iter != pDoc->saved_school_corrections.end()) {
+								school_code = prev_iter->second;
+								school = pDoc->school_codes.findName(school_code);
+							}
 							else {
 								if (school == L"") {
 									error_condition = true;
@@ -1514,4 +1522,46 @@ void CCCSwisssys2View::OnDoubleClickSectionList(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	*pResult = 0;
+}
+
+
+void CCCSwisssys2View::OnBnClickedSplitSection()
+{
+	int selected_row = section_list.GetSelectionMark();
+	if (selected_row >= 0) {
+		section_list.SetSelectionMark(-1);
+		auto pDoc = GetDocument();
+		Section selected_section = pDoc->sections[selected_row];
+
+		if (selected_section.players.size() > 2) {
+			SplitSection ss(&selected_section, pDoc, selected_row);
+			INT_PTR nRet = ss.DoModal();
+			if (nRet == IDOK) {
+				refillSections(pDoc->sections, false);
+				pDoc->SetModifiedFlag();
+			}
+		}
+		else {
+			MessageBox(_T("Can't split a section with less than 3 players."), _T("Information"), MB_OK);
+		}
+	}
+}
+
+
+void CCCSwisssys2View::OnOptionsSaveschoolcorrections()
+{
+	auto pDoc = GetDocument();
+	pDoc->save_school_corrections = !pDoc->save_school_corrections;
+	pDoc->saved_school_corrections.clear();
+	pDoc->SetModifiedFlag();
+}
+
+
+void CCCSwisssys2View::OnUpdateOptionsSaveschoolcorrections(CCmdUI *pCmdUI)
+{
+	auto pDoc = GetDocument();
+	CMenu *pMenu = this->GetParent()->GetMenu();
+	if (pMenu != NULL) {
+		pMenu->CheckMenuItem(ID_OPTIONS_SAVESCHOOLCORRECTIONS, (pDoc->save_school_corrections ? MF_CHECKED : MF_UNCHECKED) | MF_BYCOMMAND);
+	}
 }

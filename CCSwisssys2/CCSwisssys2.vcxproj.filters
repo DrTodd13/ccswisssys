@@ -54,6 +54,9 @@
     <ClInclude Include="SchoolSelector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SplitSection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCSwisssys2.cpp">
@@ -84,6 +87,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SchoolSelector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SplitSection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

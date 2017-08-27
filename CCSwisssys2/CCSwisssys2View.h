@@ -53,7 +53,7 @@ public:
 #endif
 
 protected:
-	void refillSections(Sections &s);
+	void refillSections(Sections &s, bool clear=true);
 	unsigned createSectionWorksheet(const std::wstring &output_dir, std::wstring &sec_name, const Section &sec, int subsec);
 
 // Generated message map functions
@@ -87,6 +87,9 @@ public:
 	afx_msg void OnRestrictFileBrowse();
 	CEdit restricted_edit;
 	afx_msg void OnDoubleClickSectionList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedSplitSection();
+	afx_msg void OnOptionsSaveschoolcorrections();
+	afx_msg void OnUpdateOptionsSaveschoolcorrections(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in CCSwisssys2View.cpp

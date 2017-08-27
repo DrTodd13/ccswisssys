@@ -11,6 +11,7 @@
 #define IDD_SECTION_EDITOR              311
 #define IDD_MANAGE_REGISTRATIONS        318
 #define IDD_SCHOOL_EDITOR               321
+#define IDD_SPLIT_SECTION               325
 #define IDC_EDIT1                       1000
 #define IDC_BUTTON1                     1001
 #define IDC_EDIT2                       1002
@@ -37,14 +38,18 @@
 #define IDC_BUTTON10                    1025
 #define IDC_BUTTON11                    1026
 #define IDC_CHECK1                      1027
+#define IDC_NUM_SPLIT                   1030
+#define IDC_SPLIT_SPIN                  1031
+#define IDC_SPLIT_SECTION               1032
+#define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        323
-#define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_RESOURCE_VALUE        327
+#define _APS_NEXT_COMMAND_VALUE         32772
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif
