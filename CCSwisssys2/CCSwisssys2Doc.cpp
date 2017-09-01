@@ -390,6 +390,8 @@ bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_
 	return false;
 }
 
+//#define DEBUG_FFWO
+
 /*
 Scans the whole constant contact information for fields having exactly the text "Registered".
 If only one such field exists then it becomes the field.  If there are more than one then if one predominates the other
@@ -412,7 +414,9 @@ int findFieldWithOperator(
 
 		for (j = 0; j < cc[i].size(); ++j) {
 			if (matcher(cc[i][j], cc[i])) {
-//				normal_log << "findFieldWithOperator match " << cc[i][j] << " " << j << " for player " << cc[i][0] << " " << cc[i][1] << std::endl;
+#ifdef DEBUG_FFWO
+				normal_log << "findFieldWithOperator match " << cc[i][j] << " " << j << " for player " << cc[i][0] << " " << cc[i][1] << std::endl;
+#endif
 				auto rfiter = register_fields.find(j);
 				if (rfiter == register_fields.end()) {
 					register_fields.insert(std::pair<int, int>(j, 1));
@@ -426,12 +430,16 @@ int findFieldWithOperator(
 
 	int count = 0;
 	for (auto iter = register_fields.begin(); iter != register_fields.end(); ++iter) {
-//		normal_log << "findFieldWithOperator found " << iter->second << " possibilities for field " << iter->first << std::endl;
+#ifdef DEBUG_FFWO
+		normal_log << "findFieldWithOperator found " << iter->second << " possibilities for field " << iter->first << std::endl;
+#endif
 		count += iter->second;
 	}
 	for (auto iter = register_fields.begin(); iter != register_fields.end(); ++iter) {
 		double ratio = iter->second / (double)count;
-//		normal_log << "findFieldWithOperator ratio " << ratio << " for field " << iter->first << std::endl;
+#ifdef DEBUG_FFWO
+		normal_log << "findFieldWithOperator ratio " << ratio << " for field " << iter->first << std::endl;
+#endif
 		if (ratio > cutoff) {
 			return iter->first;
 		}
