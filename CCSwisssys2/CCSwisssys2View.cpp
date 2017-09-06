@@ -514,7 +514,7 @@ void updateUscfFromRatingFile(std::wstring &uscf_id, std::wstring &uscf_rating, 
 	else {
 		if (isNumeric(uscf_id) && uscf_id.length() == 8) {
 			warning_condition = true;
-			normal_log << "WARNING: USCF ID specified but no USCF ID present in the ratings file for player " << p.last_name << " " << p.first_name << " grade code = " << p.grade << std::endl;
+			normal_log << "WARNING: USCF ID specified " << uscf_id << " but no USCF ID present in the ratings file for player " << p.last_name << " " << p.first_name << " grade code = " << p.grade << std::endl;
 		}
 		else {
 			uscf_id = L"";
@@ -537,6 +537,8 @@ int findExactMatch(const std::wstring &last, const std::wstring &first, wchar_t 
 std::wstring getLastFour(const std::wstring &full) {
 	return full.substr(full.length() - 4);
 }
+
+//#define DEBUG_MAIN
 
 // Click on the button to load sections from constant contact file.
 void CCCSwisssys2View::OnCreateSections()
@@ -656,9 +658,14 @@ void CCCSwisssys2View::OnCreateSections()
 
 		for (i = 0; i < entries.size(); ++i) {
 			if (entries[i].isPlayer()) {
+#ifdef DEBUG_MAIN
+				normal_log << std::endl;
+#endif
+
 				std::wstring last_name = entries[i].getLastName();
 				std::wstring first_name = entries[i].getFirstName();
 				std::wstring school = entries[i].getSchool();
+				std::wstring orig_school = school;
 				std::wstring full_id = entries[i].getNwsrsId();
 				//std::wstring given_rating = entries[i].getNwsrsRating();
 				std::wstring upper_last = last_name;
@@ -666,23 +673,30 @@ void CCCSwisssys2View::OnCreateSections()
 				std::wstring uscf_id = entries[i].getUscfId();
 				//std::wstring uscf_rating = entries[i].getUscfRating();
 				std::wstring uscf_rating = L"";
+				wchar_t grade_code = entries[i].getGradeCode();
+				SCHOOL_TYPE st = getSchoolType(grade_code);
 
 				upper_last = toUpper(upper_last);
 				upper_first = toUpper(upper_first);
 				full_id = toUpper(full_id);
-				//given_rating = toUpper(given_rating);
 
-				//if (upper_first == L"ANDERSON") {
-				//	upper_first = L"ANDERSON";
-				//}
+//				if (upper_first == L"JANELLE") {
+//					upper_first = L"JANELLE";
+//				}
 
 				if (full_id == L"NONE" || (full_id.size() != 0 && full_id.size() != 4 && full_id.size() != 8)) {
 					full_id = L"";
+
+					warning_condition = true;
+					if (full_id != L"NONE" && full_id.size() != 0) {
+						normal_log << "WARNING: Specified ID " << full_id << " for player " << first_name << " " << last_name << " is malformed.  Ignoring the ID and trying to find ID from name." << std::endl;
+					}
 				}
 
 				std::wstring last_four_id;
 				if (full_id.length() >= 4) {
 					last_four_id = getLastFour(full_id);
+
 				}
 
 				std::wstring school_code = L"";
@@ -692,47 +706,56 @@ void CCCSwisssys2View::OnCreateSections()
 					ratings_school_code = full_id.substr(0, 3);
 				}
 
+#ifdef DEBUG_MAIN
+				normal_log << "Processing " << first_name << " " << last_name << " " << school << " " << full_id << " " << "last 4: " << last_four_id << " school code: " << ratings_school_code << " " << grade_code << " " << st << std::endl;
+#endif
+
 				if (school == L"") {
 					school = ratings_school_code;
-				}
-
-				if (school.length() == 3) {
+#ifdef DEBUG_MAIN
+					normal_log << "school not specified...getting it from school code" << school << std::endl;
+#endif
+				} 
+				else if (school.length() == 3) {
 					school_code = toUpper(school);
-				}
-
-				if (school_code != L"") {
-					school = pDoc->school_codes.findName(school_code);
+#ifdef DEBUG_MAIN
+					normal_log << "school length is 3 so assuming school code " << school_code << std::endl;
+#endif
+				} 
+				else if (pDoc->school_codes.isExactNoSchool(school, ratings_school_code) && 
+					     pDoc->school_codes.schoolIsType(ratings_school_code, st)) {
+					school_code = ratings_school_code;
 				}
 				else {
-					school_code = pDoc->school_codes.findCodeFromSchoolExact(school);
+					school_code = pDoc->school_codes.findCodeFromSchoolExactNoSchool(school, st);
 					if (school_code == L"") {
-						school_code = pDoc->school_codes.findCodeFromSchoolExactNoSchool(school);
-						if (school_code == L"") {
-							if (pDoc->school_codes.isExactNoSchool(school, ratings_school_code)) {
-								school_code = ratings_school_code;
-							}
-							auto prev_iter = pDoc->saved_school_corrections.find(school);
-							if (prev_iter != pDoc->saved_school_corrections.end()) {
-								school_code = prev_iter->second;
-								school = pDoc->school_codes.findName(school_code);
+#ifdef DEBUG_MAIN
+						normal_log << "school not found exactly without school " << school << std::endl;
+#endif
+						auto prev_iter = pDoc->saved_school_corrections.find(school);
+						if (prev_iter != pDoc->saved_school_corrections.end()) {
+							school_code = prev_iter->second;
+							school = pDoc->school_codes.findName(school_code);
+						}
+						else {
+							if (school == L"") {
+								error_condition = true;
+								normal_log << "ERROR: no school or NWSRS ID entered for player " << last_name << " " << first_name << " " << std::endl;
+								continue;
 							}
 							else {
-								if (school == L"") {
-									error_condition = true;
-									normal_log << "ERROR: no school or NWSRS ID entered for player " << last_name << " " << first_name << " " << std::endl;
-									continue;
+								SchoolSelector ss_dialog(pDoc, school, ratings_school_code, school_code);
+
+								if (ss_dialog.DoModal() == IDOK) {
+									school = pDoc->school_codes.findName(school_code);
+#ifdef DEBUG_MAIN
+									normal_log << "school code after asking user " << school_code << " " << school << std::endl;
+#endif
 								}
 								else {
-									SchoolSelector ss_dialog(pDoc, school, ratings_school_code, school_code);
-
-									if (ss_dialog.DoModal() == IDOK) {
-										school = pDoc->school_codes.findName(school_code);
-									}
-									else {
-										error_condition = true;
-										normal_log << "ERROR: no school code correction entered for " << school << " for player " << last_name << " " << first_name << " " << std::endl;
-										continue;
-									}
+									error_condition = true;
+									normal_log << "ERROR: no school code correction entered for " << school << " for player " << last_name << " " << first_name << " " << std::endl;
+									continue;
 								}
 							}
 						}
@@ -741,7 +764,7 @@ void CCCSwisssys2View::OnCreateSections()
 
 				if (full_id.length() == 8 && ratings_school_code != school_code) {
 					info_condition = true;
-					normal_log << "INFO: change of school from " << ratings_school_code << " to " << school_code << " for player " << first_name << " " << last_name << std::endl;
+					normal_log << "INFO: Player " << first_name << " " << last_name << " with ID specified as " << full_id << " and school as " << orig_school << " change of school from " << ratings_school_code << " to " << school_code << std::endl;
 
 					full_id.replace(0, 3, school_code); // Update school code in their ID.
 				}
@@ -751,7 +774,6 @@ void CCCSwisssys2View::OnCreateSections()
 				auto rentry = pDoc->nwsrs_map.find(full_id);
 				unsigned cc_rating = 4000;
 				unsigned nwsrs_rating;
-				wchar_t grade_code = entries[i].getGradeCode();
 
 				if (rentry != pDoc->nwsrs_map.end()) {
 					cc_rating = pDoc->rated_players[rentry->second].get_higher_rating();
@@ -792,11 +814,12 @@ void CCCSwisssys2View::OnCreateSections()
 								nwsrs_rating = pDoc->rated_players[j].nwsrs_rating;
 
 								//normal_log << "Found by digit ID string from ratings file " << std::endl;
-								if (pDoc->rated_players[j].grade > grade_code) {
+								if (pDoc->rated_players[j].grade != grade_code) {
 									grade_code = pDoc->rated_players[j].grade;
 								}
 								if (school_code.length() == 3) {
-									full_id = school_code + grade_code + last_four_id;
+									full_id = school_code + pDoc->rated_players[j].grade + last_four_id;
+//									full_id = school_code + grade_code + last_four_id;
 								}
 								else {
 									full_id = pDoc->rated_players[j].school_code + pDoc->rated_players[j].grade + last_four_id;
@@ -1339,6 +1362,28 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 	players->label(0, cur_col++, "ADJ_SCORES");
 	players->label(0, cur_col++, "NON_FIDE_RDS");
 
+	std::map<CString, unsigned> sibling_count;
+
+	for (i = 0; i < sec.players.size(); ++i) {
+		if (sec.players[i].subsection != subsec) continue;
+		auto miter = sibling_count.find(sec.players[i].last_name);
+		if (miter == sibling_count.end()) {
+			sibling_count.insert(std::pair<CString, unsigned>(sec.players[i].last_name, 1));
+		}
+		else {
+			miter->second++;
+		}
+	}
+
+	std::map<CString, unsigned> sibling_club_names;
+	unsigned next_club_id = 0;
+
+	for (auto miter = sibling_count.begin(); miter != sibling_count.end(); ++miter) {
+		if (miter->second > 1) {
+			sibling_club_names.insert(std::pair<CString, unsigned>(miter->first, next_club_id++));
+		}
+	}
+
 	unsigned cur_row = 1;
 	for (i = 0; i < sec.players.size(); ++i) {
 		if (sec.players[i].subsection != subsec) continue;
@@ -1360,6 +1405,11 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 		if (!sec.players[i].uscf_rating.IsEmpty()) {
 			std::wstring rtng2_field = CStringToWString(sec.players[i].uscf_rating);
 			players->label(cur_row, 4, toString(rtng2_field));
+		}
+
+		auto miter = sibling_club_names.find(sec.players[i].last_name);
+		if (miter != sibling_club_names.end()) {
+			players->number(cur_row, 7, miter->second);
 		}
 
 		std::wstring school_code_ws = CStringToWString(sec.players[i].school_code);

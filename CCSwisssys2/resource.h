@@ -41,15 +41,20 @@
 #define IDC_NUM_SPLIT                   1030
 #define IDC_SPLIT_SPIN                  1031
 #define IDC_SPLIT_SECTION               1032
+#define IDC_MAKE_QUADS                  1033
+#define IDC_RADIO_MAKE_QUADS            1034
+#define IDC_RADIO2                      1035
+#define IDC_RADIO_EQUAL                 1035
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
+#define ID_OPTIONS_TEST                 32772
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        327
-#define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1033
+#define _APS_NEXT_COMMAND_VALUE         32773
+#define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

@@ -28,6 +28,8 @@ void SplitSection::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_NUM_SPLIT, num_split);
+	DDX_Control(pDX, IDC_RADIO_MAKE_QUADS, QuadButton);
+	DDX_Control(pDX, IDC_RADIO_EQUAL, EqualButton);
 }
 
 
@@ -121,9 +123,34 @@ struct {
 
 void SplitSection::OnBnClickedOk()
 {
+	bool make_quads = false;
+	bool make_equal = false;
+	bool quad_swiss = false;
+	int sections_left = 0;
+
 	int players_left = sec->players.size();
-	int sections_left = int_num_split;
-	
+	int new_num_sections = 0;
+
+	if (QuadButton.GetCheck()) {
+		make_quads = true;
+
+		// This works for both even and off sections.
+		// If there is between a full quad plus one to full quads plus 3
+		// then this integer division rounds down because those extra
+		// players are absorbed into a 5+ swiss section.
+		sections_left = players_left / 4;
+		quad_swiss = players_left % 4;
+	}
+	else if (EqualButton.GetCheck()) {
+		make_equal = true;
+
+		sections_left = int_num_split;
+	}
+
+	new_num_sections = sections_left;
+
+	if (!make_quads && !make_equal) return;
+
 	std::vector<SectionPlayerInfo> working_copy = sec->players;
 	std::sort(working_copy.begin(), working_copy.end(), customSplitLess);
 	int next_to_use = 0;
@@ -136,9 +163,14 @@ void SplitSection::OnBnClickedOk()
 		int approx_size = players_left;
 
 		if (sections_left > 1) {
-			approx_size = players_left / sections_left;
-			if (approx_size % 2 == 1) {
-				approx_size--;
+			if (make_quads) {
+				approx_size = 4;
+			}
+			else {
+				approx_size = players_left / sections_left;
+				if (approx_size % 2 == 1) {
+					approx_size--;
+				}
 			}
 		}
 
@@ -146,7 +178,19 @@ void SplitSection::OnBnClickedOk()
 
 		Section newSection;
 		newSection.lower_grade_limit = sec->lower_grade_limit;
-		newSection.sec_type = sec->sec_type;
+
+		if (make_quads) {
+			if (sections_left > 1 || !quad_swiss) {
+				newSection.sec_type = ROUND_ROBIN;
+			}
+			else {
+				newSection.sec_type = SWISS;
+			}
+		}
+		else {
+			newSection.sec_type = sec->sec_type;
+		}
+
 		newSection.upper_grade_limit = sec->upper_grade_limit;
 		newSection.uscf_required = sec->uscf_required;
 		std::wstringstream new_name;
@@ -170,7 +214,7 @@ void SplitSection::OnBnClickedOk()
 		new_sections.push_back(newSection);
 	}
 
-	if (new_sections.size() != int_num_split) {
+	if (new_sections.size() != new_num_sections) {
 		MessageBox(_T("Split section algorithm failed to split into the requested number of sections."), _T("ERROR"));
 		return;
 	}

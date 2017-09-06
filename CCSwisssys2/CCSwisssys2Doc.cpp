@@ -142,6 +142,28 @@ std::wstring removeSchoolSubstr(const std::wstring &name) {
 	return ret;
 }
 
+SCHOOL_TYPE getSchoolType(wchar_t grade) {
+	switch (grade) {
+	case 'A': return ELEMENTARY;
+	case 'B': return ELEMENTARY;
+	case 'C': return ELEMENTARY;
+	case 'D': return ELEMENTARY;
+	case 'E': return ELEMENTARY;
+	case 'F': return ELEMENTARY;
+	case 'G': return MIDDLE;
+	case 'H': return MIDDLE;
+	case 'I': return MIDDLE;
+	case 'J': return HIGH;
+	case 'K': return HIGH;
+	case 'L': return HIGH;
+	case 'M': return HIGH;
+	case 'N': return ADULT;
+	default:
+		assert(0);
+		return UNKNOWN;
+	}
+}
+
 CString getGradeString(wchar_t grade) {
 	switch (grade) {
 	case 'A': return CString("A - Kindergarten");
@@ -707,6 +729,16 @@ bool CCCSwisssys2Doc::loadRatingsFile() {
 
 bool isNumeric(std::wstring &s) {
 	return (s.find_first_not_of(L"0123456789") == std::string::npos);
+}
+
+std::wstring getSchoolTypeStr(SCHOOL_TYPE &st) {
+	switch (st) {
+	case ELEMENTARY: return L"ES";
+	case MIDDLE: return L"MS";
+	case HIGH: return L"HS";
+	case ADULT: return L"ADULT";
+	default: return L"UNKNOWN";
+	}
 }
 
 // CCCSwisssys2Doc commands

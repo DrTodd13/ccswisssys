@@ -17,8 +17,18 @@ typedef int SECTION_TYPE;
 #define	SWISS 0
 #define ROUND_ROBIN 1
 
+enum SCHOOL_TYPE {
+	ELEMENTARY=1,
+	MIDDLE=2,
+	HIGH=4,
+	ADULT=8,
+	UNKNOWN=16
+};
+
 CString getGradeString(wchar_t grade);
 CString getGradeStringShort(wchar_t grade);
+SCHOOL_TYPE getSchoolType(wchar_t grade);
+std::wstring getSchoolTypeStr(SCHOOL_TYPE &st);
 CString getSectionTypeString(int type);
 std::wstring CStringToWString(const CString &cs);
 CString WStringToCString(const std::wstring &ws);
@@ -357,7 +367,7 @@ public:
 		std::vector<std::wstring> fields;
 		fields.push_back(code);
 		fields.push_back(name);
-		fields.push_back(type);
+		fields.push_back(toUpper(type));
 		fields.push_back(city);
 		fields.push_back(state);
 		internalCstr(fields);
@@ -391,6 +401,11 @@ public:
 	std::wstring getSchoolType(void) const { return fields[2]; }
 	std::wstring getSchoolCity(void) const { return fields[3]; }
 	std::wstring getSchoolState(void) const { return fields[4]; }
+
+	bool isType(SCHOOL_TYPE &st) const {
+		std::wstring sts = getSchoolTypeStr(st);
+		return getSchoolType().find(sts) != std::string::npos;
+	}
 };
 
 class AllCodesEntryCodeCompare {
@@ -445,6 +460,12 @@ public:
 		sortAndIndex();
 	}
 
+	bool schoolIsType(const std::wstring &code, SCHOOL_TYPE &st) {
+		auto iter = map_id_to_index.find(code);
+		ASSERT(iter != map_id_to_index.end());
+		return operator[](iter->second).isType(st);
+	}
+	
 	void addSchool(const AllCodesEntry &entry) {
 		m_new_schools.push_back(entry);
 		push_back(entry);
@@ -505,13 +526,14 @@ public:
 		return false;
 	}
 
-	std::wstring findCodeFromSchoolExactNoSchool(const std::wstring &s) const {
+	std::wstring findCodeFromSchoolExactNoSchool(const std::wstring &s, SCHOOL_TYPE st) const {
 		std::wstring sup = removeSchoolSubstr(toUpper(s));
 
 		std::wstring ret = L"";
 
 		for (unsigned i = 1; i < size(); ++i) {
-			if (sup == operator[](i).getSchoolNameUpperNoSchool()) {
+			bool hasRightType = operator[](i).isType(st);
+			if (hasRightType && sup == operator[](i).getSchoolNameUpperNoSchool()) {
 				if (ret == L"") {
 					ret = operator[](i).getSchoolCode();
 				}

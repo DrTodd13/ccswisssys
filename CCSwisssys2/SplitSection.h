@@ -33,4 +33,6 @@ public:
 	afx_msg void OnDeltaposSplitSpin(NMHDR *pNMHDR, LRESULT *pResult);
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedOk();
+	CButton QuadButton;
+	CButton EqualButton;
 };
