@@ -6,6 +6,8 @@
 
 // ManageRegistrations dialog
 
+std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log);
+
 class ManageRegistrations : public CDialogEx
 {
 	DECLARE_DYNAMIC(ManageRegistrations)
@@ -21,7 +23,6 @@ public:
 
 protected:
 	CCCSwisssys2Doc *pDoc;
-    //std::vector<MRPlayer> rated_players;
 	int ending_index[27];
 	bool inProcessingChange;
 

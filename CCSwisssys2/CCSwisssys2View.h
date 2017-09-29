@@ -54,7 +54,7 @@ public:
 
 protected:
 	void refillSections(Sections &s, bool clear=true);
-	unsigned createSectionWorksheet(const std::wstring &output_dir, std::wstring &sec_name, const Section &sec, int subsec);
+	unsigned createSectionWorksheet(std::wofstream &normal_log, const std::wstring &output_dir, std::wstring &sec_name, const Section &sec, int subsec);
 
 // Generated message map functions
 protected:

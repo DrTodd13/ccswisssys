@@ -200,12 +200,11 @@ BEGIN
     CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_ARROWKEYS,486,212,10,14
     PUSHBUTTON      "Create Sections from Registration and Ratings Data!",IDC_BUTTON6,19,237,455,14
     CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER,19,256,455,137
-    PUSHBUTTON      "Create SwissSys Club Files for Import",IDC_BUTTON7,486,272,57,50,BS_MULTILINE
     LTEXT           "School Codes File",IDC_STATIC,20,69,56,8
     EDITTEXT        IDC_EDIT3,18,79,459,14,ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "Browse",IDC_BUTTON8,486,78,50,14
-    PUSHBUTTON      "Manage Additional Registrations not in Constant Contact",IDC_BUTTON9,17,118,458,14
-    PUSHBUTTON      "Create Swisssys Tournament",IDC_BUTTON10,487,328,56,48,BS_MULTILINE
+    PUSHBUTTON      "Manage Registrations (On-site registration.  Remove Constant Contact no-shows.)",IDC_BUTTON9,17,118,458,14
+    PUSHBUTTON      "Create Swisssys Tournament",IDC_BUTTON10,487,265,56,48,BS_MULTILINE
     LTEXT           "Restricted Entry?",IDC_STATIC,19,100,59,8
     EDITTEXT        IDC_EDIT5,79,98,396,13,ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "Browse",IDC_BUTTON11,485,97,50,14
@@ -239,28 +238,28 @@ END
 
 IDD_MANAGE_REGISTRATIONS DIALOGEX 0, 0, 493, 384
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Manage Registrations not in Constant Contact"
+CAPTION "Manage Registrations"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,423,363,50,14
-    CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER,18,23,455,137
-    CONTROL         "",IDC_LIST3,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER,18,215,455,137
-    LTEXT           "Last Name",IDC_STATIC,21,181,74,8
-    EDITTEXT        IDC_EDIT1,18,193,80,14,ES_AUTOHSCROLL
-    LTEXT           "First Name",IDC_STATIC,106,182,49,8
-    EDITTEXT        IDC_EDIT2,103,193,60,14,ES_AUTOHSCROLL
-    LTEXT           "NWSRS ID",IDC_STATIC,170,182,46,8
-    EDITTEXT        IDC_EDIT3,168,193,46,14,ES_AUTOHSCROLL
-    LTEXT           "School Code",IDC_STATIC,223,182,46,8
-    EDITTEXT        IDC_EDIT4,220,193,45,14,ES_AUTOHSCROLL
-    LTEXT           "School Name",IDC_STATIC,277,182,46,8
-    EDITTEXT        IDC_EDIT5,273,193,90,14,ES_AUTOHSCROLL
-    COMBOBOX        IDC_COMBO2,369,193,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Grade",IDC_STATIC,370,182,46,8
-    PUSHBUTTON      "Add New Player (as entered in the fields below)",IDC_BUTTON1,21,164,184,14
-    LTEXT           "Additional Registed Players (double-click to remove)",IDC_STATIC,21,11,264,8
+    CONTROL         "",IDC_LIST2,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER,18,23,455,195
+    CONTROL         "",IDC_LIST3,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER,18,269,455,83
+    LTEXT           "Last Name",IDC_STATIC,21,239,74,8
+    EDITTEXT        IDC_EDIT1,18,251,80,14,ES_AUTOHSCROLL
+    LTEXT           "First Name",IDC_STATIC,106,240,49,8
+    EDITTEXT        IDC_EDIT2,103,251,60,14,ES_AUTOHSCROLL
+    LTEXT           "NWSRS ID",IDC_STATIC,170,240,46,8
+    EDITTEXT        IDC_EDIT3,168,251,46,14,ES_AUTOHSCROLL
+    LTEXT           "School Code",IDC_STATIC,223,240,46,8
+    EDITTEXT        IDC_EDIT4,220,251,45,14,ES_AUTOHSCROLL
+    LTEXT           "School Name",IDC_STATIC,277,240,46,8
+    EDITTEXT        IDC_EDIT5,273,251,90,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO2,369,251,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Grade",IDC_STATIC,370,240,46,8
+    PUSHBUTTON      "Add New Player (as entered in the fields below)",IDC_BUTTON1,21,222,184,14
+    LTEXT           "Registered Players (double-click to remove)",IDC_STATIC,21,11,159,8
     LTEXT           "Players in the ratings file (double-click to add as a registered player)",IDC_STATIC,18,360,229,8
-    PUSHBUTTON      "Find School Code",IDC_BUTTON2,222,164,140,14
+    PUSHBUTTON      "Find School Code",IDC_BUTTON2,222,222,140,14
 END
 
 IDD_SCHOOL_EDITOR DIALOGEX 0, 0, 349, 346
@@ -299,7 +298,7 @@ BEGIN
     LTEXT           "Number of sections",IDC_STATIC,40,62,69,12
     EDITTEXT        IDC_NUM_SPLIT,107,59,40,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPLIT_SPIN,"msctls_updown32",UDS_ARROWKEYS,151,59,10,14
-    CONTROL         "Make quads.  (Plus a Swiss if odd # players.)",IDC_RADIO_MAKE_QUADS,
+    CONTROL         "Make quads.  (Plus a Swiss if odd # of players.)",IDC_RADIO_MAKE_QUADS,
                     "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP,18,21,163,10
     CONTROL         "Split into the specified number of equally sized sections.",IDC_RADIO_EQUAL,
                     "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP,18,43,194,10

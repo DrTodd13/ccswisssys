@@ -37,6 +37,7 @@ std::wstring toUpper(const std::wstring &s);
 
 class SectionPlayerInfo {
 public:
+	int cc_file_index;
 	CString last_name;
 	CString first_name;
 	CString full_id;
@@ -47,8 +48,38 @@ public:
 	CString uscf_id;
 	CString uscf_rating;
 	int subsection;
+	std::wstring notes;
+	bool unrated;
+	int cc_rating;
 
-	SectionPlayerInfo(const CString &ln, const CString &fn, const CString &fi, int r, wchar_t g, const CString &s, const CString &sc, const CString &uscfid, const CString &uscfrating, int sub=1) : last_name(ln), first_name(fn), full_id(fi), rating(r), grade(g), school(s), school_code(sc), uscf_id(uscfid), uscf_rating(uscfrating), subsection(sub) {}
+	SectionPlayerInfo(
+		int ccfi, 
+		const CString &ln, 
+		const CString &fn, 
+		const CString &fi, 
+		int r, wchar_t g, 
+		const CString &s, 
+		const CString &sc, 
+		const CString &uscfid, 
+		const CString &uscfrating, 
+		const std::wstring &n, 
+		bool u, 
+		int ccr, 
+		int sub=1) : 
+		cc_file_index(ccfi), 
+		last_name(ln), 
+		first_name(fn), 
+		full_id(fi), 
+		rating(r), 
+		grade(g), 
+		school(s), 
+		school_code(sc), 
+		uscf_id(uscfid), 
+		uscf_rating(uscfrating), 
+		subsection(sub), 
+		notes(n), 
+		unrated(u), 
+		cc_rating(ccr) {}
 };
 
 struct SortByRatingDescending
@@ -707,6 +738,7 @@ public:
 	std::map<std::wstring, unsigned> nwsrs_four_map;
 	std::map<std::wstring, unsigned> uscf_map;
 	bool save_school_corrections;
+	std::set<int> noshows;
 
 // Operations
 public:

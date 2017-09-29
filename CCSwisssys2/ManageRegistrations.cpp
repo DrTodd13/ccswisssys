@@ -629,6 +629,25 @@ BOOL ManageRegistrations::OnInitDialog()
 			pDoc->mrplayers[mrindex].ws_uscf_id,
 			mrindex);
 	}
+	
+	std::wofstream normal_log;
+	bool error_condition = false, warning_condition = false, info_condition = false;
+	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log);
+
+	for (auto ppiter = post_proc.begin(); ppiter != post_proc.end(); ++ppiter) {
+		addToList(RegisteredPlayers,
+			mrindex++,
+			CStringToWString(ppiter->last_name),
+			CStringToWString(ppiter->first_name),
+			ppiter->rating,
+			CStringToWString(ppiter->full_id),
+			ppiter->grade,
+			CStringToWString(ppiter->school_code),
+			CStringToWString(ppiter->school),
+			CStringToWString(ppiter->uscf_rating),
+			CStringToWString(ppiter->uscf_id),
+			ppiter->cc_file_index);
+	}
 
 	LastNameEdit.SetFocus();
 
@@ -639,11 +658,16 @@ BOOL ManageRegistrations::OnInitDialog()
 void ManageRegistrations::OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	// TODO: Add your control notification handler code here
-//	unsigned pindex = (unsigned)RegisteredPlayers.GetItemData(pNMItemActivate->iItem);
-
-	RegisteredPlayers.DeleteItem(pNMItemActivate->iItem);
-	pDoc->mrplayers.erase(pDoc->mrplayers.begin() + pNMItemActivate->iItem);
+	auto removed_item = pNMItemActivate->iItem;
+	int removed_index = RegisteredPlayers.GetItemData(removed_item);
+	RegisteredPlayers.DeleteItem(removed_item);
+	if (removed_index >= 0) {
+		pDoc->mrplayers.erase(pDoc->mrplayers.begin() + pNMItemActivate->iItem);
+	}
+	else {
+		int real_index = (-removed_index) - 1;
+		pDoc->noshows.insert(real_index);
+	}
 
 	*pResult = 0;
 }
