@@ -538,7 +538,8 @@ std::vector<int> findExactMatch(const std::wstring &last, const std::wstring &fi
 }
 
 std::wstring getLastFour(const std::wstring &full) {
-	return full.substr(full.length() - 4);
+	int index = max(0, (int)full.length() - 4);
+	return full.substr(index);
 }
 
 //#define DEBUG_MAIN
@@ -559,7 +560,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 
 	if (use_cc) {
 		std::wstring ccsstr = CStringToWString(pDoc->constant_contact_file);
-		auto entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log);
+		auto entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_four_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log);
 		if (entries.size() == 0) {
 			MessageBox(hWnd, _T("No players loaded from constant contact file."), _T("ERROR"), MB_OK);
 			return post_proc;
@@ -709,7 +710,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 					}
 				}
 
-				if (full_id.length() == 8 && ratings_school_code != school_code) {
+				if (full_id.length() == 8 && school_code != L"" && ratings_school_code != school_code) {
 					info_condition = true;
 					normal_log << "INFO: Player " << first_name << " " << last_name << " with ID specified as " << full_id << " and school as " << orig_school << " change of school from " << ratings_school_code << " to " << school_code << std::endl;
 
@@ -802,7 +803,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				CString cs_school_code(school_code.c_str());
 				cs_full_id = full_id.c_str();
 
-				post_proc.push_back(SectionPlayerInfo(-(i+1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), notes.str(), unrated, cc_rating));
+				post_proc.push_back(SectionPlayerInfo(-((int)i+1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), notes.str(), unrated, cc_rating));
 			}
 		}
 	}

@@ -709,6 +709,7 @@ public:
 };
 
 bool isNumeric(std::wstring &s);
+bool hasNumeric(std::wstring &s);
 
 std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename,
 	const std::map<std::wstring, unsigned> &nwsrs_map,
@@ -716,6 +717,8 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 	const std::vector<Player> &rated_players,
 	const AllCodes &school_codes,
 	std::wofstream &normal_log);
+
+std::wstring getLastFour(const std::wstring &full);
 
 class CCCSwisssys2Doc : public CDocument
 {

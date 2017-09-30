@@ -139,7 +139,7 @@ void SplitSection::OnBnClickedOk()
 		// then this integer division rounds down because those extra
 		// players are absorbed into a 5+ swiss section.
 		sections_left = players_left / 4;
-		quad_swiss = players_left % 4;
+		quad_swiss = ((players_left % 4) != 0 ? true : false);
 	}
 	else if (EqualButton.GetCheck()) {
 		make_equal = true;

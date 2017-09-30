@@ -241,7 +241,7 @@ public:
 	FindNwsrsIdField(const std::map<std::wstring, unsigned> &m) : nwsrs_map(m) {}
 
 	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
-		return nwsrs_map.find(field) != nwsrs_map.end();
+		return field.length() == 8 && !hasNumeric(field.substr(0,3)) && nwsrs_map.find(getLastFour(field)) != nwsrs_map.end();
 	}
 };
 
@@ -254,7 +254,7 @@ public:
 	FindFirstName(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i) : nwsrs_map(m), rated_players(r), id_field(i) {}
 
 	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
-		auto idres = nwsrs_map.find(all_fields[id_field]);
+		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 
 		return toUpper(field) == toUpper(rated_players[idres->second].first_name);
@@ -270,7 +270,7 @@ public:
 	FindLastName(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i) : nwsrs_map(m), rated_players(r), id_field(i) {}
 
 	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
-		auto idres = nwsrs_map.find(all_fields[id_field]);
+		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 
 		return toUpper(field) == toUpper(rated_players[idres->second].last_name);
@@ -288,7 +288,7 @@ public:
 	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		if (field.length() == 0) return false;
 
-		auto idres = nwsrs_map.find(all_fields[id_field]);
+		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 		if (rated_players[idres->second].uscf_id.length() == 0) return false;
 
@@ -324,7 +324,7 @@ public:
 
 	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		if (!isGrade(field)) return false;
-		auto idres = nwsrs_map.find(all_fields[id_field]);
+		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 
 		return getGradeCode(field) == rated_players[idres->second].grade;
@@ -342,7 +342,7 @@ public:
 
 	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		if (field.length() == 0) return false;
-		auto idres = nwsrs_map.find(all_fields[id_field]);
+		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 
 		if (school_codes.find(field) != -1) return true;
@@ -488,7 +488,7 @@ std::set<int> findEmptyPlayerFields(std::vector< std::vector<std::wstring> > &cc
 	for (i = 0; i < cc.size(); ++i) {
 		if (cc[i][regcheck] != REG_STR) continue;
 		//normal_log << "checking " << i << " " << cc[i][0] << " " << cc[i][1] << " " << cc[i][nwsrsid] << std::endl;
-		if (nwsrs_map.find(cc[i][nwsrsid]) == nwsrs_map.end()) continue;
+		if (nwsrs_map.find(getLastFour(cc[i][nwsrsid])) == nwsrs_map.end()) continue;
 		//normal_log << "is a player" << std::endl;
 
 		// For every field for registered players, if the field is not empty then remove it from the
@@ -526,7 +526,7 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 		MessageBox(NULL, _T("Could not automatically detect REGISTERED field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
 	}
-	dynamic_locations[STUDENT_NWSRS_ID] = findFieldWithOperator(normal_log, ccret, FindNwsrsIdField(nwsrs_map), dynamic_locations[REGISTERED]);
+	dynamic_locations[STUDENT_NWSRS_ID] = findFieldWithOperator(normal_log, ccret, FindNwsrsIdField(nwsrs_map), dynamic_locations[REGISTERED], NULL, 0.85);
 	if (dynamic_locations[STUDENT_NWSRS_ID] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect NWSRS ID field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
@@ -729,6 +729,10 @@ bool CCCSwisssys2Doc::loadRatingsFile() {
 
 bool isNumeric(std::wstring &s) {
 	return (s.find_first_not_of(L"0123456789") == std::string::npos);
+}
+
+bool hasNumeric(std::wstring &s) {
+	return (s.find_first_of(L"0123456789") != std::string::npos);
 }
 
 std::wstring getSchoolTypeStr(SCHOOL_TYPE &st) {
