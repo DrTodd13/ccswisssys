@@ -51,4 +51,5 @@ public:
 	afx_msg void OnCbnSelchangeCombo2();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnForceSection();
 };

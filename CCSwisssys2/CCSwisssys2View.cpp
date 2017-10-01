@@ -857,7 +857,11 @@ void CCCSwisssys2View::OnCreateSections()
 	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log);
 
     for(auto ppiter = post_proc.begin(); ppiter != post_proc.end(); ++ppiter) {
+		auto force_iter = pDoc->force_sections.find(ppiter->cc_file_index);
 		int target_section = pDoc->sections.foundIn(ppiter->cc_rating, ppiter->grade);
+		if (force_iter != pDoc->force_sections.end()) {
+			target_section = pDoc->sections.findByName(force_iter->second);
+		}
 		if (target_section == -1) {
 			error_condition = true;
 			normal_log << "ERROR: Doesn't belong in any section. " << ppiter->full_id << " " << ppiter->last_name << " " << ppiter->first_name << " " << ppiter->cc_rating << " " << ppiter->grade << " " << ppiter->school << std::endl;

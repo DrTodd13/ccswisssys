@@ -195,6 +195,7 @@
     <ClInclude Include="CCSwisssys2Doc.h" />
     <ClInclude Include="CCSwisssys2View.h" />
     <ClInclude Include="DatFile.h" />
+    <ClInclude Include="ForceSection.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="ManageRegistrations.h" />
     <ClInclude Include="Resource.h" />
@@ -210,6 +211,7 @@
     <ClCompile Include="CCSwisssys2Doc.cpp" />
     <ClCompile Include="CCSwisssys2View.cpp" />
     <ClCompile Include="DatFile.cpp" />
+    <ClCompile Include="ForceSection.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="ManageRegistrations.cpp" />
     <ClCompile Include="SchoolSelector.cpp" />

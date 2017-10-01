@@ -12,6 +12,7 @@
 #define IDD_MANAGE_REGISTRATIONS        318
 #define IDD_SCHOOL_EDITOR               321
 #define IDD_SPLIT_SECTION               325
+#define IDD_FORCE_SECTION               327
 #define IDC_EDIT1                       1000
 #define IDC_BUTTON1                     1001
 #define IDC_EDIT2                       1002
@@ -41,9 +42,7 @@
 #define IDC_NUM_SPLIT                   1030
 #define IDC_SPLIT_SPIN                  1031
 #define IDC_SPLIT_SECTION               1032
-#define IDC_MAKE_QUADS                  1033
 #define IDC_RADIO_MAKE_QUADS            1034
-#define IDC_RADIO2                      1035
 #define IDC_RADIO_EQUAL                 1035
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 #define ID_OPTIONS_TEST                 32772
@@ -52,7 +51,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        327
+#define _APS_NEXT_RESOURCE_VALUE        331
 #define _APS_NEXT_COMMAND_VALUE         32773
 #define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           310

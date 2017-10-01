@@ -6,6 +6,7 @@
 #include "ManageRegistrations.h"
 #include "afxdialogex.h"
 #include "SchoolSelector.h"
+#include "ForceSection.h"
 
 
 // ManageRegistrations dialog
@@ -48,6 +49,7 @@ BEGIN_MESSAGE_MAP(ManageRegistrations, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST3, &ManageRegistrations::OnNMDblclkList3)
 	ON_CBN_SELCHANGE(IDC_COMBO2, &ManageRegistrations::OnCbnSelchangeCombo2)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST2, &ManageRegistrations::OnNMDblclkList2)
+	ON_BN_CLICKED(IDC_BUTTON3, &ManageRegistrations::OnForceSection)
 END_MESSAGE_MAP()
 
 bool findStringIC(const std::wstring & strHaystack, const std::wstring & strNeedle)
@@ -670,4 +672,19 @@ void ManageRegistrations::OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	*pResult = 0;
+}
+
+
+void ManageRegistrations::OnForceSection()
+{
+	int selected_row = RegisteredPlayers.GetSelectionMark();
+	if (selected_row >= 0) {
+		int force_index = RegisteredPlayers.GetItemData(selected_row);
+		int selection = -1;
+		ForceSection fs_dialog(pDoc, &selection);
+		if (fs_dialog.DoModal() == IDOK) {
+			pDoc->force_sections.insert(std::pair<int,CString>(force_index, pDoc->sections[selection].name));
+			pDoc->SetModifiedFlag();
+		}
+	}
 }

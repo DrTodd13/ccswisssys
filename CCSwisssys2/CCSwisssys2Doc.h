@@ -293,6 +293,15 @@ public:
 		}
 	}
 
+	int findByName(CString &name) {
+		for (int i = 0; i < size(); ++i) {
+			if (operator[](i).name == name) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	int foundIn(int cc_rating, wchar_t grade_code) {
 		int found = -1;
 		for (unsigned i = 0; i < size(); ++i) {
@@ -742,6 +751,7 @@ public:
 	std::map<std::wstring, unsigned> uscf_map;
 	bool save_school_corrections;
 	std::set<int> noshows;
+	std::map<int, CString> force_sections;
 
 // Operations
 public:
