@@ -263,7 +263,7 @@ public:
 		}
 		else
 		{
-			unsigned length;
+			std::vector<T>::size_type length;
 			ar >> length;
 
 			for (unsigned i = 0; i < length; ++i) {
