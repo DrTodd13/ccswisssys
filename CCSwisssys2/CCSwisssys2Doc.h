@@ -107,7 +107,9 @@ public:
 
 		std::map<CString, unsigned> sibling_count;
 		std::vector<CString> to_split;
-		for (i = 0; i < players.size(); ++i) {
+		unsigned skip_siblings = 0;
+
+		for (unsigned i = 0; i < players.size(); ++i) {
 			auto miter = sibling_count.find(players[i].last_name);
 			if (miter == sibling_count.end()) {
 				sibling_count.insert(std::pair<CString, unsigned>(players[i].last_name, 1));
@@ -118,11 +120,20 @@ public:
 			}
 		}
 
+		for (auto sciter = sibling_count.begin(); sciter != sibling_count.end(); ++sciter) {
+			if (sciter->second == 1) continue;
+			for (unsigned i = skip_siblings; i < players.size(); ++i) {
+				if (players[i].last_name == sciter->first) {
+					std::iter_swap(players.begin() + skip_siblings++, players.begin() + i);
+				}
+			}
+		}
+
 		// Overall structure is to sort by rating.
 		// Then for the most part go through that sorted list and put each player in the next
 		// next subsection modulo the number of subsections.
 		// We'll try to keep even number in subsections.
-		std::sort(players.begin(), players.end(), SortByRatingDescending());
+		std::sort(players.begin() + skip_siblings, players.end(), SortByRatingDescending());
 		unsigned num_players = (unsigned)players.size();
 		// Get the number of players per subsection under a strict division.
 		unsigned player_per_subsection = num_players / num_subsections;

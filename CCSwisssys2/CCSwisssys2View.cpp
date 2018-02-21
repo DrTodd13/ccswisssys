@@ -804,7 +804,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 		}
 	}
 
-	normal_log << "\nOnce you have confirmed that you have resolved INFO and WARNING messages correctly, please delete those lines before sending to the ratings coordinator." << endl;
+	normal_log << "\nOnce you have confirmed that you have resolved INFO and WARNING messages correctly, please delete those lines before sending to the ratings coordinator." << std::endl;
 
 	return post_proc;
 }
