@@ -17,6 +17,7 @@
 #include "ManageRegistrations.h"
 #include "SchoolSelector.h"
 #include "SplitSection.h"
+#include <direct.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -148,6 +149,12 @@ void CCCSwisssys2View::OnInitialUpdate()
 		lvColumn.cx = 100;
 		lvColumn.pszText = _T("Subsections");
 		section_list.InsertColumn(7, &lvColumn);
+
+		lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
+		lvColumn.fmt = LVCFMT_LEFT;
+		lvColumn.cx = 100;
+		lvColumn.pszText = _T("Computer");
+		section_list.InsertColumn(8, &lvColumn);
 
 		section_list.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
@@ -354,6 +361,13 @@ void addToSectionList(CListCtrl &section_list, Section &newSection, int position
 		section_list.SetItemText(nItem, 7, CString(ss.str().c_str()));
 		ss.str(L"");
 	}
+
+	{
+		std::wstringstream ss;
+		ss << newSection.which_computer;
+		section_list.SetItemText(nItem, 8, CString(ss.str().c_str()));
+		ss.str(L"");
+	}
 }
 
 void CCCSwisssys2View::refillSections(Sections &s, bool clear) {
@@ -375,7 +389,8 @@ void CCCSwisssys2View::OnAddSection()
 {
 	Section newSection;
 	while (true) {
-		SectionEditor se(&newSection);
+		bool check;
+		SectionEditor se(&newSection, check);
 		INT_PTR nRet = se.DoModal();
 		if (nRet != IDOK) {
 			return;
@@ -425,7 +440,8 @@ void CCCSwisssys2View::OnEditSection()
 		auto pDoc = GetDocument();
 		Section newSection = pDoc->sections[selected_row];
 		while (true) {
-			SectionEditor se(&newSection);
+			bool check;
+			SectionEditor se(&newSection, check);
 			INT_PTR nRet = se.DoModal();
 			if (nRet != IDOK) {
 				return;
@@ -433,48 +449,22 @@ void CCCSwisssys2View::OnEditSection()
 
 			//MessageBox(_T("Debugging"), _T("User pressed OK button on dialog."));
 
-			int conflict = pDoc->sections.conflicts(newSection, selected_row);
+			if (check) {
+				int conflict = pDoc->sections.conflicts(newSection, selected_row);
 
-			if (conflict >= 0) {
-				//std::wstringstream ss;
-				CString ss = _T("New section conflicts with existing section with name ") + pDoc->sections[conflict].name + _T(".");
-				//ss << "New section conflicts with existing section with name " << pDoc->sections[conflict].name << ".";
-				//MessageBox(CString(ss.str().c_str()), _T("Section Conflict"));
-				MessageBox(ss, _T("Section Conflict"));
-				continue;
+				if (conflict >= 0) {
+					//std::wstringstream ss;
+					CString ss = _T("New section conflicts with existing section with name ") + pDoc->sections[conflict].name + _T(".");
+					//ss << "New section conflicts with existing section with name " << pDoc->sections[conflict].name << ".";
+					//MessageBox(CString(ss.str().c_str()), _T("Section Conflict"));
+					MessageBox(ss, _T("Section Conflict"));
+					continue;
+				}
 			}
 
 			pDoc->sections[selected_row] = newSection;
-
-			refillSections(pDoc->sections);
+			refillSections(pDoc->sections, check);
 			pDoc->SetModifiedFlag();
-			/*
-			section_list.DeleteItem(selected_row);
-
-			LVITEM lvItem;
-			int nItem;
-
-			lvItem.mask = LVIF_TEXT;
-			lvItem.iItem = selected_row;
-			lvItem.iSubItem = 0;
-			lvItem.pszText = newSection.name.GetBuffer();
-			nItem = section_list.InsertItem(&lvItem);
-
-			if (newSection.usedRatings()) {
-				std::wstringstream ss;
-				ss << newSection.lower_rating_limit;
-				section_list.SetItemText(nItem, 1, CString(ss.str().c_str()));
-				ss.str("");
-				ss << newSection.upper_rating_limit;
-				section_list.SetItemText(nItem, 2, CString(ss.str().c_str()));
-			}
-			if (newSection.usedGrade()) {
-				section_list.SetItemText(nItem, 3, getGradeString(newSection.lower_grade_limit).GetBuffer());
-				section_list.SetItemText(nItem, 4, getGradeString(newSection.upper_grade_limit).GetBuffer());
-			}
-
-			section_list.SetItemText(nItem, 5, getSectionTypeString(newSection.sec_type));
-			*/
 			return;
 		}
 	}
@@ -727,6 +717,12 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 					cc_rating = pDoc->rated_players[rentry->second].get_higher_rating();
 					updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[rentry->second], normal_log, warning_condition);
 					nwsrs_rating = pDoc->rated_players[rentry->second].nwsrs_rating;
+					std::wstring cap_db_last = toUpper(pDoc->rated_players[rentry->second].last_name);
+					std::wstring cap_db_first = toUpper(pDoc->rated_players[rentry->second].first_name);
+					if (cap_db_last != toUpper(last_name) || cap_db_first != toUpper(first_name)) {
+						normal_log << "NAME: player named " << toUpper(last_name) << " " << toUpper(first_name) << " is named differently in the NWSRS database as " << cap_db_last << " " << cap_db_first << std::endl;
+						notes << "Update name in database from " << cap_db_first << " " << cap_db_last << "? ";
+					}
 				}
 				else {
 					if (full_id == L"NONE" || full_id == L"N/A" || full_id == L"") {
@@ -775,7 +771,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 
 								//normal_log << "Found by digit ID string from ratings file " << std::endl;
 								if (pDoc->rated_players[j].grade != grade_code) {
-									notes << "Unexpected grade change from " << CStringToWString(getGradeStringShort(pDoc->rated_players[j].grade)) << " to " << CStringToWString(getGradeStringShort(grade_code)) << ".";
+									notes << "Unexpected grade change from " << CStringToWString(getGradeStringShort(pDoc->rated_players[j].grade)) << " to " << CStringToWString(getGradeStringShort(grade_code)) << ". ";
 									grade_code = pDoc->rated_players[j].grade;
 								}
 								if (school_code.length() == 3) {
@@ -807,6 +803,8 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 			}
 		}
 	}
+
+	normal_log << "\nOnce you have confirmed that you have resolved INFO and WARNING messages correctly, please delete those lines before sending to the ratings coordinator." << endl;
 
 	return post_proc;
 }
@@ -1124,7 +1122,7 @@ void CCCSwisssys2View::OnSectionReorder(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	auto pDoc = GetDocument();
-	int slen = pDoc->sections.size();
+	int slen = (int)pDoc->sections.size();
 	int first, second;
 
 	if (pNMUpDown->iDelta == -1) {
@@ -1540,24 +1538,66 @@ void CCCSwisssys2View::OnCreateSwisssysTourney()
 	normal_log << "5) Check-in lists were generated for each section and stored in the same directory as the Swisssys tmt file." << std::endl;
 	normal_log << std::endl;
 
-	//std::wstring output_dir = pDoc->getOutputLocation();
-	std::wstring filename = base + L".tmt";
-	std::wofstream tmt_file(filename);
-	unsigned total_sections = 0;
+	//unsigned total_sections = 0;
+	std::map<unsigned, unsigned> pairings_computers;
+	std::map<unsigned, unsigned> cur_sec_nums;
+	std::map<unsigned, std::wstring> output_dirs;
+
+	// Fill in a set with all the unique computer numbers so we know how many we need.
+	// Calculate the total number of sections.
 	for (unsigned j = 0; j < pDoc->sections.size(); ++j) {
-		total_sections += pDoc->sections[j].num_subsections;
+		pairings_computers.insert(std::pair<unsigned,unsigned>(pDoc->sections[j].which_computer,0));
+		auto pciter = pairings_computers.find(pDoc->sections[j].which_computer);
+		pciter->second += pDoc->sections[j].num_subsections;
+		cur_sec_nums.insert(std::pair<unsigned, unsigned>(pDoc->sections[j].which_computer, 0));
 	}
 
-	tmt_file << "[Setup]" << std::endl;
-	tmt_file << "Version = 9.06" << std::endl;
-	tmt_file << "[Tournament info]" << std::endl;
-	tmt_file << "Title =" << std::endl;
-	tmt_file << "Time controls =" << std::endl;
-	tmt_file << "[Section count]" << std::endl;
-	tmt_file << "Total = " << total_sections << std::endl;
-	tmt_file << "[Sections]" << std::endl;
-	unsigned cur_sec_num = 0;
+	std::map<unsigned, std::wofstream *> tmts;
+	// For each pairing computer we need...
+	for (auto pciter = pairings_computers.begin(); pciter != pairings_computers.end(); ++pciter) {
+		std::wstringstream fss;
+		// If we have more than one pairing computer then we create directories for the tournaments.
+		if (pairings_computers.size() > 1) {
+			std::wstringstream dir_base;
+			// The directories are named computerN where N is the pairing computer number.
+			dir_base << output_dir << "\\computer" << pciter->first;
+			int mkdir_res = _wmkdir(dir_base.str().c_str());
+			if (mkdir_res != 0) {
+				std::wstringstream err;
+				err << errno;
+				MessageBox(err.str().c_str(), _T("Error"));
+				if (errno == EEXIST) {
+
+				}
+			}
+			fss << dir_base.str() << "\\computer" << pciter->first << ".tmt";
+			output_dirs.insert(std::pair<unsigned, std::wstring>(pciter->first, dir_base.str()));
+		}
+		else {
+			// If only one pairing computer then create in the same directory.
+			fss << base << ".tmt";
+			output_dirs.insert(std::pair<unsigned, std::wstring>(pciter->first, output_dir));
+		}
+		std::wstring filename = fss.str();
+		// Create mapping from pairing computer to open file to write to.
+		tmts.insert(std::pair<unsigned, std::wofstream *>(pciter->first, new std::wofstream(filename)));
+
+		std::wofstream &tmt_file = *(tmts.find(pciter->first)->second);
+		tmt_file << "[Setup]" << std::endl;
+		tmt_file << "Version = 9.06" << std::endl;
+		tmt_file << "[Tournament info]" << std::endl;
+		tmt_file << "Title =" << std::endl;
+		tmt_file << "Time controls =" << std::endl;
+		tmt_file << "[Section count]" << std::endl;
+		tmt_file << "Total = " << pciter->second << std::endl;
+		tmt_file << "[Sections]" << std::endl;
+	}
+
+	// Write each section to the tournament file
 	for (unsigned j = 0; j < pDoc->sections.size(); ++j) {
+		std::wofstream &tmt_file = *(tmts.find(pDoc->sections[j].which_computer)->second);
+		auto csniter = cur_sec_nums.find(pDoc->sections[j].which_computer);
+		unsigned &cur_sec_num = csniter->second;
 		if (pDoc->sections[j].num_subsections == 1) {
 			tmt_file << "Section" << ++cur_sec_num << " = " << CStringToWString(pDoc->sections[j].name) << std::endl;
 		}
@@ -1569,6 +1609,7 @@ void CCCSwisssys2View::OnCreateSwisssysTourney()
 		}
 	}
 	for (unsigned j = 0; j < pDoc->sections.size(); ++j) {
+		std::wofstream &tmt_file = *(tmts.find(pDoc->sections[j].which_computer)->second);
 		if (pDoc->sections[j].num_subsections == 1) {
 			addToSwisssysSection(tmt_file, CStringToWString(pDoc->sections[j].name), pDoc->sections[j].sec_type);
 		}
@@ -1578,19 +1619,22 @@ void CCCSwisssys2View::OnCreateSwisssysTourney()
 			}
 		}
 	}
-	tmt_file.close();
+	for (auto tmtiter = tmts.begin(); tmtiter != tmts.end(); ++tmtiter) {
+		tmtiter->second->close();
+	}
 
 	unsigned total_placed = 0;
 
 	for (unsigned j = 0; j < pDoc->sections.size(); ++j) {
+		auto oditer = output_dirs.find(pDoc->sections[j].which_computer);
 		if (pDoc->sections[j].num_subsections == 1) {
 			std::wstring sec_name = CStringToWString(pDoc->sections[j].name);
-			total_placed += createSectionWorksheet(normal_log, output_dir, sec_name, pDoc->sections[j], 1);
+			total_placed += createSectionWorksheet(normal_log, oditer->second, sec_name, pDoc->sections[j], 1);
 		}
 		else {
 			for (unsigned k = 0; k < pDoc->sections[j].num_subsections; ++k) {
 				std::wstring sec_name = baseToNameWithSub(CStringToWString(pDoc->sections[j].name), k);
-				total_placed += createSectionWorksheet(normal_log, output_dir, sec_name, pDoc->sections[j], k+1);
+				total_placed += createSectionWorksheet(normal_log, oditer->second, sec_name, pDoc->sections[j], k+1);
 			}
 		}
 	}
@@ -1634,7 +1678,8 @@ void CCCSwisssys2View::OnDoubleClickSectionList(NMHDR *pNMHDR, LRESULT *pResult)
 		auto pDoc = GetDocument();
 		Section newSection = pDoc->sections[selected_row];
 		while (true) {
-			SectionEditor se(&newSection);
+			bool check;
+			SectionEditor se(&newSection, check);
 			INT_PTR nRet = se.DoModal();
 			if (nRet != IDOK) {
 				return;
@@ -1642,20 +1687,21 @@ void CCCSwisssys2View::OnDoubleClickSectionList(NMHDR *pNMHDR, LRESULT *pResult)
 
 			//MessageBox(_T("Debugging"), _T("User pressed OK button on dialog."));
 
-			int conflict = pDoc->sections.conflicts(newSection, selected_row);
+			if (check) {
+				int conflict = pDoc->sections.conflicts(newSection, selected_row);
 
-			if (conflict >= 0) {
-				//std::wstringstream ss;
-				CString ss = _T("New section conflicts with existing section with name ") + pDoc->sections[conflict].name + _T(".");
-				//ss << "New section conflicts with existing section with name " << pDoc->sections[conflict].name << ".";
-				//MessageBox(CString(ss.str().c_str()), _T("Section Conflict"));
-				MessageBox(ss, _T("Section Conflict"));
-				continue;
+				if (conflict >= 0) {
+					//std::wstringstream ss;
+					CString ss = _T("New section conflicts with existing section with name ") + pDoc->sections[conflict].name + _T(".");
+					//ss << "New section conflicts with existing section with name " << pDoc->sections[conflict].name << ".";
+					//MessageBox(CString(ss.str().c_str()), _T("Section Conflict"));
+					MessageBox(ss, _T("Section Conflict"));
+					continue;
+				}
 			}
 
 			pDoc->sections[selected_row] = newSection;
-
-			refillSections(pDoc->sections);
+			refillSections(pDoc->sections, check);
 			pDoc->SetModifiedFlag();
 			break;
 		}

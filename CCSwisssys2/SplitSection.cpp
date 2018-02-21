@@ -51,7 +51,7 @@ void SplitSection::OnEnChangeNumSplit()
 	if (isNumeric(new_split_wstr)) {
 		int int_new_split = _ttoi(new_split_wstr.c_str());
 		if (int_new_split >= 2) {
-			int num_in_section = sec->players.size();
+			int num_in_section = (int)sec->players.size();
 			double est_section_size = num_in_section / (int_new_split + 1.0);
 			if (est_section_size < 2.0) {
 				MessageBox(_T("Splitting into this many sections would cause average section size to be less than 2."), _T("Information"), MB_OK);
@@ -76,7 +76,7 @@ void SplitSection::OnDeltaposSplitSpin(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 
 	if (pNMUpDown->iDelta == -1) {
-		int num_in_section = sec->players.size();
+		int num_in_section = (int)sec->players.size();
 		double est_section_size = num_in_section / (int_num_split + 1.0);
 		if (est_section_size < 2.0) {
 			MessageBox(_T("Splitting into this many sections would cause average section size to be less than 2."), _T("Information"), MB_OK);
@@ -128,7 +128,7 @@ void SplitSection::OnBnClickedOk()
 	bool quad_swiss = false;
 	int sections_left = 0;
 
-	int players_left = sec->players.size();
+	int players_left = (int)sec->players.size();
 	int new_num_sections = 0;
 
 	if (QuadButton.GetCheck()) {

@@ -10,10 +10,11 @@ class SectionEditor : public CDialog
 	DECLARE_DYNAMIC(SectionEditor)
 
 public:
-	SectionEditor(Section *s, CWnd* pParent = NULL);   // standard constructor
+	SectionEditor(Section *s, bool &check, CWnd* pParent = NULL);   // standard constructor
 	virtual ~SectionEditor();
 
 	Section *m_s;
+	bool &needs_check;
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -39,4 +40,5 @@ public:
 	CComboBox num_subsections_combo;
 	afx_msg void OnEnChangeSubsections();
 	CButton uscf_required;
+	CComboBox num_pairings_computers;
 };

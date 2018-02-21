@@ -12,8 +12,8 @@
 
 IMPLEMENT_DYNAMIC(SectionEditor, CDialog)
 
-SectionEditor::SectionEditor(Section *s, CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_SECTION_EDITOR, pParent), m_s(s)
+SectionEditor::SectionEditor(Section *s, bool &check, CWnd* pParent /*=NULL*/)
+	: CDialog(IDD_SECTION_EDITOR, pParent), m_s(s), needs_check(check)
 {
 }
 
@@ -48,6 +48,14 @@ void SetupSubsectionCombobox(CComboBox &box) {
 	box.AddString(_T("10"));
 }
 
+void SetupPairingComputerCombobox(CComboBox &box) {
+	box.AddString(_T("1"));
+	box.AddString(_T("2"));
+	box.AddString(_T("3"));
+	box.AddString(_T("4"));
+	box.AddString(_T("5"));
+}
+
 BOOL SectionEditor::OnInitDialog() {
 	CDialog::OnInitDialog();
 
@@ -55,10 +63,12 @@ BOOL SectionEditor::OnInitDialog() {
 	SetupGradeCombobox(min_grade_combo);
 	SetupGradeCombobox(max_grade_combo);
 	SetupSubsectionCombobox(num_subsections_combo);
+	SetupPairingComputerCombobox(num_pairings_computers);
 	min_grade_combo.SetCurSel(0);
 	max_grade_combo.SetCurSel(0);
 	num_subsections_combo.SetCurSel(m_s->num_subsections - 1);
 	uscf_required.SetCheck(m_s->uscf_required ? BST_CHECKED : BST_UNCHECKED);
+	num_pairings_computers.SetCurSel(m_s->which_computer - 1);
 	//	section_name_edit.SetWindowText(m_s->subsections);
 
 	if (m_s->usedRatings()) {
@@ -95,6 +105,7 @@ void SectionEditor::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO3, max_grade_combo);
 	DDX_Control(pDX, IDC_COMBO4, num_subsections_combo);
 	DDX_Control(pDX, IDC_CHECK1, uscf_required);
+	DDX_Control(pDX, IDC_PAIRING_COMBO, num_pairings_computers);
 }
 
 
@@ -112,11 +123,21 @@ bool isNumeric(const CString &cs) {
 	else return false;
 }
 
+template<class T>
+void set_changed(T &old, const T& newvalue, bool &changed) {
+	if (old != newvalue) {
+		old = newvalue;
+		changed = true;
+	}
+}
+
 void SectionEditor::OnBnClickedOk()
 {
 	// TODO: Add your control notification handler code here
 	CString new_section_name, new_min_rating, new_max_rating;
-	int min_grade_sel, max_grade_sel, new_section_type_sel, num_subsections_sel;
+	int min_grade_sel, max_grade_sel, new_section_type_sel;
+	unsigned num_subsections_sel, which_computer_sel;
+	bool name_change = false, other_change = false;
 
 	section_name_edit.GetWindowText(new_section_name);
 	min_rating_edit.GetWindowText(new_min_rating);
@@ -124,6 +145,7 @@ void SectionEditor::OnBnClickedOk()
 	min_grade_sel = min_grade_combo.GetCurSel();
 	max_grade_sel = max_grade_combo.GetCurSel();
 	num_subsections_sel = num_subsections_combo.GetCurSel() + 1;
+	which_computer_sel = num_pairings_computers.GetCurSel() + 1;
 	new_section_type_sel = section_type_combo.GetCurSel();
 	int new_min_int, new_max_int;
 	int uscf_required_int = uscf_required.GetCheck();
@@ -177,26 +199,33 @@ void SectionEditor::OnBnClickedOk()
 		MessageBox(_T("Minimum rating range is 0-3000."), _T("Section Editor Error"));
 		return;
 	}
-	m_s->name = new_section_name;
-	m_s->lower_rating_limit = new_min_int;
-	m_s->upper_rating_limit = new_max_int;
+	set_changed(m_s->name, new_section_name, name_change);
+	set_changed(m_s->lower_rating_limit, new_min_int, other_change);
+	set_changed(m_s->upper_rating_limit, new_max_int, other_change);
 	if (min_grade_sel == 0) {
-		m_s->lower_grade_limit = 'A';
+		set_changed(m_s->lower_grade_limit, wchar_t('A'), other_change);
 	}
 	else {
-		m_s->lower_grade_limit = 'A' + min_grade_sel - 1;
+		set_changed(m_s->lower_grade_limit, wchar_t('A' + min_grade_sel - 1), other_change);
 	}
 	if (max_grade_sel == 0) {
-		m_s->upper_grade_limit = 'N';
+		set_changed(m_s->upper_grade_limit, wchar_t('N'), other_change);
 	}
 	else {
-		m_s->upper_grade_limit = 'A' + max_grade_sel - 1;
+		set_changed(m_s->upper_grade_limit, wchar_t('A' + max_grade_sel - 1), other_change);
 	}
-	m_s->sec_type = SECTION_TYPE(new_section_type_sel);
-	m_s->num_subsections = num_subsections_sel;
-	m_s->uscf_required = uscf_required_int == BST_CHECKED ? true : false;
+	set_changed(m_s->sec_type, SECTION_TYPE(new_section_type_sel), other_change);
+	set_changed(m_s->num_subsections, num_subsections_sel, other_change);
+	set_changed(m_s->which_computer, which_computer_sel, name_change);
+	set_changed(m_s->uscf_required, uscf_required_int == BST_CHECKED ? true : false, other_change);
 
-	CDialog::OnOK();
+	if (other_change || name_change) {
+		needs_check = other_change;
+		CDialog::OnOK();
+	}
+	else {
+		CDialog::OnCancel();
+	}
 }
 
 

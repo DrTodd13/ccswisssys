@@ -98,18 +98,32 @@ public:
 	std::vector<SectionPlayerInfo> players;
 	unsigned num_subsections;
 	bool uscf_required;
+	unsigned which_computer;
 
-	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false) {}
+	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false), which_computer(1) {}
 	
 	void makeSubsections() {
 		if (num_subsections == 1) return;
+
+		std::map<CString, unsigned> sibling_count;
+		std::vector<CString> to_split;
+		for (i = 0; i < players.size(); ++i) {
+			auto miter = sibling_count.find(players[i].last_name);
+			if (miter == sibling_count.end()) {
+				sibling_count.insert(std::pair<CString, unsigned>(players[i].last_name, 1));
+			}
+			else {
+				miter->second++;
+				to_split.push_back(players[i].last_name);
+			}
+		}
 
 		// Overall structure is to sort by rating.
 		// Then for the most part go through that sorted list and put each player in the next
 		// next subsection modulo the number of subsections.
 		// We'll try to keep even number in subsections.
 		std::sort(players.begin(), players.end(), SortByRatingDescending());
-		unsigned num_players = players.size();
+		unsigned num_players = (unsigned)players.size();
 		// Get the number of players per subsection under a strict division.
 		unsigned player_per_subsection = num_players / num_subsections;
 		// If that number is odd then subtract one so that the base number each section gets is even.
@@ -157,11 +171,11 @@ public:
 	void Serialize(CArchive& ar) {
 		if (ar.IsStoring())
 		{
-			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required;
+			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required << which_computer;
 		}
 		else
 		{
-			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required;
+			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required >> which_computer;
 		}
 	}
 

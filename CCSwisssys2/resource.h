@@ -37,6 +37,8 @@
 #define IDC_EDIT5                       1023
 #define IDC_COMBO4                      1024
 #define IDC_BUTTON10                    1025
+#define IDC_COMBO5                      1025
+#define IDC_PAIRING_COMBO               1025
 #define IDC_BUTTON11                    1026
 #define IDC_CHECK1                      1027
 #define IDC_NUM_SPLIT                   1030

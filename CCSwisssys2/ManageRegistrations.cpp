@@ -360,11 +360,11 @@ void ManageRegistrations::OnAddNewPlayer()
 		return;
 	}
 
-	unsigned entry = pDoc->mrplayers.size();
+	unsigned entry = (unsigned)pDoc->mrplayers.size();
 	std::wstring new_id = s_school_code + sel_grade;
 
 	pDoc->mrplayers.push_back(MRPlayer(s_last, s_first, new_id, s_school_code, pDoc->school_codes.findName(s_school_code), std::wstring(), init_rating, std::wstring(), sel_grade));
-	unsigned pindex = pDoc->mrplayers.size() - 1;
+	unsigned pindex = (unsigned)pDoc->mrplayers.size() - 1;
 
 	addToList(RegisteredPlayers,
 		entry,
@@ -423,7 +423,7 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 //	ss << "OnNMBlkclkList3 subItem = " << pNMItemActivate->iSubItem;
 //	MessageBox(CString(ss.str().c_str()), _T("Information"));
 	unsigned pindex = (unsigned)PossiblePlayers.GetItemData(pNMItemActivate->iItem);
-	unsigned entry = pDoc->mrplayers.size();
+	unsigned entry = (unsigned)pDoc->mrplayers.size();
 
 	pDoc->mrplayers.push_back(MRPlayer(
 		pDoc->rated_players[pindex].last_name,

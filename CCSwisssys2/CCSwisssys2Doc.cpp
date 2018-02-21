@@ -648,8 +648,8 @@ int LevenshteinDistance(const std::wstring &s, const std::wstring &t) {
 
 	// degenerate cases
 	if (supper == tupper) return 0;
-	unsigned tlen = t.length();
-	unsigned slen = s.length();
+	unsigned tlen = (unsigned)t.length();
+	unsigned slen = (unsigned)s.length();
 
 	if (slen == 0) return tlen;
 	if (tlen == 0) return slen;
