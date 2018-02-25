@@ -783,21 +783,24 @@ public:
 
 	bool loadRatingsFile();
 
-	std::wstring getOutputLocation() const {
-		if (constant_contact_file.IsEmpty()) {
+	std::wstring getOutputLocation() {
+//		if (constant_contact_file.IsEmpty()) {
+		while (this->m_strPathName == L"") {
+			this->OnFileSaveAs();
+		}
 			std::wstring copy = CStringToWString(this->m_strPathName);
 			wchar_t *buf = _wcsdup(copy.c_str());
 //			HRESULT res = PathCchRemoveFileSpec(buf, copy.length());
 			HRESULT res = PathRemoveFileSpec(buf);
 			return std::wstring(buf);
-		}
-		else {
-			std::wstring copy = CStringToWString(constant_contact_file);
-			wchar_t *buf = _wcsdup(copy.c_str());
+//		}
+//		else {
+//			std::wstring copy = CStringToWString(constant_contact_file);
+//			wchar_t *buf = _wcsdup(copy.c_str());
 //			HRESULT res = PathCchRemoveFileSpec(buf, copy.length());
-			HRESULT res = PathRemoveFileSpec(buf);
-			return std::wstring(buf);
-		}
+//			HRESULT res = PathRemoveFileSpec(buf);
+//			return std::wstring(buf);
+//		}
 	}
 
 	std::wstring getFileBase() const {

@@ -616,9 +616,9 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				upper_first = toUpper(upper_first);
 				full_id = toUpper(full_id);
 
-				//				if (upper_first == L"JANELLE") {
-				//					upper_first = L"JANELLE";
-				//				}
+				if (upper_first == L"ANIKA") {
+					upper_first = L"ANIKA";
+				}
 
 				// Handle ID specification input differences and errors.
 				if (full_id == L"NONE" || (full_id.size() != 0 && full_id.size() != 4 && full_id.size() != 8)) {
@@ -649,13 +649,15 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 #endif
 
 				if (school == L"") {
-					school = ratings_school_code;
+					school_code = ratings_school_code;
+					school = pDoc->school_codes.findName(school_code);
 #ifdef DEBUG_MAIN
 					normal_log << "school not specified...getting it from school code" << school << std::endl;
 #endif
 				}
 				else if (school.length() == 3) {
 					school_code = toUpper(school);
+					school = pDoc->school_codes.findName(school_code);
 #ifdef DEBUG_MAIN
 					normal_log << "school length is 3 so assuming school code " << school_code << std::endl;
 #endif
