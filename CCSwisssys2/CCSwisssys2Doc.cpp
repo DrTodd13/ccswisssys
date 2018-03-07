@@ -399,8 +399,9 @@ wchar_t getGradeCode(const std::wstring &s) {
 		std::wstring first_char = up.substr(0, up.length() - 1);
 		return getGradeCode(first_char);
 	}
-	MessageBox(NULL, _T("Don't know how to convert some grade string into grade code."), _T("ERROR"), MB_OK);
-	exit(-1);
+	throw UnrecognizedGradeCode();
+	//MessageBox(NULL, _T("Don't know how to convert some grade string into grade code."), _T("ERROR"), MB_OK);
+	//exit(-1);
 }
 
 bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_player_fields) {
@@ -534,9 +535,9 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 
 	std::set<int> *empty_player_fields = new std::set<int>;
 	*empty_player_fields = findEmptyPlayerFields(ccret, nwsrs_map, dynamic_locations[REGISTERED], dynamic_locations[STUDENT_NWSRS_ID], normal_log);
-//	for (auto iter = empty_player_fields->begin(); iter != empty_player_fields->end(); ++iter) {
-//		normal_log << "Empty player field " << *iter << std::endl;
-//	}
+	//for (auto iter = empty_player_fields->begin(); iter != empty_player_fields->end(); ++iter) {
+	//	normal_log << "Empty player field " << *iter << std::endl;
+	//}
 
 	dynamic_locations[FIRST_NAME] = findFieldWithOperator(normal_log, ccret, FindFirstName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.5);
 	if (dynamic_locations[FIRST_NAME] == -1) {

@@ -577,7 +577,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 			}
 			if (!was_parent && !was_player) {
 				MessageBox(hWnd, _T("Some entry was neither parent nor player."), _T("ERROR"), MB_OK);
-				normal_log << "ERROR: entry neither parent anorplayer. " << entries[i].getFirstName() << " " << entries[i].getLastName() << std::endl;
+				normal_log << "ERROR: entry neither parent nor player. " << entries[i].getFirstName() << " " << entries[i].getLastName() << std::endl;
 			}
 		}
 
@@ -607,7 +607,15 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				std::wstring uscf_id = entries[i].getUscfId();
 				//std::wstring uscf_rating = entries[i].getUscfRating();
 				std::wstring uscf_rating = L"";
-				wchar_t grade_code = entries[i].getGradeCode();
+				wchar_t grade_code;
+				try {
+					grade_code = entries[i].getGradeCode();
+				}
+				catch (UnrecognizedGradeCode ugc) {
+					if (full_id.size() == 8) {
+						grade_code = full_id[3];
+					}
+				}
 				SCHOOL_TYPE st = getSchoolType(grade_code);
 				std::wstringstream notes;
 				bool unrated = false;
@@ -616,8 +624,8 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				upper_first = toUpper(upper_first);
 				full_id = toUpper(full_id);
 
-				if (upper_first == L"ANIKA") {
-					upper_first = L"ANIKA";
+				if (upper_first == L"LORELEI") {
+					upper_first = L"LORELEI";
 				}
 
 				// Handle ID specification input differences and errors.
@@ -864,7 +872,7 @@ void CCCSwisssys2View::OnCreateSections()
 		}
 		if (target_section == -1) {
 			error_condition = true;
-			normal_log << "ERROR: Doesn't belong in any section. " << ppiter->full_id << " " << ppiter->last_name << " " << ppiter->first_name << " " << ppiter->cc_rating << " " << ppiter->grade << " " << ppiter->school << std::endl;
+			normal_log << "ERROR: Doesn't belong in any section. " << CStringToWString(ppiter->full_id) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
 		}
 		else if (target_section < -1) {
 			error_condition = true;

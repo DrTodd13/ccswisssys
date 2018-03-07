@@ -678,6 +678,8 @@ wchar_t getGradeCode(const std::wstring &s);
 
 bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_player_fields);
 
+class UnrecognizedGradeCode {};
+
 class ConstantContactEntry {
 protected:
 	std::vector<std::wstring> fields;
@@ -734,7 +736,7 @@ public:
 	}
 
 	bool isPlayer(void) const {
-		return !didAdultCheck() && !getNwsrsId().empty();
+		return !didAdultCheck();
 	}
 
 	wchar_t getGradeCode(void) const {
