@@ -130,6 +130,7 @@ BEGIN
     POPUP "Options"
     BEGIN
         MENUITEM "Save School Corrections",     ID_OPTIONS_SAVESCHOOLCORRECTIONS
+        MENUITEM "Tournament Date",             ID_OPTIONS_TOURNAMENTDATE
     END
     POPUP "&View"
     BEGIN
@@ -318,6 +319,17 @@ BEGIN
     COMBOBOX        IDC_COMBO1,30,47,210,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
+IDD_TOURNAMENT_DATE DIALOGEX 0, 0, 281, 105
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tournament Date Selector"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,170,84,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,224,84,50,14
+    LTEXT           "If your tournament has a section requiring a USCF membership, you must specify the date of your tournament so that CCSwisssys can warn you if a player's USCF membership expires by the time of the tournament.",IDC_STATIC,17,16,257,28
+    CONTROL         "",IDC_DATETIMEPICKER1,"SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,19,56,100,15
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -421,6 +433,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 115
     END
+
+    IDD_TOURNAMENT_DATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -461,6 +481,11 @@ BEGIN
 END
 
 IDD_FORCE_SECTION AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_TOURNAMENT_DATE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

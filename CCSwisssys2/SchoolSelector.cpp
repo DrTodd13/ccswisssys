@@ -177,7 +177,7 @@ BOOL SchoolSelector::OnInitDialog()
 	}
 
 	if (i != pDoc->school_codes.size()) {
-		SetTopIndex(clistctrl_allcodes, i);
+		SetTopIndex(clistctrl_allcodes, (int)i);
 //		clistctrl_allcodes.EnsureVisible(i, FALSE);
 	}
 	return TRUE;

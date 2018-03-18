@@ -11,6 +11,7 @@
 #include <Shlwapi.h>
 #include <set>
 #include <algorithm>
+#include "DateSelector2.h"
 
 typedef int SECTION_TYPE;
 
@@ -47,6 +48,7 @@ public:
 	CString school_code;
 	CString uscf_id;
 	CString uscf_rating;
+	CString uscf_expr;
 	int subsection;
 	std::wstring notes;
 	bool unrated;
@@ -62,6 +64,7 @@ public:
 		const CString &sc, 
 		const CString &uscfid, 
 		const CString &uscfrating, 
+		const CString &uscfexpr,
 		const std::wstring &n, 
 		bool u, 
 		int ccr, 
@@ -76,6 +79,7 @@ public:
 		school_code(sc), 
 		uscf_id(uscfid), 
 		uscf_rating(uscfrating), 
+		uscf_expr(uscfexpr),
 		subsection(sub), 
 		notes(n), 
 		unrated(u), 
@@ -225,11 +229,12 @@ public:
 	std::wstring ws_uscf_id;
 	unsigned nwsrs_rating;
 	std::wstring ws_uscf_rating;
+	std::wstring ws_uscf_expr;
 	wchar_t grade;
 
 	MRPlayer() {}
 
-	MRPlayer(std::wstring &l, std::wstring &f, std::wstring &i, std::wstring &s, std::wstring &sn, std::wstring &u, unsigned nw, std::wstring &ur, wchar_t g) :
+	MRPlayer(std::wstring &l, std::wstring &f, std::wstring &i, std::wstring &s, std::wstring &sn, std::wstring &u, unsigned nw, std::wstring &ur, std::wstring &ue, wchar_t g) :
 		ws_last(l),
 		ws_first(f),
 		ws_id(i),
@@ -238,6 +243,7 @@ public:
 		ws_uscf_id(u),
 		nwsrs_rating(nw),
 		ws_uscf_rating(ur),
+		ws_uscf_expr(ue),
 		grade(g) {}
 
 	void Serialize(CArchive& ar) {
@@ -250,8 +256,9 @@ public:
 			CString cs_school_name(ws_school_name.c_str());
 			CString cs_uscf_id(ws_uscf_id.c_str());
 			CString cs_uscf_rating(ws_uscf_rating.c_str());
+			CString cs_uscf_expr(ws_uscf_expr.c_str());
 
-			ar << cs_last << cs_first << cs_id << cs_school_code << cs_school_name << cs_uscf_id << nwsrs_rating << cs_uscf_rating << grade;
+			ar << cs_last << cs_first << cs_id << cs_school_code << cs_school_name << cs_uscf_id << nwsrs_rating << cs_uscf_rating << cs_uscf_expr << grade;
 		}
 		else
 		{
@@ -262,8 +269,9 @@ public:
 			CString cs_school_name;
 			CString cs_uscf_id;
 			CString cs_uscf_rating;
+			CString cs_uscf_expr;
 
-			ar >> cs_last >> cs_first >> cs_id >> cs_school_code >> cs_school_name >> cs_uscf_id >> nwsrs_rating >> cs_uscf_rating >> grade;
+			ar >> cs_last >> cs_first >> cs_id >> cs_school_code >> cs_school_name >> cs_uscf_id >> nwsrs_rating >> cs_uscf_rating >> cs_uscf_expr >> grade;
 			ws_last = cs_last;
 			ws_first = cs_first;
 			ws_id = cs_id;
@@ -271,6 +279,7 @@ public:
 			ws_school_name = cs_school_name;
 			ws_uscf_id = cs_uscf_id;
 			ws_uscf_rating = cs_uscf_rating;
+			ws_uscf_expr = cs_uscf_expr;
 		}
 	}
 };
@@ -779,6 +788,7 @@ public:
 	bool save_school_corrections;
 	std::set<int> noshows;
 	std::map<int, CString> force_sections;
+	CTime m_tournament_date;
 
 // Operations
 public:
@@ -813,6 +823,8 @@ public:
 		return copy.substr(0, lastindex);
 	}
 
+	CTime getValidTournamentDate();
+
 // Overrides
 public:
 	virtual BOOL OnNewDocument();
@@ -841,5 +853,6 @@ protected:
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
 public:
+	afx_msg void OnOptionsTournamentdate();
 };
 

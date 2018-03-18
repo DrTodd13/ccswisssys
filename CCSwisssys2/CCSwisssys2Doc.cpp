@@ -23,6 +23,7 @@
 IMPLEMENT_DYNCREATE(CCCSwisssys2Doc, CDocument)
 
 BEGIN_MESSAGE_MAP(CCCSwisssys2Doc, CDocument)
+	ON_COMMAND(ID_OPTIONS_TOURNAMENTDATE, &CCCSwisssys2Doc::OnOptionsTournamentdate)
 END_MESSAGE_MAP()
 
 
@@ -92,6 +93,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		::Serialize(saved_school_corrections, ar);
 		school_codes.Serialize(ar);
 		ar << save_school_corrections;
+		ar << m_tournament_date;
 	}
 	else
 	{
@@ -107,6 +109,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		::Serialize(saved_school_corrections, ar);
 		school_codes.Serialize(ar);
 		ar >> save_school_corrections;
+		ar >> m_tournament_date;
 	}
 }
 
@@ -747,3 +750,22 @@ std::wstring getSchoolTypeStr(SCHOOL_TYPE &st) {
 }
 
 // CCCSwisssys2Doc commands
+
+CTime CCCSwisssys2Doc::getValidTournamentDate() {
+	while (m_tournament_date.GetTime() == 0) {
+		OnOptionsTournamentdate();
+	}
+	return m_tournament_date;
+}
+
+void CCCSwisssys2Doc::OnOptionsTournamentdate()
+{
+	CTime temp = m_tournament_date;
+	if (temp.GetTime() == 0) {
+		temp = CTime::GetCurrentTime();
+	}
+	DateSelector2 ds(&temp);
+	if (ds.DoModal() == IDOK) {
+		m_tournament_date = temp;
+	}
+}

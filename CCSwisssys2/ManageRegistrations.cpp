@@ -213,8 +213,6 @@ void ManageRegistrations::OnEnChangeEdit1()
 	// send this notification unless you override the CDialogEx::OnInitDialog()
 	// function and call CRichEditCtrl().SetEventMask()
 	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 	OnAnyChange();
 }
 
@@ -225,8 +223,6 @@ void ManageRegistrations::OnEnChangeEdit2()
 	// send this notification unless you override the CDialogEx::OnInitDialog()
 	// function and call CRichEditCtrl().SetEventMask()
 	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 	OnAnyChange();
 }
 
@@ -237,8 +233,6 @@ void ManageRegistrations::OnEnChangeEdit3()
 	// send this notification unless you override the CDialogEx::OnInitDialog()
 	// function and call CRichEditCtrl().SetEventMask()
 	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 	OnAnyChange();
 }
 
@@ -249,8 +243,6 @@ void ManageRegistrations::OnEnChangeEdit4()
 	// send this notification unless you override the CDialogEx::OnInitDialog()
 	// function and call CRichEditCtrl().SetEventMask()
 	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 	OnAnyChange();
 }
 
@@ -261,8 +253,6 @@ void ManageRegistrations::OnEnChangeEdit5()
 	// send this notification unless you override the CDialogEx::OnInitDialog()
 	// function and call CRichEditCtrl().SetEventMask()
 	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 	OnAnyChange();
 }
 
@@ -341,8 +331,6 @@ void ManageRegistrations::OnAddNewPlayer()
 		return;
 	}
 
-	//CString cs_last, cs_first, cs_id, cs_school_code, cs_school_name;
-
 	if (cs_last.IsEmpty()) {
 		MessageBox(_T("Please enter a last name and try again."), _T("Error"));
 		return;
@@ -363,7 +351,7 @@ void ManageRegistrations::OnAddNewPlayer()
 	unsigned entry = (unsigned)pDoc->mrplayers.size();
 	std::wstring new_id = s_school_code + sel_grade;
 
-	pDoc->mrplayers.push_back(MRPlayer(s_last, s_first, new_id, s_school_code, pDoc->school_codes.findName(s_school_code), std::wstring(), init_rating, std::wstring(), sel_grade));
+	pDoc->mrplayers.push_back(MRPlayer(s_last, s_first, new_id, s_school_code, pDoc->school_codes.findName(s_school_code), std::wstring(), init_rating, std::wstring(), std::wstring(), sel_grade));
 	unsigned pindex = (unsigned)pDoc->mrplayers.size() - 1;
 
 	addToList(RegisteredPlayers,
@@ -418,7 +406,6 @@ void ManageRegistrations::OnConstantContactFileBrowse()
 void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	// TODO: Add your control notification handler code here
 	std::wstringstream ss;
 //	ss << "OnNMBlkclkList3 subItem = " << pNMItemActivate->iSubItem;
 //	MessageBox(CString(ss.str().c_str()), _T("Information"));
@@ -434,6 +421,7 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 		pDoc->rated_players[pindex].uscf_id,
 		pDoc->rated_players[pindex].nwsrs_rating,
 		pDoc->rated_players[pindex].uscf_rating,
+		pDoc->rated_players[pindex].uscf_exp_date,
 		pDoc->rated_players[pindex].grade));
 
 	addToList(RegisteredPlayers,
@@ -466,7 +454,6 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 
 void ManageRegistrations::OnCbnSelchangeCombo2()
 {
-	// TODO: Add your control notification handler code here
 	OnAnyChange();
 }
 
@@ -474,8 +461,6 @@ void ManageRegistrations::OnCbnSelchangeCombo2()
 BOOL ManageRegistrations::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
-	// TODO:  Add extra initialization here
 
 	LVCOLUMN lvColumn;
 	int nCol;
@@ -661,7 +646,7 @@ void ManageRegistrations::OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	auto removed_item = pNMItemActivate->iItem;
-	int removed_index = RegisteredPlayers.GetItemData(removed_item);
+	int removed_index = (int)RegisteredPlayers.GetItemData(removed_item);
 	RegisteredPlayers.DeleteItem(removed_item);
 	if (removed_index >= 0) {
 		pDoc->mrplayers.erase(pDoc->mrplayers.begin() + pNMItemActivate->iItem);
@@ -679,7 +664,7 @@ void ManageRegistrations::OnForceSection()
 {
 	int selected_row = RegisteredPlayers.GetSelectionMark();
 	if (selected_row >= 0) {
-		int force_index = RegisteredPlayers.GetItemData(selected_row);
+		int force_index = (int)RegisteredPlayers.GetItemData(selected_row);
 		int selection = -1;
 		ForceSection fs_dialog(pDoc, &selection);
 		if (fs_dialog.DoModal() == IDOK) {

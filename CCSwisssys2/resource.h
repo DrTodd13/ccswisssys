@@ -13,6 +13,8 @@
 #define IDD_SCHOOL_EDITOR               321
 #define IDD_SPLIT_SECTION               325
 #define IDD_FORCE_SECTION               327
+#define IDD_DIALOG2                     333
+#define IDD_TOURNAMENT_DATE             333
 #define IDC_EDIT1                       1000
 #define IDC_BUTTON1                     1001
 #define IDC_EDIT2                       1002
@@ -37,7 +39,6 @@
 #define IDC_EDIT5                       1023
 #define IDC_COMBO4                      1024
 #define IDC_BUTTON10                    1025
-#define IDC_COMBO5                      1025
 #define IDC_PAIRING_COMBO               1025
 #define IDC_BUTTON11                    1026
 #define IDC_CHECK1                      1027
@@ -46,16 +47,18 @@
 #define IDC_SPLIT_SECTION               1032
 #define IDC_RADIO_MAKE_QUADS            1034
 #define IDC_RADIO_EQUAL                 1035
+#define IDC_DATETIMEPICKER1             1037
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 #define ID_OPTIONS_TEST                 32772
+#define ID_OPTIONS_TOURNAMENTDATE       32773
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        331
-#define _APS_NEXT_COMMAND_VALUE         32773
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_RESOURCE_VALUE        335
+#define _APS_NEXT_COMMAND_VALUE         32774
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif
