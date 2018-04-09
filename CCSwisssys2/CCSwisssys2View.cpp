@@ -489,13 +489,18 @@ bool isValidUSCFId(std::wstring &uscf_id) {
 	return isNumeric(uscf_id) && uscf_id.length() == 8;
 }
 
-void updateUscfFromRatingFile(std::wstring &uscf_id, std::wstring &uscf_rating, const Player &p, std::wofstream &normal_log, bool &warning_condition) {
+void updateUscfFromRatingFile(std::wstring &uscf_id, std::wstring &uscf_rating, const Player &p, std::wofstream &normal_log, bool &warning_condition, log_messages &lm) {
+	if (uscf_id == L"N/A" || uscf_id == L"NONE") {
+		uscf_id = L"";
+	}
+
 	if (p.uscf_id != L"") {
 		std::wstring temp_rating = p.uscf_rating;
 
 		if (uscf_id.size() != 0 && uscf_id != p.uscf_id) {
 			warning_condition = true;
-			normal_log << "WARNING: USCF ID in constant contact " << uscf_id << " not the same as the one in the ratings file " << p.uscf_id << " for player " << p.first_name << " " << p.last_name << " NWSRS ID: " << p.getFullId() << std::endl;
+			lm.uscf_id_cc_no_match << "    WARNING: USCF ID in constant contact " << uscf_id << " not the same as the one in the ratings file " << p.uscf_id << " for player " << p.first_name << " " << p.last_name << " NWSRS ID: " << p.getFullId() << std::endl;
+			//normal_log << "WARNING: USCF ID in constant contact " << uscf_id << " not the same as the one in the ratings file " << p.uscf_id << " for player " << p.first_name << " " << p.last_name << " NWSRS ID: " << p.getFullId() << std::endl;
 		}
 		if (uscf_rating.size() != 0 && uscf_rating != temp_rating) {
 			//warning_condition = true;
@@ -508,7 +513,8 @@ void updateUscfFromRatingFile(std::wstring &uscf_id, std::wstring &uscf_rating, 
 	else {
 		if (isValidUSCFId(uscf_id)) {
 			warning_condition = true;
-			normal_log << "WARNING: USCF ID specified " << uscf_id << " but no USCF ID present in the ratings file for player " << p.last_name << " " << p.first_name << " grade code = " << p.grade << " NWSRS ID: " << p.getFullId() << std::endl;
+			lm.new_uscf_ids << "    WARNING: USCF ID specified " << uscf_id << " but no USCF ID present in the ratings file for player " << p.last_name << " " << p.first_name << " grade code = " << p.grade << " NWSRS ID: " << p.getFullId() << std::endl;
+			//normal_log << "WARNING: USCF ID specified " << uscf_id << " but no USCF ID present in the ratings file for player " << p.last_name << " " << p.first_name << " grade code = " << p.grade << " NWSRS ID: " << p.getFullId() << std::endl;
 		}
 		else {
 			uscf_id = L"";
@@ -538,7 +544,13 @@ std::wstring getLastFour(const std::wstring &full) {
 
 //#define DEBUG_MAIN
 
-std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log) {
+std::wstring removeWhitespace(std::wstring &s) {
+	s.erase(std::remove_if(s.begin(), s.end(), iswspace), s.end());
+	return s;
+}
+
+// MAIN
+std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log, log_messages &lm) {
 	std::vector<SectionPlayerInfo> post_proc;
 
 	std::wifstream cc_file(pDoc->constant_contact_file);
@@ -566,14 +578,15 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 		for (i = 0; i < entries.size(); ++i) {
 			bool was_parent = false, was_player = false;
 
-			//        std::cout << entries[i].getFirstName() << " " << entries[i].getLastName() << " " << entries[i].didAdultCheck() << " school=" << entries[i].getSchool() << " grade=" << entries[i].getGrade() << " section=" << entries[i].getSection() << " nwsrsid=" << entries[i].getNwsrsId() << std::endl;
 			if (entries[i].isParent()) {
 				++num_parents;
 				was_parent = true;
+				//normal_log << "Parent:" << entries[i].getFirstName() << " " << entries[i].getLastName() << " " << std::endl;
 			}
 			if (entries[i].isPlayer()) {
 				++num_players;
 				was_player = true;
+				//normal_log << "Player:" << entries[i].getFirstName() << " " << entries[i].getLastName() << " " << std::endl;
 			}
 			if (was_parent && was_player) {
 				MessageBox(hWnd, _T("Some entry was both parent and player."), _T("ERROR"), MB_OK);
@@ -585,9 +598,9 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 			}
 		}
 
-		//	std::cout << "There are " << entries.size() << " entries in the file." << std::endl;
-		//	std::cout << "There are " << num_parents << " parents." << std::endl;
-		//	std::cout << "There are " << num_players << " players." << std::endl;
+		normal_log << "There are " << entries.size() << " entries in the file." << std::endl;
+		normal_log << "There are " << num_parents << " parents." << std::endl;
+		normal_log << "There are " << num_players << " players.\n" << std::endl;
 		if (num_parents + num_players != entries.size()) {
 			MessageBox(hWnd, _T("Some problem where number of parents plus number of players not equal to number of entries."), _T("ERROR"), MB_OK);
 			//ShellExecute(NULL, _T("open"), _T("c:\\windows\\notepad.exe"), (LPCWSTR)logfilename.c_str(), _T(""), SW_SHOWNORMAL);
@@ -604,7 +617,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				std::wstring first_name = entries[i].getFirstName();
 				std::wstring school = entries[i].getSchool();
 				std::wstring orig_school = school;
-				std::wstring full_id = entries[i].getNwsrsId();
+				std::wstring full_id = toUpper(removeWhitespace(entries[i].getNwsrsId()));
 				//std::wstring given_rating = entries[i].getNwsrsRating();
 				std::wstring upper_last = last_name;
 				std::wstring upper_first = first_name;
@@ -612,6 +625,37 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				//std::wstring uscf_rating = entries[i].getUscfRating();
 				std::wstring uscf_expr = L"";
 				std::wstring uscf_rating = L"";
+				std::wstring full_name = first_name + L" " + last_name;
+
+				std::wstring school_check = L"ACMA";
+				if (orig_school == school_check) {
+					orig_school = school_check;
+				}
+
+				auto rentry = pDoc->nwsrs_map.find(full_id);
+				bool id_perfect = false;
+				std::wstring full_id_save = full_id;
+				if (rentry != pDoc->nwsrs_map.end()) {
+					id_perfect = true;
+				}
+
+				if (full_id.size() == 8) {
+					// People can't follow directions and sometimes put USCF ID in NWSRS spot.
+					auto uscfiter = pDoc->uscf_map.find(full_id);
+					if (uscfiter != pDoc->uscf_map.end()) {
+						uscf_id = full_id;
+						full_id = pDoc->rated_players[uscfiter->second].getFullId();
+						normal_log << "WARNING: USCF ID " << uscf_id << " for player " << first_name << " " << last_name << " was given as the NWSRS ID.  CCSwisssys has fetched the NWSRS ID " << full_id << " from the ratings file." << std::endl;
+					}
+					else {
+						std::wstring inputschoolcode = full_id.substr(0, 3);
+						if (!isAlpha(inputschoolcode)) {
+							normal_log << "WARNING: Specified ID " << full_id << " for player " << first_name << " " << last_name << " is malformed.  Ignoring the ID and trying to find ID from name." << std::endl;
+							full_id = L"";
+						}
+					}
+				}
+
 				wchar_t grade_code;
 				try {
 					grade_code = entries[i].getGradeCode();
@@ -627,10 +671,9 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 
 				upper_last = toUpper(upper_last);
 				upper_first = toUpper(upper_first);
-				full_id = toUpper(full_id);
-
-				if (upper_first == L"LORELEI") {
-					upper_first = L"LORELEI";
+				
+				if (upper_first == L"NATHAN") {
+					upper_first = L"NATHAN";
 				}
 
 				// Handle ID specification input differences and errors.
@@ -696,7 +739,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 								continue;
 							}
 							else {
-								SchoolSelector ss_dialog(pDoc, school, ratings_school_code, school_code);
+								SchoolSelector ss_dialog(pDoc, school, ratings_school_code, school_code, full_name, CStringToWString(getGradeString(grade_code)));
 
 								if (ss_dialog.DoModal() == IDOK) {
 									school = pDoc->school_codes.findName(school_code);
@@ -714,29 +757,23 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 					}
 				}
 
-				if (full_id.length() == 8 && school_code != L"" && ratings_school_code != school_code) {
-					info_condition = true;
-					normal_log << "INFO: Player " << first_name << " " << last_name << " with ID specified as " << full_id << " and school as " << orig_school << " change of school from " << ratings_school_code << " to " << school_code << std::endl;
-
-					full_id.replace(0, 3, school_code); // Update school code in their ID.
-				}
-
 				CString cs_full_id = CString(full_id.c_str());
 
-				auto rentry = pDoc->nwsrs_map.find(full_id);
+				rentry = pDoc->nwsrs_map.find(full_id);
 				auto lfi_rentry = pDoc->nwsrs_four_map.find(last_four_id);
 				unsigned cc_rating = 4000;
 				unsigned nwsrs_rating;
 
 				if (rentry != pDoc->nwsrs_map.end()) {
-					unsigned rp_index = lfi_rentry->second;
+					unsigned rp_index = rentry->second;
 					cc_rating = pDoc->rated_players[rp_index].get_higher_rating();
-					updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[rp_index], normal_log, warning_condition);
+					updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[rp_index], normal_log, warning_condition, lm);
 					nwsrs_rating = pDoc->rated_players[rp_index].nwsrs_rating;
 					std::wstring cap_db_last = toUpper(pDoc->rated_players[rp_index].last_name);
 					std::wstring cap_db_first = toUpper(pDoc->rated_players[rp_index].first_name);
 					if (cap_db_last != toUpper(last_name) || cap_db_first != toUpper(first_name)) {
-						normal_log << "NAME: player named " << toUpper(last_name) << " " << toUpper(first_name) << " is named differently in the NWSRS database as " << cap_db_last << " " << cap_db_first << std::endl;
+						lm.name_change << "    NAME: player named " << toUpper(first_name) << " " << toUpper(last_name) << " is named differently in the NWSRS database as " << cap_db_last << " " << cap_db_first << std::endl;
+						//normal_log << "NAME: player named " << toUpper(first_name) << " " << toUpper(last_name) << " is named differently in the NWSRS database as " << cap_db_last << " " << cap_db_first << std::endl;
 						notes << "Update name in database from " << cap_db_first << " " << cap_db_last << "? ";
 					}
 					uscf_expr = pDoc->rated_players[rp_index].uscf_exp_date;
@@ -745,7 +782,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				else if (lfi_rentry != pDoc->nwsrs_four_map.end()) {
 					unsigned rp_index = lfi_rentry->second;
 					cc_rating = pDoc->rated_players[rp_index].get_higher_rating();
-					updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[rp_index], normal_log, warning_condition);
+					updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[rp_index], normal_log, warning_condition, lm);
 					nwsrs_rating = pDoc->rated_players[rp_index].nwsrs_rating;
 					std::wstring cap_db_last = toUpper(pDoc->rated_players[rp_index].last_name);
 					std::wstring cap_db_first = toUpper(pDoc->rated_players[rp_index].first_name);
@@ -764,12 +801,65 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				}
 #endif
 				else {
+					// No exact full id matching in ratings DB.
+					bool originally_something = false;
+
+					if (last_four_id.length() == 4) {
+						originally_something = true;
+						// They have an ID but the exact ID wasn't found in the list.  So, search by partial ID.
+						bool found = false;
+						for (unsigned j = 0; j < pDoc->rated_players.size(); ++j) {
+							if (pDoc->rated_players[j].id == last_four_id) {
+								std::wstringstream wss;
+								wss << "No ID or bad ID " << full_id_save << " specified for player " << upper_first << " " << upper_last << " grade code: " << grade_code << 
+									" school: " << school << ".  However, a potential match has been found in the ratings file with name " << 
+									pDoc->rated_players[j].first_name << " " << pDoc->rated_players[j].last_name << 
+									" with ID: " << pDoc->rated_players[j].getFullId() <<
+									" and grade code: " << pDoc->rated_players[j].grade <<
+									" and school code: " << pDoc->rated_players[j].school_code << "(" <<
+									pDoc->school_codes.findName(pDoc->rated_players[j].school_code) << ")" <<
+									" Please verify if this is the correct person and click Yes if they are and No if they aren't.";
+								int ret = MessageBox(hWnd, WStringToCString(wss.str()), _T("Matching name found in ratings file."), MB_ICONQUESTION | MB_YESNO);
+
+								if (ret == IDYES) {
+									cc_rating = pDoc->rated_players[j].get_higher_rating();
+									updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[j], normal_log, warning_condition, lm);
+									nwsrs_rating = pDoc->rated_players[j].nwsrs_rating;
+									uscf_expr = pDoc->rated_players[j].uscf_exp_date;
+
+									//normal_log << "Found by digit ID string from ratings file " << std::endl;
+									if (pDoc->rated_players[j].grade != grade_code) {
+										notes << "Unexpected grade change from " << CStringToWString(getGradeStringShort(pDoc->rated_players[j].grade)) << " to " << CStringToWString(getGradeStringShort(grade_code)) << ". ";
+										lm.grade_change << "    Unexpected grade change from " << CStringToWString(getGradeStringShort(pDoc->rated_players[j].grade)) << " to " << CStringToWString(getGradeStringShort(grade_code)) << " for player " << first_name << " " << last_name << std::endl;
+										grade_code = pDoc->rated_players[j].grade;
+									}
+									if (school_code.length() == 3) {
+										full_id = school_code + pDoc->rated_players[j].grade + last_four_id;
+										//									full_id = school_code + grade_code + last_four_id;
+									}
+									else {
+										full_id = pDoc->rated_players[j].school_code + pDoc->rated_players[j].grade + last_four_id;
+									}
+									found = true;
+									normal_log << "WARNING: Player ID corrected from " << full_id_save << " to " << full_id << " by matching the last 4 digits of their specified ID to those IDs in the ratings file for player " << first_name << " " << last_name << std::endl;
+									break;
+								}
+							}
+						}
+						// Do somethere here if the player was not found.
+						if (!found) {
+							full_id = L"";
+							//error_condition = true;
+							//normal_log << "ERROR: Did not find player ID " << last_four_id << " in the ratings file. " << full_id << " " << last_name << " " << first_name << " " << grade_code << " " << school << std::endl;
+						}
+					}
+
 					if (full_id == L"NONE" || full_id == L"N/A" || full_id == L"") {
 						std::vector<int> exact_match = findExactMatch(upper_last, upper_first, grade_code, pDoc->rated_players);
 						bool match_found = false;
 						for (auto match = exact_match.begin(); match != exact_match.end(); ++match) {
 							std::wstringstream wss;
-							wss << "No ID specified for player " << upper_first << " " << upper_last << " grade code: " << grade_code << " school: " << school
+							wss << "No ID or bad ID " << full_id_save << " specified for player " << upper_first << " " << upper_last << " grade code: " << grade_code << " school: " << school
 								<< ".  However, a player with the same first and last name was found in the ratings file with ID: " << pDoc->rated_players[*match].getFullId() <<
 								" and grade code: " << pDoc->rated_players[*match].grade <<
 								" and school code: " << pDoc->rated_players[*match].school_code << "(" <<
@@ -780,33 +870,41 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 							if (ret == IDYES) {
 								warning_condition = true;
 								//normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
-								normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
+								//normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
 
 								full_id = pDoc->rated_players[*match].getFullId();
 								cc_rating = pDoc->rated_players[*match].get_higher_rating();
-								updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[*match], normal_log, warning_condition);
+								updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[*match], normal_log, warning_condition, lm);
 								nwsrs_rating = pDoc->rated_players[*match].nwsrs_rating;
 								uscf_expr = pDoc->rated_players[*match].uscf_exp_date;
 								match_found = true;
+								normal_log << "WARNING: Player ID corrected from " << full_id_save << " to " << full_id << " by an exact match of their first and last names in the ratings file for player " << first_name << " " << last_name << std::endl;
 							}
 						}
 						if (!match_found) {
-							full_id = school_code + grade_code;
-							cc_rating = (grade_code - 'A') * 100;
-							nwsrs_rating = cc_rating;
-							unrated = true;
+							if (originally_something) {
+								error_condition = true;
+								normal_log << "ERROR: Did not find player ID " << last_four_id << " in the ratings file. " << full_id << " " << last_name << " " << first_name << " " << grade_code << " " << school << std::endl;
+							}
+							else {
+								full_id = school_code + grade_code;
+								cc_rating = (grade_code - 'A') * 100;
+								nwsrs_rating = cc_rating;
+								unrated = true;
 
-							info_condition = true;
-							normal_log << "INFO: new tournament player without a previous ID " << first_name << " " << last_name << ", grade: " << grade_code << ", school: " << school << std::endl;
+								info_condition = true;
+								normal_log << "INFO: new tournament player without a previous ID " << first_name << " " << last_name << ", grade: " << grade_code << ", school: " << school << std::endl;
+							}
 						}
 					}
+#if 0
 					else {
 						// They have an ID but the exact ID wasn't found in the list.  So, search by partial ID.
 						bool found = false;
 						for (unsigned j = 0; j < pDoc->rated_players.size(); ++j) {
 							if (pDoc->rated_players[j].id == last_four_id) {
 								cc_rating = pDoc->rated_players[j].get_higher_rating();
-								updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[j], normal_log, warning_condition);
+								updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[j], normal_log, warning_condition, lm);
 								nwsrs_rating = pDoc->rated_players[j].nwsrs_rating;
 								uscf_expr = pDoc->rated_players[j].uscf_exp_date;
 
@@ -832,6 +930,20 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 							normal_log << "ERROR: Did not find player ID " << last_four_id << " in the ratings file. " << full_id << " " << last_name << " " << first_name << " " << grade_code << " " << school << std::endl;
 						}
 					}
+#endif
+				}
+
+				if (full_id.length() == 8 && school_code != L"" && ratings_school_code != school_code) {
+					info_condition = true;
+					lm.school_change << "    INFO: Player " << first_name << " " << last_name << " with ID specified as " << full_id << " and school as " << orig_school << " change of school from " << ratings_school_code << " to " << school_code << std::endl;
+					//normal_log << "INFO: Player " << first_name << " " << last_name << " with ID specified as " << full_id << " and school as " << orig_school << " change of school from " << ratings_school_code << " to " << school_code << std::endl;
+
+					full_id.replace(0, 3, school_code); // Update school code in their ID.
+				}
+
+				if (!id_perfect) {
+					lm.imperfect << "    INFO: The incorrectly specified NWSRS ID " << full_id_save << " in the Constant Contact information for player " << first_name << " " << last_name << " has been corrected to ID " << full_id << std::endl;
+					//normal_log << "INFO: The incorrectly specified NWSRS ID " << full_id_save << " in the Constant Contact information for player " << first_name << " " << last_name << " has been corrected to ID " << full_id << std::endl;
 				}
 
 				CString cs_last_name(last_name.c_str());
@@ -845,21 +957,24 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 		}
 	}
 
-	normal_log << "\nOnce you have confirmed that you have resolved INFO and WARNING messages correctly, please delete those lines before sending to the ratings coordinator." << std::endl;
-
 	return post_proc;
 }
 
 bool willExpire(const std::wstring &uscf_expr_date, const CTime &tournament_date) {
 	std::wstringstream indate(uscf_expr_date);
 	wchar_t ch;
-	unsigned month=0, day=0, year=0;
-	indate >> month;
-	indate >> ch;
-	indate >> day;
-	indate >> ch;
-	indate >> year;
-	year += 2000;
+	int month=0, day=0, year=0;
+	try {
+		indate >> month;
+		indate >> ch;
+		indate >> day;
+		indate >> ch;
+		indate >> year;
+		year += 2000;
+	}
+	catch (std::exception &) {
+		//return false;
+	}
 
 	if (year < tournament_date.GetYear()) return true;
 	if (year > tournament_date.GetYear()) return false;
@@ -867,6 +982,7 @@ bool willExpire(const std::wstring &uscf_expr_date, const CTime &tournament_date
 	if (month > tournament_date.GetMonth()) return false;
 	return day < tournament_date.GetDay();
 }
+
 
 // Click on the button to load sections from constant contact file.
 void CCCSwisssys2View::OnCreateSections()
@@ -886,6 +1002,7 @@ void CCCSwisssys2View::OnCreateSections()
 	std::wstring output_dir = pDoc->getOutputLocation();
 	std::wstring logfilename = output_dir + _T("\\ccswslog.txt");
 	std::wofstream normal_log(logfilename);
+	log_messages lm;
 
 	Player p;
 	std::set<std::wstring> restricted_set;
@@ -911,7 +1028,7 @@ void CCCSwisssys2View::OnCreateSections()
 		}
 	}
 
-	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log);
+	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log, lm);
 
     for(auto ppiter = post_proc.begin(); ppiter != post_proc.end(); ++ppiter) {
 		auto force_iter = pDoc->force_sections.find(ppiter->cc_file_index);
@@ -932,20 +1049,24 @@ void CCCSwisssys2View::OnCreateSections()
 				if (pDoc->sections[target_section].uscf_required) {
 					if (!isValidUSCFId(CStringToWString(ppiter->uscf_id))) {
 						warning_condition = true;
-						normal_log << "WARNING: Player in section requiring USCF membership did not specify a USCF ID and there is not one present in the ratings file. NWSRS=" << CStringToWString(ppiter->full_id) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
+						lm.no_uscf_membership << "    WARNING: Player in section requiring USCF membership did not specify a USCF ID and there is not one present in the ratings file. NWSRS=" << CStringToWString(ppiter->full_id) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
+						//normal_log << "WARNING: Player in section requiring USCF membership did not specify a USCF ID and there is not one present in the ratings file. NWSRS=" << CStringToWString(ppiter->full_id) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
 					}
 					else {
-						if (willExpire(CStringToWString(ppiter->uscf_expr), pDoc->getValidTournamentDate())) {
+						std::wstring ws_uscf_expr = CStringToWString(ppiter->uscf_expr);
+						if (ws_uscf_expr.length() > 0 && willExpire(ws_uscf_expr, pDoc->getValidTournamentDate())) {
 							warning_condition = true;
-							normal_log << "WARNING: Player in section requiring USCF membership will have an expired membership by the date of the tournament. NWSRS=" << CStringToWString(ppiter->full_id) << " USCF=" << CStringToWString(ppiter->uscf_id) << " Expired: " << CStringToWString(ppiter->uscf_expr) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
+							lm.expired_uscf_membership << "    WARNING: Player in section requiring USCF membership will have an expired membership by the date of the tournament. NWSRS=" << CStringToWString(ppiter->full_id) << " USCF=" << CStringToWString(ppiter->uscf_id) << " Expired: " << CStringToWString(ppiter->uscf_expr) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
+							//normal_log << "WARNING: Player in section requiring USCF membership will have an expired membership by the date of the tournament. NWSRS=" << CStringToWString(ppiter->full_id) << " USCF=" << CStringToWString(ppiter->uscf_id) << " Expired: " << CStringToWString(ppiter->uscf_expr) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
 						}
 					}
 				}
 				pDoc->sections[target_section].players.push_back(*ppiter);
 			}
 			else {
-				error_condition = true;
-				normal_log << "ERROR: Player in constant contact not in the restricted tournament id list. " << ppiter->full_id << " " << ppiter->last_name << " " << ppiter->first_name << " " << ppiter->cc_rating << " " << ppiter->grade << " " << ppiter->school << std::endl;
+				//error_condition = true;
+				warning_condition = true;
+				normal_log << "ERROR: Player in constant contact not in the restricted tournament id list. " << CStringToWString(ppiter->full_id) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
 			}
 			//normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << full_id << " " << last_name << " " << first_name << " " << cc_rating << " " << grade_code << " " << school_code << " uscf rating and id " << uscf_rating << " " << uscf_id << std::endl;
 		}
@@ -986,6 +1107,19 @@ void CCCSwisssys2View::OnCreateSections()
 	}
 
 	pDoc->sections.makeSubsections();
+
+	normal_log << std::endl;
+
+	normal_log << "INCORRECTLY SPECIFIED NWSRS IDS\n" << "-------------------------------\n" << lm.imperfect.str() << std::endl;
+	normal_log << "NAME CHANGES\n" << "------------\n" << lm.name_change.str() << std::endl;
+	normal_log << "SCHOOL CHANGES\n" << "--------------\n" << lm.school_change.str() << std::endl;
+	normal_log << "GRADE CHANGES\n" << "-------------\n" << lm.grade_change.str() << std::endl;
+	normal_log << "MISSING USCF MEMBERSHIP\n" << "-----------------------\n" << lm.no_uscf_membership.str() << std::endl;
+	normal_log << "EXPIRED USCF MEMBERSHIP\n" << "-----------------------\n" << lm.expired_uscf_membership.str() << std::endl;
+	normal_log << "NEW USCF IDS\n" << "------------\n" << lm.new_uscf_ids.str() << std::endl;
+	normal_log << "USCF ID MISMATCH\n" << "----------------\n" << lm.uscf_id_cc_no_match.str() << std::endl;
+
+	normal_log << "\nOnce you have confirmed that you have resolved any INFO, WARNING, or ERROR messages correctly, please delete those lines before sending to the ratings coordinator.\n" << std::endl;
 
 	if (pDoc->school_codes.m_new_schools.size() > 0) {
 		info_condition = true;
@@ -1222,18 +1356,7 @@ void CCCSwisssys2View::OnSectionReorder(NMHDR *pNMHDR, LRESULT *pResult)
 	pDoc->SetModifiedFlag();
 }
 
-template <class T>
-int listCompareItem(T &a, T &b, bool rev=false) {
-	if (a < b) return rev ? 1 : -1;
-	if (a > b) return rev ? -1 : 1;
-	return 0;
-}
-
-int listCompareItemInt(int a, int b, bool rev=false) {
-	if (a < b) return rev ? 1 : -1;
-	if (a > b) return rev ? -1 : 1;
-	return 0;
-}
+#include "helper.h"
 
 class spc_sort_info {
 public:
@@ -1352,13 +1475,21 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 	workbook checkin_wb;
 	worksheet* checkin = checkin_wb.sheet("Check-In");
 	checkin->defaultColwidth(8);
-	checkin->colwidth(0, 256 * 40);
+	checkin->colwidth(0, 256 * 14);
+	checkin->colwidth(1, 256 * 14);
+	checkin->colwidth(2, 256 * 35);
+	checkin->colwidth(3, 256 * 15);
+	checkin->colwidth(4, 256 * 15);
 	std::wstringstream header;
 	header << "Check-In List for Section " << sec_name;
 	checkin->label(0, 0, header.str());
-	checkin->label(2, 0, "Player");
-	checkin->label(2, 1, "Present");
-	checkin->label(2, 2, "Notes");
+	checkin->label(2, 0, "Last Name");
+	checkin->label(2, 1, "First Name");
+	checkin->label(2, 2, "School");
+	checkin->label(2, 3, "Grade");
+	checkin->label(2, 4, "ID");
+	checkin->label(2, 5, "Present");
+	checkin->label(2, 6, "Notes");
 
 	unsigned i;
 	unsigned num_players = 0;
@@ -1495,7 +1626,11 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 
 		std::wstring name_field = toUpper(CStringToWString(sec.players[i].last_name)) + L", " +
 			toUpper(CStringToWString(sec.players[i].first_name));
-		checkin->label(3 + i, 0, toString(name_field));
+		checkin->label(3 + i, 0, toString(toUpper(CStringToWString(sec.players[i].last_name))));  // last
+		checkin->label(3 + i, 1, toString(toUpper(CStringToWString(sec.players[i].first_name)))); // first
+		checkin->label(3 + i, 2, toString(toUpper(CStringToWString(sec.players[i].school)))); // school
+		checkin->label(3 + i, 3, toString(toUpper(CStringToWString(getGradeString(sec.players[i].grade))))); // grade
+		checkin->label(3 + i, 4, toString(toUpper(CStringToWString(sec.players[i].full_id)))); // ID
 		players->label(cur_row, 0, toString(name_field));
 
 		std::wstring id_field = CStringToWString(sec.players[i].full_id);
@@ -1544,7 +1679,7 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 		notes_field << sec.players[i].notes;
 			
 		if (notes_field.str().length() != 0) {
-			checkin->label(3 + i, 2, toString(notes_field.str()));
+			checkin->label(3 + i, 6, toString(notes_field.str()));
 		}
 
 		++cur_row;
@@ -1569,8 +1704,7 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 	return cur_row - 1;
 }
 
-void CCCSwisssys2View::OnCreateSwisssysTourney()
-{
+void CCCSwisssys2View::OnCreateSwisssysTourney() {
 	auto pDoc = GetDocument();
 
 	std::wstring output_dir = pDoc->getOutputLocation();
@@ -1636,10 +1770,12 @@ void CCCSwisssys2View::OnCreateSwisssysTourney()
 			int mkdir_res = _wmkdir(dir_base.str().c_str());
 			if (mkdir_res != 0) {
 				std::wstringstream err;
-				err << errno;
-				MessageBox(err.str().c_str(), _T("Error"));
+				err << "Error " << errno << " when creating directory " << dir_base.str() << ".";
 				if (errno == EEXIST) {
 
+				}
+				else {
+					MessageBox(err.str().c_str(), _T("Error"));
 				}
 			}
 			fss << dir_base.str() << "\\computer" << pciter->first << ".tmt";

@@ -290,6 +290,10 @@ BEGIN
     LTEXT           "School code from ID =>",IDC_STATIC,202,72,78,8
     EDITTEXT        IDC_EDIT5,284,69,40,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "The school name entered in ConstantContact is below.",IDC_STATIC,15,57,191,8
+    LTEXT           "Name",IDC_STATIC,18,43,20,8
+    EDITTEXT        IDC_SE_NAME,47,41,138,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Grade",IDC_STATIC,196,43,25,8
+    EDITTEXT        IDC_SE_GRADE,229,41,94,14,ES_AUTOHSCROLL | ES_READONLY
 END
 
 IDD_SPLIT_SECTION DIALOGEX 0, 0, 309, 176
@@ -303,7 +307,7 @@ BEGIN
     EDITTEXT        IDC_NUM_SPLIT,107,59,40,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPLIT_SPIN,"msctls_updown32",UDS_ARROWKEYS,151,59,10,14
     CONTROL         "Make quads.  (Plus a Swiss if odd # of players.)",IDC_RADIO_MAKE_QUADS,
-                    "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP,18,21,163,10
+                    "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP,18,21,205,10
     CONTROL         "Split into the specified number of equally sized sections.",IDC_RADIO_EQUAL,
                     "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP,18,43,194,10
 END

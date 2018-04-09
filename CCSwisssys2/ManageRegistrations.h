@@ -6,7 +6,7 @@
 
 // ManageRegistrations dialog
 
-std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log);
+std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log, log_messages &lm);
 
 class ManageRegistrations : public CDialogEx
 {

@@ -203,6 +203,7 @@
     <ClInclude Include="DateSelector2.h" />
     <ClInclude Include="DatFile.h" />
     <ClInclude Include="ForceSection.h" />
+    <ClInclude Include="helper.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="ManageRegistrations.h" />
     <ClInclude Include="Resource.h" />
@@ -220,6 +221,7 @@
     <ClCompile Include="DateSelector2.cpp" />
     <ClCompile Include="DatFile.cpp" />
     <ClCompile Include="ForceSection.cpp" />
+    <ClCompile Include="helper.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="ManageRegistrations.cpp" />
     <ClCompile Include="SchoolSelector.cpp" />

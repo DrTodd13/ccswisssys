@@ -6,7 +6,6 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 
-
 class CCCSwisssys2View : public CFormView
 {
 protected: // create from serialization only
@@ -96,4 +95,3 @@ public:
 inline CCCSwisssys2Doc* CCCSwisssys2View::GetDocument() const
    { return reinterpret_cast<CCCSwisssys2Doc*>(m_pDocument); }
 #endif
-

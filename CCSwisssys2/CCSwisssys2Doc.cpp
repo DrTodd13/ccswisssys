@@ -731,6 +731,15 @@ bool CCCSwisssys2Doc::loadRatingsFile() {
 	return true;
 }
 
+bool isAlpha(std::wstring &s) {
+	for (unsigned i = 0; i < s.length(); ++i) {
+		if (!isalpha(s[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bool isNumeric(std::wstring &s) {
 	return (s.find_first_not_of(L"0123456789") == std::string::npos);
 }

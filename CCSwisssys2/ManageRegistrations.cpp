@@ -390,7 +390,7 @@ void ManageRegistrations::OnConstantContactFileBrowse()
 	s_school_code = CStringToWString(cs_school_code);
 	s_school_name = CStringToWString(cs_school_name);
 
-	SchoolSelector ss_dialog(pDoc, s_school_name, s_school_code, s_school_code);
+	SchoolSelector ss_dialog(pDoc, s_school_name, s_school_code, s_school_code, L"", L"");
 
 	if (ss_dialog.DoModal() == IDOK) {
 		s_school_name = pDoc->school_codes.findName(s_school_code);
@@ -618,8 +618,9 @@ BOOL ManageRegistrations::OnInitDialog()
 	}
 	
 	std::wofstream normal_log;
+	log_messages lm;
 	bool error_condition = false, warning_condition = false, info_condition = false;
-	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log);
+	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log, lm);
 
 	for (auto ppiter = post_proc.begin(); ppiter != post_proc.end(); ++ppiter) {
 		addToList(RegisteredPlayers,

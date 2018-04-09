@@ -5,18 +5,22 @@
 #include "CCSwisssys2.h"
 #include "SchoolSelector.h"
 #include "afxdialogex.h"
+#include "helper.h"
 
 
 // SchoolSelector dialog
 
 IMPLEMENT_DYNAMIC(SchoolSelector, CDialogEx)
 
-SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, CWnd* pParent /*=NULL*/)
+SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, const std::wstring &name, const std::wstring &grade, CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_SCHOOL_EDITOR, pParent), m_out_code(out_code)
 {
 	pDoc = doc;
 	m_school = school;
 	m_possible = in_code;
+	m_name = name;
+	m_grade = grade;
+	last_sort = 0;
 }
 
 SchoolSelector::~SchoolSelector()
@@ -31,6 +35,8 @@ void SchoolSelector::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT2, cedit_code);
 	DDX_Control(pDX, IDC_EDIT3, cedit_name);
 	DDX_Control(pDX, IDC_EDIT4, cedit_city);
+	DDX_Control(pDX, IDC_SE_NAME, cedit_player_name);
+	DDX_Control(pDX, IDC_SE_GRADE, cedit_player_grade);
 	DDX_Control(pDX, IDC_COMBO2, ccombo_type);
 	DDX_Control(pDX, IDC_COMBO1, ccombo_state);
 	DDX_Control(pDX, IDC_LIST1, clistctrl_allcodes);
@@ -40,6 +46,7 @@ void SchoolSelector::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(SchoolSelector, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &SchoolSelector::OnDoubleClickSchoolList)
 	ON_BN_CLICKED(IDOK, &SchoolSelector::OnBnClickedOk)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST1, &SchoolSelector::OnLvnColumnclickList1)
 END_MESSAGE_MAP()
 
 
@@ -151,6 +158,8 @@ BOOL SchoolSelector::OnInitDialog()
 
 	cedit_input_school.SetWindowTextW(WStringToCString(m_school));
 	cedit_possible.SetWindowTextW(WStringToCString(m_possible));
+	cedit_player_name.SetWindowTextW(WStringToCString(m_name));
+	cedit_player_grade.SetWindowTextW(WStringToCString(m_grade));
 	SetupStateCombobox(ccombo_state);
 	SetupTypeCombobox(ccombo_type);
 
@@ -262,4 +271,147 @@ void SchoolSelector::OnBnClickedOk()
 	pDoc->school_codes.addSchool(AllCodesEntry(ws_code, ws_name, ws_type, ws_city, ws_state));
 	m_out_code = ws_code;
 	CDialogEx::OnOK();
+}
+
+class se_sort_info {
+public:
+	int column;
+	AllCodes *all_codes;
+	std::wstring school;
+	se_sort_info(int c, AllCodes *ac, const std::wstring &s) : column(c), all_codes(ac), school(s) {}
+};
+
+template <typename Iterator>
+bool next_combination(const Iterator first, Iterator k, const Iterator last) {
+	/* Credits: Mark Nelson http://marknelson.us */
+	if ((first == last) || (first == k) || (last == k))
+		return false;
+	Iterator i1 = first;
+	Iterator i2 = last;
+	++i1;
+	if (last == i1)
+		return false;
+	i1 = last;
+	--i1;
+	i1 = k;
+	--i2;
+	while (first != i1)	{
+		if (*--i1 < *i2) {
+			Iterator j = k;
+			while (!(*i1 < *j)) ++j;
+			std::iter_swap(i1, j);
+			++i1;
+			++j;
+			i2 = k;
+			std::rotate(i1, j, last);
+			while (last != j) {
+				++j;
+				++i2;
+			}
+			std::rotate(k, i2, last);
+			return true;
+		}
+	}
+	std::rotate(first, k, last);
+	return false;
+}
+
+float multiWordScore(const std::wstring &a, const std::wstring &b) {
+	std::vector<std::wstring> atokens = tokenize(a);
+	std::vector<std::wstring> btokens = tokenize(b);
+
+	if (atokens.size() > btokens.size()) {
+		std::swap(atokens, btokens);
+	}
+
+	int matches = 0;
+
+	unsigned i, j, k, l;
+	for (i = 0; i < atokens.size(); ++i) {
+		for (j = 0; j < btokens.size(); ++j) {
+			if (LevenshteinDistance(atokens[i], btokens[j]) <= 1) {
+				++matches;
+			}
+		}
+	}
+	unsigned alen = atokens.size();
+	unsigned blen = btokens.size();
+	if (matches > 0) {
+		return (float)matches / (alen > blen ? alen : blen);
+	}
+	else {
+		unsigned min_dist = UINT_MAX;
+
+		std::vector<unsigned> bindices(blen);
+		std::iota(std::begin(bindices), std::end(bindices), 0);
+
+		do {
+			unsigned this_dist = 0;
+			for (i = 0; i < alen; ++i) {
+				for (j = 0; j < alen; ++j) {
+					this_dist += LevenshteinDistance(atokens[i], btokens[bindices[i]]);
+				}
+			}
+			min_dist = min(min_dist, this_dist);
+		} while (next_combination(bindices.begin(), bindices.begin() + alen, bindices.end()));
+
+		return -min_dist;
+	}
+}
+
+int CALLBACK se_school_compare(LPARAM l1, LPARAM l2, LPARAM lsort) {
+	int p1 = (int)l1;
+	int p2 = (int)l2;
+	se_sort_info *sort_info = (se_sort_info*)lsort;
+	switch (sort_info->column) {
+	case 0:
+		return listCompareItem((*sort_info->all_codes)[p1].getSchoolCode(), (*sort_info->all_codes)[p2].getSchoolCode());
+	case 1:
+		return listCompareItem((*sort_info->all_codes)[p1].getSchoolName(), (*sort_info->all_codes)[p2].getSchoolName());
+	case 2:
+		return listCompareItemFloat(
+			       multiWordScore(sort_info->school, ((*sort_info->all_codes)[p1].getSchoolNameUpperNoSchool())),
+			       multiWordScore(sort_info->school, ((*sort_info->all_codes)[p2].getSchoolNameUpperNoSchool())));
+	default:
+		return 0;
+	}
+}
+
+void SchoolSelector::OnLvnColumnclickList1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	*pResult = 0;
+	int column = pNMLV->iSubItem;
+	if (column >= 0 && column <= 1) {
+		int new_column;
+		if (column == 0) {
+			new_column = 0;
+		}
+		else {
+			switch (last_sort) {
+			case 0:
+				new_column = 1;
+				break;
+			case 1:
+				if (m_school != L"") {
+					new_column = 2;
+				}
+				else {
+					new_column = 1;
+				}
+				break;
+			case 2:
+				new_column = 1;
+				break;
+			}
+		}
+		if (new_column != last_sort) {
+			last_sort = new_column;
+		}
+		else {
+			return;
+		}
+	}
+	se_sort_info sort_info(last_sort, &pDoc->school_codes, toUpper(m_school));
+	clistctrl_allcodes.SortItems(se_school_compare, (LPARAM)&sort_info);
 }

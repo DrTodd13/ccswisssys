@@ -478,7 +478,9 @@ public:
 
 	bool isType(SCHOOL_TYPE &st) const {
 		std::wstring sts = getSchoolTypeStr(st);
-		return getSchoolType().find(sts) != std::string::npos;
+		std::wstring cur_type = getSchoolType();
+		// If there is no information about the school type then assume everything matches.
+		return cur_type.length() == 0 || cur_type.find(sts) != std::string::npos;
 	}
 };
 
@@ -753,6 +755,7 @@ public:
 	}
 };
 
+bool isAlpha(std::wstring &s);
 bool isNumeric(std::wstring &s);
 bool hasNumeric(std::wstring &s);
 
@@ -854,5 +857,17 @@ protected:
 #endif // SHARED_HANDLERS
 public:
 	afx_msg void OnOptionsTournamentdate();
+};
+
+class log_messages {
+public:
+	std::wstringstream school_change;
+	std::wstringstream new_uscf_ids;
+	std::wstringstream uscf_id_cc_no_match;
+	std::wstringstream name_change;
+	std::wstringstream no_uscf_membership;
+	std::wstringstream expired_uscf_membership;
+	std::wstringstream grade_change;
+	std::wstringstream imperfect;
 };
 

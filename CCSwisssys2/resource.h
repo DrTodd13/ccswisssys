@@ -13,7 +13,6 @@
 #define IDD_SCHOOL_EDITOR               321
 #define IDD_SPLIT_SECTION               325
 #define IDD_FORCE_SECTION               327
-#define IDD_DIALOG2                     333
 #define IDD_TOURNAMENT_DATE             333
 #define IDC_EDIT1                       1000
 #define IDC_BUTTON1                     1001
@@ -48,6 +47,9 @@
 #define IDC_RADIO_MAKE_QUADS            1034
 #define IDC_RADIO_EQUAL                 1035
 #define IDC_DATETIMEPICKER1             1037
+#define IDC_SE_NAME                     1038
+#define IDC_EDIT7                       1039
+#define IDC_SE_GRADE                    1039
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 #define ID_OPTIONS_TEST                 32772
 #define ID_OPTIONS_TOURNAMENTDATE       32773
@@ -58,7 +60,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        335
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1038
+#define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif
