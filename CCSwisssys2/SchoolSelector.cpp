@@ -12,7 +12,7 @@
 
 IMPLEMENT_DYNAMIC(SchoolSelector, CDialogEx)
 
-SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, const std::wstring &name, const std::wstring &grade, CWnd* pParent /*=NULL*/)
+SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, const std::wstring &name, const std::wstring &grade, const std::wstring &key, CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_SCHOOL_EDITOR, pParent), m_out_code(out_code)
 {
 	pDoc = doc;
@@ -21,6 +21,7 @@ SchoolSelector::SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school,
 	m_name = name;
 	m_grade = grade;
 	last_sort = 0;
+	m_unique_key = key;
 }
 
 SchoolSelector::~SchoolSelector()
@@ -200,7 +201,10 @@ void SchoolSelector::OnDoubleClickSchoolList(NMHDR *pNMHDR, LRESULT *pResult)
 	unsigned pindex = (unsigned)clistctrl_allcodes.GetItemData(pNMItemActivate->iItem);
 
 	m_out_code = pDoc->school_codes[pindex].getSchoolCode();
-	pDoc->saved_school_corrections.insert(std::pair<std::wstring, std::wstring>(m_school, m_out_code));
+	if (m_unique_key != L"") {
+		auto cfiter = pDoc->get_corrected_iter(m_unique_key);
+		cfiter->second.school_code = m_out_code;
+	}
 
 	*pResult = 0;
 
@@ -270,6 +274,11 @@ void SchoolSelector::OnBnClickedOk()
 
 	pDoc->school_codes.addSchool(AllCodesEntry(ws_code, ws_name, ws_type, ws_city, ws_state));
 	m_out_code = ws_code;
+	CorrectedFields cf;
+	cf.school_code = m_out_code;
+	if (m_unique_key != L"") {
+		pDoc->saved_school_corrections.insert(std::pair<std::wstring, CorrectedFields>(m_unique_key, cf));
+	}
 	CDialogEx::OnOK();
 }
 
@@ -280,84 +289,6 @@ public:
 	std::wstring school;
 	se_sort_info(int c, AllCodes *ac, const std::wstring &s) : column(c), all_codes(ac), school(s) {}
 };
-
-template <typename Iterator>
-bool next_combination(const Iterator first, Iterator k, const Iterator last) {
-	/* Credits: Mark Nelson http://marknelson.us */
-	if ((first == last) || (first == k) || (last == k))
-		return false;
-	Iterator i1 = first;
-	Iterator i2 = last;
-	++i1;
-	if (last == i1)
-		return false;
-	i1 = last;
-	--i1;
-	i1 = k;
-	--i2;
-	while (first != i1)	{
-		if (*--i1 < *i2) {
-			Iterator j = k;
-			while (!(*i1 < *j)) ++j;
-			std::iter_swap(i1, j);
-			++i1;
-			++j;
-			i2 = k;
-			std::rotate(i1, j, last);
-			while (last != j) {
-				++j;
-				++i2;
-			}
-			std::rotate(k, i2, last);
-			return true;
-		}
-	}
-	std::rotate(first, k, last);
-	return false;
-}
-
-float multiWordScore(const std::wstring &a, const std::wstring &b) {
-	std::vector<std::wstring> atokens = tokenize(a);
-	std::vector<std::wstring> btokens = tokenize(b);
-
-	if (atokens.size() > btokens.size()) {
-		std::swap(atokens, btokens);
-	}
-
-	int matches = 0;
-
-	unsigned i, j, k, l;
-	for (i = 0; i < atokens.size(); ++i) {
-		for (j = 0; j < btokens.size(); ++j) {
-			if (LevenshteinDistance(atokens[i], btokens[j]) <= 1) {
-				++matches;
-			}
-		}
-	}
-	unsigned alen = atokens.size();
-	unsigned blen = btokens.size();
-	if (matches > 0) {
-		return (float)matches / (alen > blen ? alen : blen);
-	}
-	else {
-		unsigned min_dist = UINT_MAX;
-
-		std::vector<unsigned> bindices(blen);
-		std::iota(std::begin(bindices), std::end(bindices), 0);
-
-		do {
-			unsigned this_dist = 0;
-			for (i = 0; i < alen; ++i) {
-				for (j = 0; j < alen; ++j) {
-					this_dist += LevenshteinDistance(atokens[i], btokens[bindices[i]]);
-				}
-			}
-			min_dist = min(min_dist, this_dist);
-		} while (next_combination(bindices.begin(), bindices.begin() + alen, bindices.end()));
-
-		return -min_dist;
-	}
-}
 
 int CALLBACK se_school_compare(LPARAM l1, LPARAM l2, LPARAM lsort) {
 	int p1 = (int)l1;

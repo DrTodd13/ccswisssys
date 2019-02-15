@@ -11,7 +11,7 @@ class SchoolSelector : public CDialogEx
 	DECLARE_DYNAMIC(SchoolSelector)
 
 public:
-	SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, const std::wstring &name, const std::wstring &grade, CWnd* pParent = NULL);   // standard constructor
+	SchoolSelector(CCCSwisssys2Doc *doc, const std::wstring &school, const std::wstring &in_code, std::wstring &out_code, const std::wstring &name, const std::wstring &grade, const std::wstring &key, CWnd* pParent = NULL);   // standard constructor
 	virtual ~SchoolSelector();
 
 // Dialog Data
@@ -26,6 +26,7 @@ protected:
 	std::wstring m_name;
 	std::wstring m_grade;
 	std::wstring &m_out_code;
+	std::wstring m_unique_key;
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 

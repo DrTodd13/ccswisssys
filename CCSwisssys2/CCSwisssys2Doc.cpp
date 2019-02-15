@@ -80,6 +80,29 @@ void Serialize(std::map<std::wstring, std::wstring> &the_map, CArchive& ar) {
 	}
 }
 
+void Serialize(std::map<std::wstring, CorrectedFields> &the_map, CArchive& ar) {
+	if (ar.IsStoring())
+	{
+		ar << the_map.size();
+		for (auto iter = the_map.begin(); iter != the_map.end(); ++iter) {
+			ar << WStringToCString(iter->first);
+			iter->second.Serialize(ar);
+		}
+	}
+	else
+	{
+		size_t the_size;
+		ar >> the_size;
+		for (size_t i = 0; i < the_size; ++i) {
+			CString a, b;
+			ar >> a;
+			CorrectedFields cf;
+			cf.Serialize(ar);
+			the_map.insert(std::pair<std::wstring, CorrectedFields>(CStringToWString(a), cf));
+		}
+	}
+}
+
 void CCCSwisssys2Doc::Serialize(CArchive& ar)
 {
 	if (ar.IsStoring())
@@ -643,66 +666,6 @@ void CCCSwisssys2Doc::Dump(CDumpContext& dc) const
 	CDocument::Dump(dc);
 }
 #endif //_DEBUG
-
-int LevenshteinDistance(const std::wstring &s, const std::wstring &t) {
-	std::wstring supper, tupper;
-
-	supper = toUpper(s);
-	tupper = toUpper(t);
-
-	// degenerate cases
-	if (supper == tupper) return 0;
-	unsigned tlen = (unsigned)t.length();
-	unsigned slen = (unsigned)s.length();
-
-	if (slen == 0) return tlen;
-	if (tlen == 0) return slen;
-
-	unsigned v0len = tlen + 1;
-	unsigned v1len = tlen + 1;
-
-	// create two work vectors of integer distances
-	int *v0 = new int[v0len];
-	int *v1 = new int[v1len];
-
-	// initialize v0 (the previous row of distances)
-	// this row is A[0][i]: edit distance for an empty s
-	// the distance is just the number of characters to delete from t
-	for (unsigned i = 0; i < v0len; i++)
-	   v0[i] = i;
-
-	for (unsigned i = 0; i < slen; i++)
-	{
-		// calculate v1 (current row distances) from the previous row v0
-
-		// first element of v1 is A[i+1][0]
-		//   edit distance is delete (i+1) chars from s to match empty t
-		v1[0] = i + 1;
-
-		// use formula to fill in the rest of the row
-		for (unsigned j = 0; j < tlen; j++)
-		{
-			int cost = (supper[i] == tupper[j]) ? 0 : 1;
-			v1[j + 1] = min(min(v1[j] + 1, v0[j + 1] + 1), v0[j] + cost);
-		}
-
-		// copy v1 (current row) to v0 (previous row) for next iteration
-		for (unsigned j = 0; j < v0len; j++)
-			v0[j] = v1[j];
-	}
-
-	return v1[min(slen,tlen)];
-}
-
-std::wstring toUpper(const std::wstring &s) {
-	std::wstring ret = s;
-
-	for (unsigned j = 0; j < s.size(); ++j) {
-		ret[j] = toupper(ret[j]);
-	}
-
-	return ret;
-}
 
 bool CCCSwisssys2Doc::loadRatingsFile() {
 	rated_players.clear();

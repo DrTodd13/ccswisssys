@@ -6,6 +6,20 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 
+class SectionIndex {
+public:
+	const Section * section;
+	int index;
+
+	SectionIndex(const Section *s, int i) : section(s), index(i) {}
+
+	bool operator<(const SectionIndex &other) const {
+		if (section->players[index].last_name < other.section->players[other.index].last_name) return true;
+		if (section->players[index].last_name > other.section->players[other.index].last_name) return false;
+		return section->players[index].first_name < other.section->players[other.index].first_name;
+	}
+};
+
 class CCCSwisssys2View : public CFormView
 {
 protected: // create from serialization only
@@ -52,8 +66,9 @@ public:
 #endif
 
 protected:
-	void refillSections(Sections &s, bool clear=true);
-	unsigned createSectionWorksheet(std::wofstream &normal_log, const std::wstring &output_dir, std::wstring &sec_name, const Section &sec, int subsec);
+	void refillSections(Sections &s, bool clear=true, int selection_mark=-1);
+	unsigned createSectionWorksheet(std::wofstream &normal_log, const std::wstring &output_dir, std::wstring &sec_name, const Section &sec, int subsec, std::vector<SectionIndex> &vsi);
+	void createAllCheckinWorksheet(std::wofstream &normal_log, const std::wstring &output_dir, const std::vector<SectionIndex> &vsi);
 
 // Generated message map functions
 protected:

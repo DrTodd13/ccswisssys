@@ -12,6 +12,7 @@
 #include <set>
 #include <algorithm>
 #include "DateSelector2.h"
+#include "helper.h"
 
 typedef int SECTION_TYPE;
 
@@ -33,7 +34,6 @@ std::wstring getSchoolTypeStr(SCHOOL_TYPE &st);
 CString getSectionTypeString(int type);
 std::wstring CStringToWString(const CString &cs);
 CString WStringToCString(const std::wstring &ws);
-int LevenshteinDistance(const std::wstring &s, const std::wstring &t);
 std::wstring toUpper(const std::wstring &s);
 
 class SectionPlayerInfo {
@@ -103,9 +103,33 @@ public:
 	unsigned num_subsections;
 	bool uscf_required;
 	unsigned which_computer;
+	CString time_control;
+	CString starting_board_number;
+	CString playing_room;
+	unsigned num_rounds;
 
-	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false), which_computer(1) {}
+	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false), which_computer(1), time_control(""), starting_board_number(""), playing_room(""), num_rounds(5) {}
 	
+	int getLastBoardNumber(void) const {
+		int cur_start = _ttoi(starting_board_number);
+		if (players.size() <= 3) {
+			return cur_start;
+		}
+		else {
+			int boards_needed = (players.size() - 2) / 2;
+			return cur_start + boards_needed;
+		}
+	}
+
+	std::wstring getPrintName(unsigned subsec) const {
+		if (num_subsections > 1) {
+			return baseToNameWithSub(CStringToWString(name), subsec);
+		}
+		else {
+			return CStringToWString(name);
+		}
+	}
+
 	void makeSubsections() {
 		if (num_subsections == 1) return;
 
@@ -186,11 +210,11 @@ public:
 	void Serialize(CArchive& ar) {
 		if (ar.IsStoring())
 		{
-			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required << which_computer;
+			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required << which_computer << time_control << starting_board_number << playing_room << num_rounds;
 		}
 		else
 		{
-			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required >> which_computer;
+			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required >> which_computer >> time_control >> starting_board_number >> playing_room >> num_rounds;
 		}
 	}
 
@@ -516,7 +540,7 @@ public:
 	}
 
 	void Load(const std::wstring filename) {
-		auto ccret = load_csvw_file(filename, true);
+		auto ccret = load_csvw_file(filename, false);
 
 		unsigned i;
 		for (i = 0; i < ccret.size(); ++i) {
@@ -566,6 +590,22 @@ public:
 		else {
 			return operator[](index).getSchoolName();
 		}
+	}
+
+	std::wstring findNameUpperNoSchool(const std::wstring &code) const {
+		int index = find(code);
+		if (index == -1) {
+			return L"";
+		}
+		else {
+			return operator[](index).getSchoolNameUpperNoSchool();
+		}
+	}
+
+	bool schoolNameMatchesCode(const std::wstring &name, const std::wstring &code) {
+		std::wstring sup = removeSchoolSubstr(toUpper(name));
+		std::wstring name_from_code = findNameUpperNoSchool(code);
+		return multiWordMatches(sup, name_from_code) > 0;
 	}
 
 	// See if there is exactly one exact match for the school in the list.
@@ -768,6 +808,31 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 
 std::wstring getLastFour(const std::wstring &full);
 
+class CorrectedFields {
+public:
+	std::wstring school_code;
+	std::wstring id;
+
+	virtual void Serialize(CArchive& ar) {
+		if (ar.IsStoring()) {
+			CString sc = WStringToCString(school_code);
+			CString si = WStringToCString(id);
+			ar << sc << si;
+		}
+		else {
+			CString sc, si;
+			ar >> sc >> si;
+			school_code = CStringToWString(sc);
+			id = CStringToWString(si);
+		}
+	}
+
+	void update(std::wstring &in_school_code, std::wstring &in_id) {
+		if (school_code != L"") in_school_code = school_code;
+		if (id != L"") in_id = id;
+	}
+};
+
 class CCCSwisssys2Doc : public CDocument
 {
 protected: // create from serialization only
@@ -783,7 +848,7 @@ public:
 	Sections sections;
 	SerializedVector<MRPlayer> mrplayers;
 	AllCodes school_codes;
-	std::map<std::wstring, std::wstring> saved_school_corrections;
+	std::map<std::wstring, CorrectedFields> saved_school_corrections;
 	std::vector<Player> rated_players;
 	std::map<std::wstring, unsigned> nwsrs_map;
 	std::map<std::wstring, unsigned> nwsrs_four_map;
@@ -797,6 +862,35 @@ public:
 public:
 
 	bool loadRatingsFile();
+
+	std::map<std::wstring, CorrectedFields>::iterator get_corrected_iter(const std::wstring &key) {
+		auto prev_iter = saved_school_corrections.find(key);
+		if (prev_iter == saved_school_corrections.end()) {
+			saved_school_corrections.insert(std::pair<std::wstring, CorrectedFields>(key, CorrectedFields()));
+			prev_iter = saved_school_corrections.find(key);
+		}
+		return prev_iter;
+	}
+
+	std::wstring get_saved_correction_school_code(const std::wstring &key) {
+		auto prev_iter = saved_school_corrections.find(key);
+		if (prev_iter != saved_school_corrections.end()) {
+			if (prev_iter->second.school_code != L"") {
+				return prev_iter->second.school_code;
+			}
+		}
+		return L"";
+	}
+
+	std::wstring get_saved_correction_id(const std::wstring &key) {
+		auto prev_iter = saved_school_corrections.find(key);
+		if (prev_iter != saved_school_corrections.end()) {
+			if (prev_iter->second.id != L"") {
+				return prev_iter->second.id;
+			}
+		}
+		return L"";
+	}
 
 	std::wstring getOutputLocation() {
 //		if (constant_contact_file.IsEmpty()) {
@@ -869,5 +963,6 @@ public:
 	std::wstringstream expired_uscf_membership;
 	std::wstringstream grade_change;
 	std::wstringstream imperfect;
+	std::wstringstream grade_code;
 };
 

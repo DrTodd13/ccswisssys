@@ -6,7 +6,7 @@
 #include "SectionEditor.h"
 #include "afxdialogex.h"
 #include <sstream>
-
+#include "helper.h"
 
 // SectionEditor dialog
 
@@ -63,12 +63,17 @@ BOOL SectionEditor::OnInitDialog() {
 	SetupGradeCombobox(min_grade_combo);
 	SetupGradeCombobox(max_grade_combo);
 	SetupSubsectionCombobox(num_subsections_combo);
+	SetupSubsectionCombobox(num_rounds_combobox);
 	SetupPairingComputerCombobox(num_pairings_computers);
 	min_grade_combo.SetCurSel(0);
 	max_grade_combo.SetCurSel(0);
 	num_subsections_combo.SetCurSel(m_s->num_subsections - 1);
+	num_rounds_combobox.SetCurSel(m_s->num_rounds - 1);
 	uscf_required.SetCheck(m_s->uscf_required ? BST_CHECKED : BST_UNCHECKED);
 	num_pairings_computers.SetCurSel(m_s->which_computer - 1);
+	time_control_edit.SetWindowTextW(m_s->time_control);
+	board_number_edit.SetWindowTextW(m_s->starting_board_number);
+	playing_room_edit.SetWindowTextW(m_s->playing_room);
 	//	section_name_edit.SetWindowText(m_s->subsections);
 
 	if (m_s->usedRatings()) {
@@ -106,6 +111,10 @@ void SectionEditor::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO4, num_subsections_combo);
 	DDX_Control(pDX, IDC_CHECK1, uscf_required);
 	DDX_Control(pDX, IDC_PAIRING_COMBO, num_pairings_computers);
+	DDX_Control(pDX, IDC_TIME_CONTROL, time_control_edit);
+	DDX_Control(pDX, IDC_BOARD_NUMBER, board_number_edit);
+	DDX_Control(pDX, IDC_PLAYING_ROOM, playing_room_edit);
+	DDX_Control(pDX, IDC_NUM_ROUNDS, num_rounds_combobox);
 }
 
 
@@ -118,11 +127,6 @@ END_MESSAGE_MAP()
 
 // SectionEditor message handlers
 
-bool isNumeric(const CString &cs) {
-	if (cs.SpanIncluding(_T("0123456789")) == cs) return true;
-	else return false;
-}
-
 template<class T>
 void set_changed(T &old, const T& newvalue, bool &changed) {
 	if (old != newvalue) {
@@ -131,12 +135,20 @@ void set_changed(T &old, const T& newvalue, bool &changed) {
 	}
 }
 
+bool isValidBoardNumbers(const CString &s) {
+	std::vector<std::wstring> tokens = tokenize(CStringToWString(s), std::wstring(L";"));
+	for (int i = 0; i < tokens.size(); ++i) {
+		if (tokens[i] == L"") continue;
+		if (!isNumeric(tokens[i])) return false;
+	}
+	return true;
+}
+
 void SectionEditor::OnBnClickedOk()
 {
-	// TODO: Add your control notification handler code here
-	CString new_section_name, new_min_rating, new_max_rating;
+	CString new_section_name, new_min_rating, new_max_rating, new_time_control, new_board_number, new_playing_room;
 	int min_grade_sel, max_grade_sel, new_section_type_sel;
-	unsigned num_subsections_sel, which_computer_sel;
+	unsigned num_subsections_sel, which_computer_sel, num_rounds_sel;
 	bool name_change = false, other_change = false;
 
 	section_name_edit.GetWindowText(new_section_name);
@@ -145,11 +157,20 @@ void SectionEditor::OnBnClickedOk()
 	min_grade_sel = min_grade_combo.GetCurSel();
 	max_grade_sel = max_grade_combo.GetCurSel();
 	num_subsections_sel = num_subsections_combo.GetCurSel() + 1;
+	num_rounds_sel = num_rounds_combobox.GetCurSel() + 1;
 	which_computer_sel = num_pairings_computers.GetCurSel() + 1;
 	new_section_type_sel = section_type_combo.GetCurSel();
 	int new_min_int, new_max_int;
 	int uscf_required_int = uscf_required.GetCheck();
+	time_control_edit.GetWindowText(new_time_control);
+	board_number_edit.GetWindowText(new_board_number);
+	playing_room_edit.GetWindowText(new_playing_room);
+	std::wstring wstr_new_sec_name = CStringToWString(new_section_name);
 	
+	if (wstr_new_sec_name.find_first_not_of(L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_+-!@#$") != std::string::npos)	{
+		MessageBox(_T("Section names can only consist of letters, numbers, _, +, -, !, @, #, or $."), _T("Section Editor Error"));
+		return;
+	}
 	if (new_section_name.GetLength() == 0) {
 		MessageBox(_T("Section name should not be empty."), _T("Section Editor Error"));
 		return;
@@ -164,6 +185,11 @@ void SectionEditor::OnBnClickedOk()
 	}
 	if (max_grade_sel < min_grade_sel) {
 		MessageBox(_T("Maximum grade must be larger than minimum grade."), _T("Section Editor Error"));
+		return;
+	}
+
+	if (!isValidBoardNumbers(new_board_number)) {
+		MessageBox(_T("Starting board number is not numeric.  For split sections, you can specify board numbers for each subsection with the format 301;341;371"), _T("Section Editor Error"));
 		return;
 	}
 
@@ -216,8 +242,12 @@ void SectionEditor::OnBnClickedOk()
 	}
 	set_changed(m_s->sec_type, SECTION_TYPE(new_section_type_sel), other_change);
 	set_changed(m_s->num_subsections, num_subsections_sel, other_change);
+	set_changed(m_s->num_rounds, num_rounds_sel, other_change);
 	set_changed(m_s->which_computer, which_computer_sel, name_change);
 	set_changed(m_s->uscf_required, uscf_required_int == BST_CHECKED ? true : false, other_change);
+	set_changed(m_s->time_control, new_time_control, name_change);
+	set_changed(m_s->starting_board_number, new_board_number, name_change);
+	set_changed(m_s->playing_room, new_playing_room, name_change);
 
 	if (other_change || name_change) {
 		needs_check = other_change;

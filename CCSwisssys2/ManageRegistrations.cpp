@@ -390,7 +390,7 @@ void ManageRegistrations::OnConstantContactFileBrowse()
 	s_school_code = CStringToWString(cs_school_code);
 	s_school_name = CStringToWString(cs_school_name);
 
-	SchoolSelector ss_dialog(pDoc, s_school_name, s_school_code, s_school_code, L"", L"");
+	SchoolSelector ss_dialog(pDoc, s_school_name, s_school_code, s_school_code, L"", L"", L"");
 
 	if (ss_dialog.DoModal() == IDOK) {
 		s_school_name = pDoc->school_codes.findName(s_school_code);

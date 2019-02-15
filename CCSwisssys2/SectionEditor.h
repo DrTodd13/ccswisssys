@@ -41,4 +41,8 @@ public:
 	afx_msg void OnEnChangeSubsections();
 	CButton uscf_required;
 	CComboBox num_pairings_computers;
+	CEdit time_control_edit;
+	CEdit board_number_edit;
+	CEdit playing_room_edit;
+	CComboBox num_rounds_combobox;
 };
