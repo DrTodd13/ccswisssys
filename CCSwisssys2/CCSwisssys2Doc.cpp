@@ -117,6 +117,8 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		school_codes.Serialize(ar);
 		ar << save_school_corrections;
 		ar << m_tournament_date;
+		force_sections.Serialize(ar);
+		noshows.Serialize(ar);
 	}
 	else
 	{
@@ -133,6 +135,8 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		school_codes.Serialize(ar);
 		ar >> save_school_corrections;
 		ar >> m_tournament_date;
+		force_sections.Serialize(ar);
+		noshows.Serialize(ar);
 	}
 }
 
@@ -246,7 +250,7 @@ CString getSectionTypeString(int type) {
 
 class FindFieldOperator {
 public:
-	virtual bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const = 0;
+	virtual bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const = 0;
 };
 
 class FindFieldByString : public FindFieldOperator {
@@ -255,7 +259,7 @@ protected:
 public:
 	FindFieldByString(const std::wstring &m) : match(m) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		return field == match;
 	}
 };
@@ -266,8 +270,34 @@ protected:
 public:
 	FindNwsrsIdField(const std::map<std::wstring, unsigned> &m) : nwsrs_map(m) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		return field.length() == 8 && !hasNumeric(field.substr(0,3)) && nwsrs_map.find(getLastFour(field)) != nwsrs_map.end();
+	}
+};
+
+class FindPhoneNumber : public FindFieldOperator {
+public:
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+		return field.length() == 10 && isNumeric(field);
+	}
+};
+
+class FindEmail : public FindFieldOperator {
+public:
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+		return field.find(L"@") != std::wstring::npos;
+	}
+};
+
+class FindInSet : public FindFieldOperator {
+protected:
+	const std::set<std::wstring> &the_set;
+	int exclusion_column;
+public:
+	FindInSet(int ec, const std::set<std::wstring> &s) : exclusion_column(ec), the_set(s) {}
+
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+		return (index != exclusion_column) && (the_set.find(field) != the_set.end());
 	}
 };
 
@@ -279,7 +309,7 @@ protected:
 public:
 	FindFirstName(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i) : nwsrs_map(m), rated_players(r), id_field(i) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 
@@ -295,7 +325,7 @@ protected:
 public:
 	FindLastName(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i) : nwsrs_map(m), rated_players(r), id_field(i) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
 
@@ -311,7 +341,7 @@ protected:
 public:
 	FindUscfId(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i) : nwsrs_map(m), rated_players(r), id_field(i) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		if (field.length() == 0) return false;
 
 		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
@@ -348,7 +378,7 @@ protected:
 public:
 	FindGradeField(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i) : nwsrs_map(m), rated_players(r), id_field(i) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		if (!isGrade(field)) return false;
 		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
@@ -366,7 +396,7 @@ protected:
 public:
 	FindSchoolField(const std::map<std::wstring, unsigned> &m, const std::vector<Player> &r, int i, const AllCodes &s) : nwsrs_map(m), rated_players(r), id_field(i), school_codes(s) {}
 
-	bool operator()(const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		if (field.length() == 0) return false;
 		auto idres = nwsrs_map.find(getLastFour(all_fields[id_field]));
 		if (idres == nwsrs_map.end()) return false;
@@ -441,6 +471,24 @@ bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_
 
 //#define DEBUG_FFWO
 
+void collectNames(std::vector< std::vector<std::wstring> > &cc,
+	int regcheck,
+	std::set<std::wstring> &firsts,
+	std::set<std::wstring> &lasts,
+	std::set<int> *empty_player_fields,
+	int first_index,
+	int last_index) {
+
+	unsigned i;
+	for (i = 0; i < cc.size(); ++i) {
+		if (regcheck != -1 && cc[i][regcheck] != REG_STR) continue;
+		if (doAdultCheck(cc[i], empty_player_fields)) {
+			firsts.insert(cc[i][first_index]);
+			lasts.insert(cc[i][last_index]);
+		}
+	}
+}
+
 /*
 Scans the whole constant contact information for fields having exactly the text "Registered".
 If only one such field exists then it becomes the field.  If there are more than one then if one predominates the other
@@ -452,17 +500,20 @@ int findFieldWithOperator(
 	const FindFieldOperator &matcher, 
 	int regcheck = -1, 
 	std::set<int> *empty_player_fields = NULL, 
-	double cutoff=0.95) {
+	double cutoff=0.95,
+    bool only_players=true) {
 
 	unsigned i,j;
 	std::map<int, int> register_fields;
 
 	for (i = 0; i < cc.size(); ++i) {
 		if (regcheck != -1 && cc[i][regcheck] != REG_STR) continue;
-		if (empty_player_fields != NULL && doAdultCheck(cc[i], empty_player_fields)) continue;
+		if (empty_player_fields != NULL) {
+			if (only_players == doAdultCheck(cc[i], empty_player_fields)) continue;
+		}
 
 		for (j = 0; j < cc[i].size(); ++j) {
-			if (matcher(cc[i][j], cc[i])) {
+			if (matcher(j, cc[i][j], cc[i])) {
 #ifdef DEBUG_FFWO
 				normal_log << "findFieldWithOperator match " << cc[i][j] << " " << j << " for player " << cc[i][0] << " " << cc[i][1] << std::endl;
 #endif
@@ -540,11 +591,7 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 
 	auto ccret = load_csvw_file(filename, true);
 
-	int *dynamic_locations = new int[8];
-	unsigned i;
-	for (i = 0; i < 8; ++i) {
-		dynamic_locations[i] = -1;
-	}
+	DynamicLocations dynamic_locations;
 
 	std::vector< ConstantContactEntry > ret;
 
@@ -577,6 +624,9 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 		return ret;
 	}
 
+	std::set<std::wstring> firsts, lasts;
+	collectNames(ccret, dynamic_locations[REGISTERED], firsts, lasts, empty_player_fields, dynamic_locations[FIRST_NAME], dynamic_locations[LAST_NAME]);
+
 	dynamic_locations[STUDENT_USCF_ID] = findFieldWithOperator(normal_log, ccret, FindUscfId(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields);
 //	normal_log << "Finding grade code" << std::endl;
 	dynamic_locations[STUDENT_GRADE] = findFieldWithOperator(normal_log, ccret, FindGradeField(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
@@ -591,6 +641,31 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 		return ret;
 	}
 
+	dynamic_locations[ADULT_EMAIL] = findFieldWithOperator(normal_log, ccret, FindEmail(), dynamic_locations[REGISTERED], empty_player_fields, 0.6, false);
+	if (dynamic_locations[ADULT_EMAIL] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect SCHOOL field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[ADULT_PHONE] = findFieldWithOperator(normal_log, ccret, FindPhoneNumber(), dynamic_locations[REGISTERED], empty_player_fields, 0.6, false);
+	if (dynamic_locations[ADULT_PHONE] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect SCHOOL field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[RESPONSIBLE_FIRST] = findFieldWithOperator(normal_log, ccret, FindInSet(dynamic_locations[FIRST_NAME], firsts), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
+	if (dynamic_locations[RESPONSIBLE_FIRST] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect SCHOOL field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[RESPONSIBLE_LAST] = findFieldWithOperator(normal_log, ccret, FindInSet(dynamic_locations[LAST_NAME], lasts), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
+	if (dynamic_locations[RESPONSIBLE_LAST] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect SCHOOL field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	unsigned i;
 	for (i = 0; i < ccret.size(); ++i) {
 		if (ccret[i][dynamic_locations[REGISTERED]] == REG_STR) {
 			ret.push_back(ConstantContactEntry(ccret[i], dynamic_locations, empty_player_fields));
@@ -703,7 +778,7 @@ bool isAlpha(std::wstring &s) {
 	return true;
 }
 
-bool isNumeric(std::wstring &s) {
+bool isNumeric(const std::wstring &s) {
 	return (s.find_first_not_of(L"0123456789") == std::string::npos);
 }
 
@@ -740,4 +815,16 @@ void CCCSwisssys2Doc::OnOptionsTournamentdate()
 	if (ds.DoModal() == IDOK) {
 		m_tournament_date = temp;
 	}
+}
+
+CArchive & operator<<(CArchive &ar, const std::wstring &s) {
+	ar << WStringToCString(s);
+	return ar;
+}
+
+CArchive & operator>>(CArchive &ar, std::wstring &s) {
+	CString ins;
+	ar >> ins;
+	s = CStringToWString(ins);
+	return ar;
 }

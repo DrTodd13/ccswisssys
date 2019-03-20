@@ -6,7 +6,16 @@
 
 // ManageRegistrations dialog
 
-std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log, log_messages &lm);
+std::vector<SectionPlayerInfo> process_cc_file(
+	HWND hWnd, 
+	CCCSwisssys2Doc *pDoc, 
+	std::vector<ConstantContactEntry> &entries, 
+	std::map<std::wstring, unsigned> &adult_map, 
+	bool &error_condition, 
+	bool &warning_condition, 
+	bool &info_condition, 
+	std::wofstream &normal_log, 
+	log_messages &lm);
 
 class ManageRegistrations : public CDialogEx
 {
@@ -25,8 +34,10 @@ protected:
 	CCCSwisssys2Doc *pDoc;
 	int ending_index[27];
 	bool inProcessingChange;
+	std::vector<SectionPlayerInfo> post_proc;
 
 	void OnAnyChange();
+	void updateRegistered();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
@@ -52,4 +63,7 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnForceSection();
+	afx_msg void OnBnClickedAutoSection();
+	afx_msg void OnBnClickedWithdrawal();
+	afx_msg void OnBnClickedReenter();
 };

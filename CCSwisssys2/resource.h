@@ -28,7 +28,6 @@
 #define IDC_COMBO2                      1014
 #define IDC_COMBO3                      1015
 #define IDC_BUTTON6                     1016
-#define IDC_COMBO5                      1016
 #define IDC_NUM_ROUNDS                  1016
 #define IDC_LIST2                       1017
 #define IDC_SPIN2                       1018
@@ -53,8 +52,12 @@
 #define IDC_SE_GRADE                    1039
 #define IDC_TIME_CONTROL                1040
 #define IDC_BOARD_NUMBER                1041
+#define IDC_AUTO_SECTION                1041
 #define IDC_TIME_CONTROL3               1042
 #define IDC_PLAYING_ROOM                1042
+#define IDC_WITHDRAWAL                  1042
+#define IDC_REENTER                     1043
+#define IDC_FORCE_SECTION               1044
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 #define ID_OPTIONS_TEST                 32772
 #define ID_OPTIONS_TOURNAMENTDATE       32773
@@ -65,7 +68,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        335
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1041
+#define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

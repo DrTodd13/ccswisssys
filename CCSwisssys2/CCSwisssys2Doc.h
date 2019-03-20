@@ -53,6 +53,11 @@ public:
 	std::wstring notes;
 	bool unrated;
 	int cc_rating;
+	CString adult_first, adult_last, adult_email, adult_phone;
+
+	std::wstring getUnique() {
+		return CStringToWString(last_name + first_name + grade + school + adult_first + adult_last);
+	}
 
 	SectionPlayerInfo(
 		int ccfi, 
@@ -68,6 +73,8 @@ public:
 		const std::wstring &n, 
 		bool u, 
 		int ccr, 
+		const CString &af,
+		const CString &al,
 		int sub=1) : 
 		cc_file_index(ccfi), 
 		last_name(ln), 
@@ -83,7 +90,9 @@ public:
 		subsection(sub), 
 		notes(n), 
 		unrated(u), 
-		cc_rating(ccr) {}
+		cc_rating(ccr),
+	    adult_first(af),
+	    adult_last(al) {}
 };
 
 struct SortByRatingDescending
@@ -255,6 +264,10 @@ public:
 	std::wstring ws_uscf_rating;
 	std::wstring ws_uscf_expr;
 	wchar_t grade;
+
+	std::wstring getUnique() {
+		return L"MRPlayer" + ws_last + ws_first + ws_id + ws_school_name;
+	}
 
 	MRPlayer() {}
 
@@ -717,12 +730,32 @@ extern std::wstring REG_STR;
 enum {
 	FIRST_NAME = 0,
 	LAST_NAME = 1,
-//	ADULT_CHECK = 2,
 	STUDENT_SCHOOL = 2,
 	STUDENT_GRADE = 3,
 	STUDENT_NWSRS_ID = 4,
 	STUDENT_USCF_ID = 5,
-	REGISTERED = 6
+	REGISTERED = 6,
+	RESPONSIBLE_FIRST = 7,
+	RESPONSIBLE_LAST = 8,
+	ADULT_EMAIL = 9,
+	ADULT_PHONE = 10
+};
+
+#define NUM_DYNAMIC_LOCATIONS 11
+
+class DynamicLocations {
+protected:
+	int locations[NUM_DYNAMIC_LOCATIONS];
+public:
+	DynamicLocations() {
+		unsigned i;
+		for (i = 0; i < NUM_DYNAMIC_LOCATIONS; ++i) {
+			locations[i] = -1;
+		}
+	}
+
+	int operator [](int i) const { return locations[i]; }
+	int & operator [](int i) { return locations[i]; }
 };
 
 wchar_t getGradeCode(const std::wstring &s);
@@ -734,7 +767,7 @@ class UnrecognizedGradeCode {};
 class ConstantContactEntry {
 protected:
 	std::vector<std::wstring> fields;
-	int * m_locations;
+	DynamicLocations m_locations;
 	std::set<int> *m_empty_player_fields;
 	void valid(void) const {
 		//if (fields.size() < 18) {
@@ -743,13 +776,16 @@ protected:
 		//}
 	}
 public:
-	ConstantContactEntry(const std::vector<std::wstring> &f, int * locations, std::set<int> * epf) : fields(f), m_locations(locations), m_empty_player_fields(epf) { valid(); }
+	ConstantContactEntry(const std::vector<std::wstring> &f, const DynamicLocations &locations, std::set<int> * epf) : fields(f), m_locations(locations), m_empty_player_fields(epf) { valid(); }
 
 	std::wstring getFirstName(void)   const { valid(); return fields[m_locations[FIRST_NAME]]; }
 	std::wstring getLastName(void)    const { valid(); return fields[m_locations[LAST_NAME]]; }
+	std::wstring getEmail(void)       const { valid(); return fields[m_locations[ADULT_EMAIL]]; }
+	std::wstring getPhone(void)       const { valid(); return fields[m_locations[ADULT_PHONE]]; }
+	std::wstring getAdultFirst(void)  const { valid(); return fields[m_locations[RESPONSIBLE_FIRST]]; }
+	std::wstring getAdultLast(void)   const { valid(); return fields[m_locations[RESPONSIBLE_LAST]]; }
+
 	/*
-	std::wstring getEmail(void)       const { valid(); return fields[2]; }
-	std::wstring getPhone(void)       const { valid(); return fields[3]; }
 	std::wstring getAddress1(void)    const { valid(); return fields[4]; }
 	std::wstring getCity(void)        const { valid(); return fields[5]; }
 	std::wstring getState(void)       const { valid(); return fields[6]; }
@@ -796,7 +832,7 @@ public:
 };
 
 bool isAlpha(std::wstring &s);
-bool isNumeric(std::wstring &s);
+bool isNumeric(const std::wstring &s);
 bool hasNumeric(std::wstring &s);
 
 std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename,
@@ -833,6 +869,57 @@ public:
 	}
 };
 
+CArchive & operator<<(CArchive &ar, const std::wstring &s);
+CArchive & operator>>(CArchive &ar, std::wstring &s);
+
+template <typename A, typename B>
+class SerializedMap : public std::map<A, B> {
+public:
+	virtual void Serialize(CArchive& ar) {
+		if (ar.IsStoring())
+		{
+			int fs_size = size();
+			ar << fs_size;
+			for (auto fsiter = begin(); fsiter != end(); ++fsiter) {
+				ar << fsiter->first << fsiter->second;
+			}
+		}
+		else {
+			int fs_size;
+			ar >> fs_size;
+			for (unsigned i = 0; i < fs_size; ++i) {
+				std::wstring a, b;
+				ar >> a >> b;
+				insert(std::pair<A, B>(a, b));
+			}
+		}
+	}
+};
+
+template <typename A>
+class SerializedSet : public std::set<A> {
+public:
+	virtual void Serialize(CArchive& ar) {
+		if (ar.IsStoring())
+		{
+			int fs_size = size();
+			ar << fs_size;
+			for (auto fsiter = begin(); fsiter != end(); ++fsiter) {
+				ar << *fsiter;
+			}
+		}
+		else {
+			int fs_size;
+			ar >> fs_size;
+			for (unsigned i = 0; i < fs_size; ++i) {
+				std::wstring a;
+				ar >> a;
+				insert(a);
+			}
+		}
+	}
+};
+
 class CCCSwisssys2Doc : public CDocument
 {
 protected: // create from serialization only
@@ -854,8 +941,8 @@ public:
 	std::map<std::wstring, unsigned> nwsrs_four_map;
 	std::map<std::wstring, unsigned> uscf_map;
 	bool save_school_corrections;
-	std::set<int> noshows;
-	std::map<int, CString> force_sections;
+	SerializedSet<std::wstring> noshows;
+	SerializedMap<std::wstring, std::wstring> force_sections;  // map of unique player key to the forced section name
 	CTime m_tournament_date;
 
 // Operations

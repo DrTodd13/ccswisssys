@@ -18,6 +18,13 @@ ManageRegistrations::ManageRegistrations(CCCSwisssys2Doc *doc, CWnd* pParent /*=
 {
 	pDoc = doc;
 	inProcessingChange = false;
+
+	std::wofstream normal_log;
+	log_messages lm;
+	bool error_condition = false, warning_condition = false, info_condition = false;
+	std::vector<ConstantContactEntry> entries;
+	std::map<std::wstring, unsigned> adult_map;
+	post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, entries, adult_map, error_condition, warning_condition, info_condition, normal_log, lm);
 }
 
 ManageRegistrations::~ManageRegistrations()
@@ -49,7 +56,10 @@ BEGIN_MESSAGE_MAP(ManageRegistrations, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST3, &ManageRegistrations::OnNMDblclkList3)
 	ON_CBN_SELCHANGE(IDC_COMBO2, &ManageRegistrations::OnCbnSelchangeCombo2)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST2, &ManageRegistrations::OnNMDblclkList2)
-	ON_BN_CLICKED(IDC_BUTTON3, &ManageRegistrations::OnForceSection)
+	ON_BN_CLICKED(IDC_FORCE_SECTION, &ManageRegistrations::OnForceSection)
+	ON_BN_CLICKED(IDC_AUTO_SECTION, &ManageRegistrations::OnBnClickedAutoSection)
+	ON_BN_CLICKED(IDC_WITHDRAWAL, &ManageRegistrations::OnBnClickedWithdrawal)
+	ON_BN_CLICKED(IDC_REENTER, &ManageRegistrations::OnBnClickedReenter)
 END_MESSAGE_MAP()
 
 bool findStringIC(const std::wstring & strHaystack, const std::wstring & strNeedle)
@@ -76,12 +86,55 @@ bool insensitiveCompare(const std::wstring &full, const std::wstring &part) {
 
 // ManageRegistrations message handlers
 
-void addToList(CListCtrl &the_list, 
+void addToRegisteredList(CListCtrl &the_list, 
 	int entry,
 	std::wstring &ws_last, 
 	std::wstring &ws_first, 
 	int nwsrs_rating, 
 	std::wstring &ws_id, 
+	wchar_t grade,
+	std::wstring &ws_school_code,
+	std::wstring &ws_school_name,
+	std::wstring &ws_uscf_rating,
+	std::wstring &ws_uscf_id,
+	std::wstring &ws_forced_section,
+	std::wstring &ws_withdrawn,
+	int itemData) {
+
+	LVITEM lvItem;
+	int nItem;
+
+	lvItem.mask = LVIF_TEXT;
+	lvItem.iItem = entry;
+	lvItem.iSubItem = 0;
+	lvItem.pszText = &ws_last[0];
+	nItem = the_list.InsertItem(&lvItem);
+
+	the_list.SetItemText(nItem, 1, &ws_first[0]);
+	std::wstringstream ss;
+	ss << nwsrs_rating;
+	the_list.SetItemText(nItem, 2, CString(ss.str().c_str()));
+	ss.str(L"");
+
+	the_list.SetItemText(nItem, 3, &ws_id[0]);
+	the_list.SetItemText(nItem, 4, getGradeString(grade));
+	the_list.SetItemText(nItem, 5, &ws_school_code[0]);
+	the_list.SetItemText(nItem, 5, &ws_school_code[0]);
+	the_list.SetItemText(nItem, 6, &ws_school_name[0]);
+	the_list.SetItemText(nItem, 7, &ws_uscf_rating[0]);
+	the_list.SetItemText(nItem, 8, &ws_uscf_id[0]);
+	the_list.SetItemText(nItem, 9, &ws_forced_section[0]);
+	the_list.SetItemText(nItem, 10, &ws_withdrawn[0]);
+
+	the_list.SetItemData(nItem, (DWORD_PTR)itemData);
+}
+
+void addToPossibleList(CListCtrl &the_list,
+	int entry,
+	std::wstring &ws_last,
+	std::wstring &ws_first,
+	int nwsrs_rating,
+	std::wstring &ws_id,
 	wchar_t grade,
 	std::wstring &ws_school_code,
 	std::wstring &ws_school_name,
@@ -113,6 +166,66 @@ void addToList(CListCtrl &the_list,
 	the_list.SetItemText(nItem, 8, &ws_uscf_id[0]);
 
 	the_list.SetItemData(nItem, (DWORD_PTR)itemData);
+}
+
+void ManageRegistrations::updateRegistered() {
+	RegisteredPlayers.SetSelectionMark(-1);
+	RegisteredPlayers.DeleteAllItems();
+
+	unsigned mrindex;
+
+	for (mrindex = 0; mrindex < pDoc->mrplayers.size(); ++mrindex) {
+		auto unique_name = pDoc->mrplayers[mrindex].getUnique();
+		std::wstring forced_section = L"";
+		auto forced_iter = pDoc->force_sections.find(unique_name);
+		if (forced_iter != pDoc->force_sections.end()) {
+			forced_section = forced_iter->second;
+		}
+		addToRegisteredList(RegisteredPlayers,
+			mrindex,
+			pDoc->mrplayers[mrindex].ws_last,
+			pDoc->mrplayers[mrindex].ws_first,
+			pDoc->mrplayers[mrindex].nwsrs_rating,
+			pDoc->mrplayers[mrindex].ws_id,
+			pDoc->mrplayers[mrindex].grade,
+			pDoc->mrplayers[mrindex].ws_school_code,
+			pDoc->mrplayers[mrindex].ws_school_name,
+			pDoc->mrplayers[mrindex].ws_uscf_rating,
+			pDoc->mrplayers[mrindex].ws_uscf_id,
+			forced_section,
+			std::wstring(L""),
+			(-mrindex - 1));
+	}
+
+	unsigned ppindex;
+	for (ppindex = 0; ppindex < post_proc.size(); ++ppindex) {
+		auto &ppiter = post_proc[ppindex];
+		auto unique_name = ppiter.getUnique();
+		std::wstring forced_section = L"";
+		auto forced_iter = pDoc->force_sections.find(unique_name);
+		if (forced_iter != pDoc->force_sections.end()) {
+			forced_section = forced_iter->second;
+		}
+		std::wstring withdrawn = L"";
+		auto with_iter = pDoc->noshows.find(unique_name);
+		if (with_iter != pDoc->noshows.end()) {
+			withdrawn = L"Yes";
+		}
+		addToRegisteredList(RegisteredPlayers,
+			mrindex++,
+			CStringToWString(ppiter.last_name),
+			CStringToWString(ppiter.first_name),
+			ppiter.rating,
+			CStringToWString(ppiter.full_id),
+			ppiter.grade,
+			CStringToWString(ppiter.school_code),
+			CStringToWString(ppiter.school),
+			CStringToWString(ppiter.uscf_rating),
+			CStringToWString(ppiter.uscf_id),
+			forced_section,
+			withdrawn,
+			ppindex);
+	}
 }
 
 void ManageRegistrations::OnAnyChange()
@@ -189,7 +302,7 @@ void ManageRegistrations::OnAnyChange()
 				}
 			}
 
-			addToList(PossiblePlayers, 
+			addToPossibleList(PossiblePlayers, 
 				entry++,
 				pDoc->rated_players[i].last_name,
 				pDoc->rated_players[i].first_name,
@@ -354,7 +467,7 @@ void ManageRegistrations::OnAddNewPlayer()
 	pDoc->mrplayers.push_back(MRPlayer(s_last, s_first, new_id, s_school_code, pDoc->school_codes.findName(s_school_code), std::wstring(), init_rating, std::wstring(), std::wstring(), sel_grade));
 	unsigned pindex = (unsigned)pDoc->mrplayers.size() - 1;
 
-	addToList(RegisteredPlayers,
+	addToRegisteredList(RegisteredPlayers,
 		entry,
 		pDoc->mrplayers[pindex].ws_last,
 		pDoc->mrplayers[pindex].ws_first,
@@ -365,7 +478,9 @@ void ManageRegistrations::OnAddNewPlayer()
 		pDoc->school_codes.findName(pDoc->rated_players[pindex].school_code),
 		pDoc->mrplayers[pindex].ws_uscf_rating,
 		pDoc->mrplayers[pindex].ws_uscf_id,
-		entry);
+		std::wstring(L""),
+		std::wstring(L""),
+		(-entry - 1));
 
 	entry++;
 
@@ -424,7 +539,7 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 		pDoc->rated_players[pindex].uscf_exp_date,
 		pDoc->rated_players[pindex].grade));
 
-	addToList(RegisteredPlayers,
+	addToRegisteredList(RegisteredPlayers,
 		entry,
 		pDoc->rated_players[pindex].last_name,
 		pDoc->rated_players[pindex].first_name,
@@ -435,7 +550,9 @@ void ManageRegistrations::OnNMDblclkList3(NMHDR *pNMHDR, LRESULT *pResult)
 		pDoc->school_codes.findName(pDoc->rated_players[pindex].school_code),
 		pDoc->rated_players[pindex].uscf_rating,
 		pDoc->rated_players[pindex].uscf_id,
-		entry);
+		std::wstring(L""),
+		std::wstring(L""),
+		(-entry - 1));
 
 	entry++;
 
@@ -528,6 +645,18 @@ BOOL ManageRegistrations::OnInitDialog()
 	RegisteredPlayers.InsertColumn(8, &lvColumn);
 	PossiblePlayers.InsertColumn(8, &lvColumn);
 
+	lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
+	lvColumn.fmt = LVCFMT_LEFT;
+	lvColumn.cx = 80;
+	lvColumn.pszText = _T("Forced");
+	RegisteredPlayers.InsertColumn(9, &lvColumn);
+
+	lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
+	lvColumn.fmt = LVCFMT_LEFT;
+	lvColumn.cx = 80;
+	lvColumn.pszText = _T("Withdrawn");
+	RegisteredPlayers.InsertColumn(10, &lvColumn);
+
 	RegisteredPlayers.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 	PossiblePlayers.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
@@ -599,43 +728,7 @@ BOOL ManageRegistrations::OnInitDialog()
 	}
 #endif
 
-
-	unsigned mrindex;
-
-	for (mrindex = 0; mrindex < pDoc->mrplayers.size(); ++mrindex) {
-		addToList(RegisteredPlayers,
-			mrindex,
-			pDoc->mrplayers[mrindex].ws_last,
-			pDoc->mrplayers[mrindex].ws_first,
-			pDoc->mrplayers[mrindex].nwsrs_rating,
-			pDoc->mrplayers[mrindex].ws_id,
-			pDoc->mrplayers[mrindex].grade,
-			pDoc->mrplayers[mrindex].ws_school_code,
-			pDoc->mrplayers[mrindex].ws_school_name,
-			pDoc->mrplayers[mrindex].ws_uscf_rating,
-			pDoc->mrplayers[mrindex].ws_uscf_id,
-			mrindex);
-	}
-	
-	std::wofstream normal_log;
-	log_messages lm;
-	bool error_condition = false, warning_condition = false, info_condition = false;
-	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log, lm);
-
-	for (auto ppiter = post_proc.begin(); ppiter != post_proc.end(); ++ppiter) {
-		addToList(RegisteredPlayers,
-			mrindex++,
-			CStringToWString(ppiter->last_name),
-			CStringToWString(ppiter->first_name),
-			ppiter->rating,
-			CStringToWString(ppiter->full_id),
-			ppiter->grade,
-			CStringToWString(ppiter->school_code),
-			CStringToWString(ppiter->school),
-			CStringToWString(ppiter->uscf_rating),
-			CStringToWString(ppiter->uscf_id),
-			ppiter->cc_file_index);
-	}
+	updateRegistered();
 
 	LastNameEdit.SetFocus();
 
@@ -645,6 +738,7 @@ BOOL ManageRegistrations::OnInitDialog()
 
 void ManageRegistrations::OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult)
 {
+	/*
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	auto removed_item = pNMItemActivate->iItem;
 	int removed_index = (int)RegisteredPlayers.GetItemData(removed_item);
@@ -656,6 +750,7 @@ void ManageRegistrations::OnNMDblclkList2(NMHDR *pNMHDR, LRESULT *pResult)
 		int real_index = (-removed_index) - 1;
 		pDoc->noshows.insert(real_index);
 	}
+	*/
 
 	*pResult = 0;
 }
@@ -669,8 +764,70 @@ void ManageRegistrations::OnForceSection()
 		int selection = -1;
 		ForceSection fs_dialog(pDoc, &selection);
 		if (fs_dialog.DoModal() == IDOK) {
-			pDoc->force_sections.insert(std::pair<int,CString>(force_index, pDoc->sections[selection].name));
+			if (force_index >= 0) {
+				pDoc->force_sections.insert(std::pair<std::wstring, std::wstring>(post_proc[force_index].getUnique(), CStringToWString(pDoc->sections[selection].name)));
+			}
+			else {
+				int mrindex = -(force_index + 1);
+				pDoc->force_sections.insert(std::pair<std::wstring, std::wstring>(pDoc->mrplayers[mrindex].getUnique(), CStringToWString(pDoc->sections[selection].name)));
+			}
 			pDoc->SetModifiedFlag();
+			updateRegistered();
+		}
+	}
+}
+
+
+void ManageRegistrations::OnBnClickedAutoSection()
+{
+	int selected_row = RegisteredPlayers.GetSelectionMark();
+	if (selected_row >= 0) {
+		int force_index = (int)RegisteredPlayers.GetItemData(selected_row);
+		if (force_index >= 0) {
+			if (pDoc->force_sections.erase(post_proc[force_index].getUnique()) > 0) {
+				pDoc->SetModifiedFlag();
+				updateRegistered();
+			}
+		}
+		else {
+			int mrindex = -(force_index + 1);
+			if (pDoc->force_sections.erase(pDoc->mrplayers[mrindex].getUnique()) > 0) {
+				pDoc->SetModifiedFlag();
+				updateRegistered();
+			}
+		}
+	}
+}
+
+
+void ManageRegistrations::OnBnClickedWithdrawal()
+{
+	int selected_row = RegisteredPlayers.GetSelectionMark();
+	if (selected_row >= 0) {
+		int removed_index = (int)RegisteredPlayers.GetItemData(selected_row);
+		if (removed_index >= 0) {
+			pDoc->noshows.insert(post_proc[removed_index].getUnique());
+		}
+		else {
+			int real_index = (-removed_index) - 1;
+			pDoc->mrplayers.erase(pDoc->mrplayers.begin() + real_index);
+		}
+		pDoc->SetModifiedFlag();
+		updateRegistered();
+	}
+}
+
+
+void ManageRegistrations::OnBnClickedReenter()
+{
+	int selected_row = RegisteredPlayers.GetSelectionMark();
+	if (selected_row >= 0) {
+		int removed_index = (int)RegisteredPlayers.GetItemData(selected_row);
+		if (removed_index >= 0) {
+			if (pDoc->noshows.erase(post_proc[removed_index].getUnique()) > 0) {
+				pDoc->SetModifiedFlag();
+				updateRegistered();
+			}
 		}
 	}
 }

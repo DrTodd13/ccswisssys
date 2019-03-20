@@ -573,7 +573,7 @@ std::wstring removeWhitespace(std::wstring &s) {
 }
 
 // MAIN
-std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log, log_messages &lm) {
+std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc, std::vector<ConstantContactEntry> &entries, std::map<std::wstring, unsigned> &adult_map, bool &error_condition, bool &warning_condition, bool &info_condition, std::wofstream &normal_log, log_messages &lm) {
 	std::vector<SectionPlayerInfo> post_proc;
 
 	std::wifstream cc_file(pDoc->constant_contact_file);
@@ -589,13 +589,12 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 
 	if (use_cc) {
 		std::wstring ccsstr = CStringToWString(pDoc->constant_contact_file);
-		auto entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_four_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log);
+		entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_four_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log);
 		if (entries.size() == 0) {
 			MessageBox(hWnd, _T("No players loaded from constant contact file."), _T("ERROR"), MB_OK);
 			return post_proc;
 		}
-
-
+		
 		unsigned num_parents = 0, num_players = 0;
 
 		for (i = 0; i < entries.size(); ++i) {
@@ -631,7 +630,14 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 		}
 
 		for (i = 0; i < entries.size(); ++i) {
-			if (entries[i].isPlayer() && pDoc->noshows.find(i) == pDoc->noshows.end()) {
+			if (!entries[i].isPlayer()) {
+				std::wstring last_name = entries[i].getLastName();
+				std::wstring first_name = entries[i].getFirstName();
+				std::wstring combined = last_name + first_name;
+				adult_map.insert(std::pair<std::wstring, unsigned>(combined, i));
+			}
+
+			if (entries[i].isPlayer()) {
 #ifdef DEBUG_MAIN
 				normal_log << std::endl;
 #endif
@@ -650,6 +656,10 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				std::wstring uscf_rating = L"";
 				std::wstring full_name = first_name + L" " + last_name;
 				std::wstring unique_key = full_name + L" " + school + L" " + full_id;
+
+				std::wstring adult_first = entries[i].getAdultFirst();
+				std::wstring adult_last = entries[i].getAdultLast();
+				std::wstring adult_combined = adult_last + adult_first;
 
 				std::wstring school_check = L"ACMA";
 				if (orig_school == school_check) {
@@ -1091,7 +1101,12 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				CString cs_school_code(school_code.c_str());
 				cs_full_id = full_id.c_str();
 
-				post_proc.push_back(SectionPlayerInfo(-((int)i+1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating));
+				CString cs_adult_first(adult_first.c_str()), cs_adult_last(adult_last.c_str());
+				auto spi = SectionPlayerInfo(-((int)i + 1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating, cs_adult_first, cs_adult_last);
+
+				if (pDoc->noshows.find(spi.getUnique()) == pDoc->noshows.end()) {
+					post_proc.push_back(SectionPlayerInfo(-((int)i + 1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating, cs_adult_first, cs_adult_last));
+				}
 			}
 		}
 	}
@@ -1167,13 +1182,16 @@ void CCCSwisssys2View::OnCreateSections()
 		}
 	}
 
-	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, error_condition, warning_condition, info_condition, normal_log, lm);
+	entries.clear();
+	adult_map.clear();
+	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, entries, adult_map, error_condition, warning_condition, info_condition, normal_log, lm);
 
     for(auto ppiter = post_proc.begin(); ppiter != post_proc.end(); ++ppiter) {
-		auto force_iter = pDoc->force_sections.find(ppiter->cc_file_index);
+		std::wstring unique_name = ppiter->getUnique();
+		auto force_iter = pDoc->force_sections.find(unique_name);
 		int target_section = pDoc->sections.foundIn(ppiter->cc_rating, ppiter->grade);
 		if (force_iter != pDoc->force_sections.end()) {
-			target_section = pDoc->sections.findByName(force_iter->second);
+			target_section = pDoc->sections.findByName(WStringToCString(force_iter->second));
 		}
 		if (target_section == -1) {
 			error_condition = true;
@@ -1215,7 +1233,12 @@ void CCCSwisssys2View::OnCreateSections()
 	// Add "manage additional registration" players to sections.
 	for (i = 0; i < pDoc->mrplayers.size(); ++i) {
 		MRPlayer &this_player = pDoc->mrplayers[i];
+		std::wstring unique_name = this_player.getUnique();
+		auto force_iter = pDoc->force_sections.find(unique_name);
 		int target_section = pDoc->sections.foundIn(pDoc->mrplayers[i].nwsrs_rating, pDoc->mrplayers[i].grade);
+		if (force_iter != pDoc->force_sections.end()) {
+			target_section = pDoc->sections.findByName(WStringToCString(force_iter->second));
+		}
 		if (target_section == -1) {
 			error_condition = true;
 			normal_log << "ERROR: Doesn't belong in any section. " << this_player.ws_id << " " << this_player.nwsrs_rating << " " << this_player.ws_last << " " << this_player.ws_first << " " << " " << this_player.grade << " " << this_player.ws_school_code << " " << this_player.ws_school_name << std::endl;
@@ -1235,7 +1258,7 @@ void CCCSwisssys2View::OnCreateSections()
 				CString cs_uscf_rating(this_player.ws_uscf_rating.c_str());
 				CString cs_uscf_expr(this_player.ws_uscf_expr.c_str());
 
-				pDoc->sections[target_section].players.push_back(SectionPlayerInfo(i, cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating, cs_uscf_expr, L"", false, this_player.nwsrs_rating));
+				pDoc->sections[target_section].players.push_back(SectionPlayerInfo(i, cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating, cs_uscf_expr, L"", false, this_player.nwsrs_rating, L"", L""));
 				//normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << this_player.ws_id << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " uscf rating and id " << this_player.ws_uscf_rating << " " << this_player.ws_uscf_id << std::endl;
 			}
 			else {
@@ -1629,6 +1652,10 @@ std::string toString(const std::wstring &ws) {
 	return s;
 }
 
+bool SectionIndexRatingsSort(const SectionIndex &a, const SectionIndex &b) {
+	return a.section->players[a.index].cc_rating > b.section->players[b.index].cc_rating;
+}
+
 unsigned CCCSwisssys2View::createSectionWorksheet(
 	std::wofstream &normal_log,
 	const std::wstring &output_dir, 
@@ -1800,59 +1827,75 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 		}
 	}
 
-	unsigned cur_row = 1;
+	std::vector<SectionIndex> this_sorted_name, this_sorted_rating;
+
 	for (i = 0; i < sec.players.size(); ++i) {
 		if (sec.players[i].subsection != subsec) continue;
-
 		vsi.push_back(SectionIndex(&sec, i));
+		this_sorted_name.push_back(SectionIndex(&sec, i));
+		this_sorted_rating.push_back(SectionIndex(&sec, i));
+	}
+
+	std::sort(this_sorted_name.begin(), this_sorted_name.end());
+	std::sort(this_sorted_rating.begin(), this_sorted_rating.end(), SectionIndexRatingsSort);
+
+	unsigned j;
+	for (j = 0; j < this_sorted_rating.size(); ++j) {
+		unsigned i = this_sorted_rating[j].index;
 		std::wstring name_field = toUpper(CStringToWString(sec.players[i].last_name)) + L", " +
 			toUpper(CStringToWString(sec.players[i].first_name));
-		checkin->label(3 + i, 0, toString(capWords(CStringToWString(sec.players[i].last_name))));  // last
-		checkin->label(3 + i, 1, toString(capWords(CStringToWString(sec.players[i].first_name)))); // first
-		checkin->label(3 + i, 2, toString(capWords(CStringToWString(sec.players[i].school)))); // school
-		checkin->label(3 + i, 3, toString(CStringToWString(getGradeStringShort(sec.players[i].grade)))); // grade
-		checkin->label(3 + i, 4, toString(toUpper(CStringToWString(sec.players[i].full_id)))); // ID
-		players->label(cur_row, 0, toString(name_field));
-
+		players->label(j+1, 0, toString(name_field));
 		std::wstring id_field = CStringToWString(sec.players[i].full_id);
-		players->label(cur_row, 1, toString(id_field));
+		players->label(j+1, 1, toString(id_field));
 
 		if (!sec.players[i].uscf_id.IsEmpty()) {
 			std::wstring id2_field = CStringToWString(sec.players[i].uscf_id);
-			players->label(cur_row, 2, toString(id2_field));
+			players->label(j+1, 2, toString(id2_field));
 		}
 
 		if (sec.players[i].unrated) {
-			players->number(cur_row, 3, 0);
+			players->number(j+1, 3, 0);
 		}
 		else {
-			players->number(cur_row, 3, sec.players[i].rating);
+			players->number(j+1, 3, sec.players[i].rating);
 		}
 
 		if (!sec.players[i].uscf_rating.IsEmpty()) {
 			std::wstring rtng2_field = CStringToWString(sec.players[i].uscf_rating);
-			players->label(cur_row, 4, toString(rtng2_field));
+			players->label(j+1, 4, toString(rtng2_field));
 		}
+		auto miter = sibling_club_names.find(sec.players[i].last_name);
+		if (miter != sibling_club_names.end()) {
+			players->number(j+1, 7, miter->second);
+		}
+		std::wstring school_code_ws = CStringToWString(sec.players[i].school_code);
+		if (school_code_ws != L"HSO") {
+			players->label(j+1, 8, toString(school_code_ws));
+		}
+
+		std::wstring grade_ws = CStringToWString(getGradeStringShort(sec.players[i].grade));
+		players->label(j+1, 11, toString(grade_ws));
+
+		players->number(j+1, 28, 0);
+		players->label(j+1, 31, "FALSE");
+		players->number(j+1, 38, 0);
+	}
+
+	for (j = 0; j < this_sorted_name.size(); ++j) {
+		unsigned i = this_sorted_name[j].index;
+
+		checkin->label(3 + j, 0, toString(capWords(CStringToWString(sec.players[i].last_name))));  // last
+		checkin->label(3 + j, 1, toString(capWords(CStringToWString(sec.players[i].first_name)))); // first
+		checkin->label(3 + j, 2, toString(capWords(CStringToWString(sec.players[i].school)))); // school
+		checkin->label(3 + j, 3, toString(CStringToWString(getGradeStringShort(sec.players[i].grade)))); // grade
+		checkin->label(3 + j, 4, toString(toUpper(CStringToWString(sec.players[i].full_id)))); // ID
 
 		std::wstringstream notes_field;
 
 		auto miter = sibling_club_names.find(sec.players[i].last_name);
 		if (miter != sibling_club_names.end()) {
-			players->number(cur_row, 7, miter->second);
 			notes_field << "Verify sibling also playing in section.";
 		}
-
-		std::wstring school_code_ws = CStringToWString(sec.players[i].school_code);
-		if (school_code_ws != L"HSO") {
-			players->label(cur_row, 8, toString(school_code_ws));
-		}
-
-		std::wstring grade_ws = CStringToWString(getGradeStringShort(sec.players[i].grade));
-		players->label(cur_row, 11, toString(grade_ws));
-
-		players->number(cur_row, 28, 0);
-		players->label(cur_row, 31, "FALSE");
-		players->number(cur_row, 38, 0);
 
 		if (notes_field.str().length() != 0) {
 			notes_field << " ";
@@ -1860,10 +1903,8 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 		notes_field << sec.players[i].notes;
 			
 		if (notes_field.str().length() != 0) {
-			checkin->label(3 + i, 6, toString(notes_field.str()));
+			checkin->label(3 + j, 6, toString(notes_field.str()));
 		}
-
-		++cur_row;
 	}
 
 	std::wstring s = output_dir + L"\\" + sec_name + L".S0C";
@@ -1882,7 +1923,7 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 		MessageBox(_T("Failed to section check-in workbook."), _T("Error"));
 	}
 
-	return cur_row - 1;
+	return this_sorted_rating.size();
 }
 
 template <class M, class Key>
@@ -1915,6 +1956,31 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	checkin->label(2, 5, "Grade");
 	checkin->label(2, 6, "ID");
 	checkin->label(2, 7, "Notes");
+
+	workbook td_wb;
+	worksheet* td_info = td_wb.sheet("Info");
+	td_info->defaultColwidth(8);
+	td_info->colwidth(0, 256 * 14);  // last name
+	td_info->colwidth(1, 256 * 14);  // first name
+	td_info->colwidth(2, 256 * 14);  // section
+	td_info->colwidth(3, 256 * 30);  // school
+	td_info->colwidth(4, 256 * 6);   // grade
+	td_info->colwidth(5, 256 * 10);  // ID
+	td_info->colwidth(6, 256 * 6);   // rating
+	td_info->colwidth(7, 256 * 18);  // adult
+	td_info->colwidth(8, 256 * 11);  // phone
+	td_info->colwidth(9, 256 * 30);  // email
+
+	td_info->label(0, 0, "Last Name");
+	td_info->label(0, 1, "First Name");
+	td_info->label(0, 2, "Section");
+	td_info->label(0, 3, "School");
+	td_info->label(0, 4, "Grade");
+	td_info->label(0, 5, "ID");
+	td_info->label(0, 6, "Rating");
+	td_info->label(0, 7, "Adult");
+	td_info->label(0, 8, "Phone");
+	td_info->label(0, 9, "Email");
 
 	std::map<const Section *, std::map<unsigned, std::map<CString, unsigned> > > sibling_count;
 	std::map<const Section *, std::map<unsigned, std::map<CString, unsigned> > > sibling_club_names;
@@ -1954,6 +2020,34 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 		checkin->label(3 + i, 5, toString(CStringToWString(getGradeStringShort(vsi[i].section->players[vsi[i].index].grade)))); // grade
 		checkin->label(3 + i, 6, toString(toUpper(CStringToWString(vsi[i].section->players[vsi[i].index].full_id)))); // ID
 
+		td_info->label(1 + i, 0, toString(capWords(CStringToWString(vsi[i].section->players[vsi[i].index].last_name))));  // last
+		td_info->label(1 + i, 1, toString(capWords(CStringToWString(vsi[i].section->players[vsi[i].index].first_name)))); // first
+		td_info->label(1 + i, 2, toString(sec_name)); // section name
+		td_info->label(1 + i, 3, toString(capWords(CStringToWString(vsi[i].section->players[vsi[i].index].school)))); // school
+		td_info->label(1 + i, 4, toString(CStringToWString(getGradeStringShort(vsi[i].section->players[vsi[i].index].grade)))); // grade
+		td_info->label(1 + i, 5, toString(toUpper(CStringToWString(vsi[i].section->players[vsi[i].index].full_id)))); // ID
+		td_info->number(1 + i, 6, vsi[i].section->players[vsi[i].index].cc_rating); // higher of nwsrs and uscf ratings
+		td_info->label(1 + i, 7, toString(CStringToWString(vsi[i].section->players[vsi[i].index].adult_first + L" " + vsi[i].section->players[vsi[i].index].adult_last))); // responsible adult name
+
+		std::wstring adult_combined = CStringToWString(vsi[i].section->players[vsi[i].index].adult_last + vsi[i].section->players[vsi[i].index].adult_first);
+		std::wstring adult_email = L"";
+		std::wstring adult_phone = L"";
+
+		auto adult_iter = adult_map.find(adult_combined);
+		if (adult_iter != adult_map.end()) {
+			int adult_index = adult_iter->second;
+			adult_email = entries[adult_index].getEmail();
+			adult_phone = entries[adult_index].getPhone();
+		}
+
+		std::wstring ws_phone = adult_phone;
+		ws_phone.erase(std::remove(ws_phone.begin(), ws_phone.end(), '('), ws_phone.end());
+		ws_phone.erase(std::remove(ws_phone.begin(), ws_phone.end(), ')'), ws_phone.end());
+		ws_phone.erase(std::remove(ws_phone.begin(), ws_phone.end(), ' '), ws_phone.end());
+		ws_phone.erase(std::remove(ws_phone.begin(), ws_phone.end(), '-'), ws_phone.end());
+		td_info->label(1 + i, 8, toString(ws_phone)); // phone
+		td_info->label(1 + i, 9, toString(adult_email)); // email
+
 		std::wstringstream notes_field;
 
 		auto scnuiter = sibling_club_names.find(vsi[i].section)->second.find(vsi[i].section->players[vsi[i].index].subsection)->second;
@@ -1980,6 +2074,14 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 
 	if (err != NO_ERRORS) {
 		MessageBox(_T("Failed to create the all section check-in workbook.  Do you have the previous check-in sheet open in Excel?"), _T("Error"));
+	}
+
+	std::wstring td_s = output_dir + L"\\td-info.xls";
+	std::string td_filename = toString(td_s);
+	err = td_wb.Dump(td_filename);
+
+	if (err != NO_ERRORS) {
+		MessageBox(_T("Failed to create the td-info workbook.  Do you have the previous td-info sheet open in Excel?"), _T("Error"));
 	}
 }
 
