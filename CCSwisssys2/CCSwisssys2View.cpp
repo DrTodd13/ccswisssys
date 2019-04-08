@@ -629,6 +629,8 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 			return post_proc;
 		}
 
+		std::set<std::wstring> duplicate_detect;
+
 		for (i = 0; i < entries.size(); ++i) {
 			if (!entries[i].isPlayer()) {
 				std::wstring last_name = entries[i].getLastName();
@@ -656,14 +658,15 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				std::wstring uscf_rating = L"";
 				std::wstring full_name = first_name + L" " + last_name;
 				std::wstring unique_key = full_name + L" " + school + L" " + full_id;
+				std::wstring registration_date = entries[i].getRegistrationDate();
 
 				std::wstring adult_first = entries[i].getAdultFirst();
 				std::wstring adult_last = entries[i].getAdultLast();
 				std::wstring adult_combined = adult_last + adult_first;
 
 				std::wstring school_check = L"ACMA";
-				if (orig_school == school_check) {
-					orig_school = school_check;
+				if (last_name == L"Varro") {
+					last_name = L"Varro";
 				}
 
 				auto rentry = pDoc->nwsrs_map.find(full_id);
@@ -885,6 +888,7 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 									//normal_log << "WARNING: no ID specified but exact match for player found in player list " << last_name << " " << first_name << " grade code = " << grade_code << " " << school << std::endl;
 
 									full_id = pDoc->rated_players[*match].getFullId();
+									last_four_id = getLastFour(full_id);
 									cc_rating = pDoc->rated_players[*match].get_higher_rating();
 									updateUscfFromRatingFile(uscf_id, uscf_rating, pDoc->rated_players[*match], normal_log, warning_condition, lm);
 									nwsrs_rating = pDoc->rated_players[*match].nwsrs_rating;
@@ -1100,12 +1104,17 @@ std::vector<SectionPlayerInfo> process_cc_file(HWND hWnd, CCCSwisssys2Doc *pDoc,
 				CString cs_school(school.c_str());
 				CString cs_school_code(school_code.c_str());
 				cs_full_id = full_id.c_str();
+				CString cs_registration_date(registration_date.c_str());
 
 				CString cs_adult_first(adult_first.c_str()), cs_adult_last(adult_last.c_str());
-				auto spi = SectionPlayerInfo(-((int)i + 1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating, cs_adult_first, cs_adult_last);
+				auto spi = SectionPlayerInfo(-((int)i + 1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating, cs_adult_first, cs_adult_last, cs_registration_date);
 
 				if (pDoc->noshows.find(spi.getUnique()) == pDoc->noshows.end()) {
-					post_proc.push_back(SectionPlayerInfo(-((int)i + 1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating, cs_adult_first, cs_adult_last));
+					auto dditer = duplicate_detect.find(last_four_id);
+					if (last_four_id == L"" || dditer == duplicate_detect.end()) {
+						post_proc.push_back(spi);
+//						post_proc.push_back(SectionPlayerInfo(-((int)i + 1), cs_last_name, cs_first_name, cs_full_id, nwsrs_rating, grade_code, cs_school, cs_school_code, CString(uscf_id.c_str()), CString(uscf_rating.c_str()), CString(uscf_expr.c_str()), notes.str(), unrated, cc_rating, cs_adult_first, cs_adult_last));
+					}
 				}
 			}
 		}
@@ -1258,7 +1267,7 @@ void CCCSwisssys2View::OnCreateSections()
 				CString cs_uscf_rating(this_player.ws_uscf_rating.c_str());
 				CString cs_uscf_expr(this_player.ws_uscf_expr.c_str());
 
-				pDoc->sections[target_section].players.push_back(SectionPlayerInfo(i, cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating, cs_uscf_expr, L"", false, this_player.nwsrs_rating, L"", L""));
+				pDoc->sections[target_section].players.push_back(SectionPlayerInfo(i, cs_last, cs_first, cs_id, this_player.nwsrs_rating, this_player.grade, cs_school_name, cs_school_code, cs_uscf_id, cs_uscf_rating, cs_uscf_expr, L"", false, this_player.nwsrs_rating, L"", L"", L""));
 				//normal_log << "Went in section " << CStringToWString(pDoc->sections[target_section].name) << " " << this_player.ws_id << " " << this_player.ws_last << " " << this_player.ws_first << " " << this_player.nwsrs_rating << " " << this_player.grade << " " << this_player.ws_school_code << " uscf rating and id " << this_player.ws_uscf_rating << " " << this_player.ws_uscf_id << std::endl;
 			}
 			else {
@@ -1970,6 +1979,8 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	td_info->colwidth(7, 256 * 18);  // adult
 	td_info->colwidth(8, 256 * 11);  // phone
 	td_info->colwidth(9, 256 * 30);  // email
+	td_info->colwidth(10, 256 * 30); // registration date/time
+	td_info->colwidth(11, 256 * 30); // notes
 
 	td_info->label(0, 0, "Last Name");
 	td_info->label(0, 1, "First Name");
@@ -1981,6 +1992,8 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	td_info->label(0, 7, "Adult");
 	td_info->label(0, 8, "Phone");
 	td_info->label(0, 9, "Email");
+	td_info->label(0, 10, "Registration Date");
+	td_info->label(0, 11, "Notes");
 
 	std::map<const Section *, std::map<unsigned, std::map<CString, unsigned> > > sibling_count;
 	std::map<const Section *, std::map<unsigned, std::map<CString, unsigned> > > sibling_club_names;
@@ -2047,6 +2060,7 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 		ws_phone.erase(std::remove(ws_phone.begin(), ws_phone.end(), '-'), ws_phone.end());
 		td_info->label(1 + i, 8, toString(ws_phone)); // phone
 		td_info->label(1 + i, 9, toString(adult_email)); // email
+		td_info->label(1 + i, 10, toString(CStringToWString(vsi[i].section->players[vsi[i].index].registration_date))); // registration date/time
 
 		std::wstringstream notes_field;
 
@@ -2063,6 +2077,7 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 
 		if (notes_field.str().length() != 0) {
 			checkin->label(3 + i, 7, toString(notes_field.str()));
+			td_info->label(1 + i, 11, toString(notes_field.str()));
 		}
 
 		++cur_row;

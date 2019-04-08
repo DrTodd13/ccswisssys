@@ -54,6 +54,7 @@ public:
 	bool unrated;
 	int cc_rating;
 	CString adult_first, adult_last, adult_email, adult_phone;
+	CString registration_date;
 
 	std::wstring getUnique() {
 		return CStringToWString(last_name + first_name + grade + school + adult_first + adult_last);
@@ -75,6 +76,7 @@ public:
 		int ccr, 
 		const CString &af,
 		const CString &al,
+		const CString &rdt,
 		int sub=1) : 
 		cc_file_index(ccfi), 
 		last_name(ln), 
@@ -92,7 +94,8 @@ public:
 		unrated(u), 
 		cc_rating(ccr),
 	    adult_first(af),
-	    adult_last(al) {}
+	    adult_last(al),
+	    registration_date(rdt) {}
 };
 
 struct SortByRatingDescending
@@ -738,10 +741,11 @@ enum {
 	RESPONSIBLE_FIRST = 7,
 	RESPONSIBLE_LAST = 8,
 	ADULT_EMAIL = 9,
-	ADULT_PHONE = 10
+	ADULT_PHONE = 10,
+	REGISTRATION_DATETIME = 11
 };
 
-#define NUM_DYNAMIC_LOCATIONS 11
+#define NUM_DYNAMIC_LOCATIONS 12
 
 class DynamicLocations {
 protected:
@@ -784,6 +788,7 @@ public:
 	std::wstring getPhone(void)       const { valid(); return fields[m_locations[ADULT_PHONE]]; }
 	std::wstring getAdultFirst(void)  const { valid(); return fields[m_locations[RESPONSIBLE_FIRST]]; }
 	std::wstring getAdultLast(void)   const { valid(); return fields[m_locations[RESPONSIBLE_LAST]]; }
+	std::wstring getRegistrationDate(void)   const { valid(); return fields[m_locations[REGISTRATION_DATETIME]]; }
 
 	/*
 	std::wstring getAddress1(void)    const { valid(); return fields[4]; }

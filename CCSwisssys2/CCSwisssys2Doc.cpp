@@ -13,6 +13,8 @@
 
 #include <propkey.h>
 #include <assert.h>
+#include <chrono>
+#include <ctime>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -286,6 +288,24 @@ class FindEmail : public FindFieldOperator {
 public:
 	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
 		return field.find(L"@") != std::wstring::npos;
+	}
+};
+
+class FindYear : public FindFieldOperator {
+protected:
+	std::wstring currentYear;
+public:
+	FindYear() {
+		auto now = std::chrono::system_clock::now();
+		std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+		struct tm *parts = std::localtime(&now_c);
+		std::wstringstream wss;
+		wss << parts->tm_year + 1900;
+		currentYear = wss.str();
+	}
+
+	bool operator()(int index, const std::wstring &field, const std::vector<std::wstring> &all_fields) const {
+		return field.find(currentYear) != std::wstring::npos;
 	}
 };
 
@@ -595,28 +615,51 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 
 	std::vector< ConstantContactEntry > ret;
 
+#ifdef DEBUG_FFWO
+	normal_log << "Finding registration string." << std::endl;
+#endif
+
 	dynamic_locations[REGISTERED] = findFieldWithOperator(normal_log, ccret, FindFieldByString(std::wstring(REG_STR)));
 	if (dynamic_locations[REGISTERED] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect REGISTERED field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
 	}
+
+#ifdef DEBUG_FFWO
+	normal_log << "Finding NWSRS ID Field." << std::endl;
+#endif
+
 	dynamic_locations[STUDENT_NWSRS_ID] = findFieldWithOperator(normal_log, ccret, FindNwsrsIdField(nwsrs_map), dynamic_locations[REGISTERED], NULL, 0.85);
 	if (dynamic_locations[STUDENT_NWSRS_ID] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect NWSRS ID field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
 	}
 
+#ifdef DEBUG_FFWO
+	normal_log << "Finding empty player fields." << std::endl;
+#endif
+
 	std::set<int> *empty_player_fields = new std::set<int>;
 	*empty_player_fields = findEmptyPlayerFields(ccret, nwsrs_map, dynamic_locations[REGISTERED], dynamic_locations[STUDENT_NWSRS_ID], normal_log);
-	//for (auto iter = empty_player_fields->begin(); iter != empty_player_fields->end(); ++iter) {
-	//	normal_log << "Empty player field " << *iter << std::endl;
-	//}
+#ifdef DEBUG_FFWO
+	for (auto iter = empty_player_fields->begin(); iter != empty_player_fields->end(); ++iter) {
+		normal_log << "Empty player field " << *iter << std::endl;
+	}
+#endif
+
+#ifdef DEBUG_FFWO
+	normal_log << "Finding first name field." << std::endl;
+#endif
 
 	dynamic_locations[FIRST_NAME] = findFieldWithOperator(normal_log, ccret, FindFirstName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.5);
 	if (dynamic_locations[FIRST_NAME] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect FIRST NAME field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
 	}
+
+#ifdef DEBUG_FFWO
+	normal_log << "Finding last name field." << std::endl;
+#endif
 
 	dynamic_locations[LAST_NAME] = findFieldWithOperator(normal_log, ccret, FindLastName(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields, 0.5);
 	if (dynamic_locations[LAST_NAME] == -1) {
@@ -626,6 +669,10 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 
 	std::set<std::wstring> firsts, lasts;
 	collectNames(ccret, dynamic_locations[REGISTERED], firsts, lasts, empty_player_fields, dynamic_locations[FIRST_NAME], dynamic_locations[LAST_NAME]);
+
+#ifdef DEBUG_FFWO
+	normal_log << "Finding USCF ID field." << std::endl;
+#endif
 
 	dynamic_locations[STUDENT_USCF_ID] = findFieldWithOperator(normal_log, ccret, FindUscfId(nwsrs_map, rated_players, dynamic_locations[STUDENT_NWSRS_ID]), dynamic_locations[REGISTERED], empty_player_fields);
 //	normal_log << "Finding grade code" << std::endl;
@@ -662,6 +709,12 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 	dynamic_locations[RESPONSIBLE_LAST] = findFieldWithOperator(normal_log, ccret, FindInSet(dynamic_locations[LAST_NAME], lasts), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
 	if (dynamic_locations[RESPONSIBLE_LAST] == -1) {
 		MessageBox(NULL, _T("Could not automatically detect SCHOOL field in constant contact registration file."), _T("ERROR"), MB_OK);
+		return ret;
+	}
+
+	dynamic_locations[REGISTRATION_DATETIME] = findFieldWithOperator(normal_log, ccret, FindYear(), dynamic_locations[REGISTERED], empty_player_fields, 0.6);
+	if (dynamic_locations[REGISTRATION_DATETIME] == -1) {
+		MessageBox(NULL, _T("Could not automatically detect registration datetime field in constant contact registration file."), _T("ERROR"), MB_OK);
 		return ret;
 	}
 
