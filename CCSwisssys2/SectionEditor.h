@@ -10,7 +10,7 @@ class SectionEditor : public CDialog
 	DECLARE_DYNAMIC(SectionEditor)
 
 public:
-	SectionEditor(Section *s, bool &check, CWnd* pParent = NULL);   // standard constructor
+	SectionEditor(Section *s, CCCSwisssys2Doc* d, bool &check, CWnd* pParent = NULL);   // standard constructor
 	virtual ~SectionEditor();
 
 	Section *m_s;
@@ -31,6 +31,7 @@ public:
 	CEdit max_rating_edit;
 	CComboBox section_type_combo;
 	CEdit num_subsections_edit;
+	CCCSwisssys2Doc *pDoc;
 
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedOk();
@@ -45,4 +46,6 @@ public:
 	CEdit board_number_edit;
 	CEdit playing_room_edit;
 	CComboBox num_rounds_combobox;
+	CButton AutoResection;
+	afx_msg void OnBnClickedAutoResecCheck();
 };

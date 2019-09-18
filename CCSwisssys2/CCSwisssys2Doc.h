@@ -119,9 +119,18 @@ public:
 	CString starting_board_number;
 	CString playing_room;
 	unsigned num_rounds;
+	int parent_section;
+	int num_split;
 
-	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false), which_computer(1), time_control(""), starting_board_number(""), playing_room(""), num_rounds(5) {}
+	Section() : name(""), lower_rating_limit(0), upper_rating_limit(3000), lower_grade_limit('A'), upper_grade_limit('N'), sec_type(SWISS), num_subsections(1), uscf_required(false), which_computer(1), time_control(""), starting_board_number(""), playing_room(""), num_rounds(5), parent_section(-1), num_split(-1) {}
 	
+	void copyResectioningFields(const Section &other) {
+		lower_rating_limit = other.lower_rating_limit;
+		upper_rating_limit = other.upper_rating_limit;
+		sec_type = other.sec_type;
+		players = other.players;
+	}
+
 	int getLastBoardNumber(void) const {
 		int cur_start = _ttoi(starting_board_number);
 		if (players.size() <= 3) {
@@ -222,11 +231,11 @@ public:
 	void Serialize(CArchive& ar) {
 		if (ar.IsStoring())
 		{
-			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required << which_computer << time_control << starting_board_number << playing_room << num_rounds;
+			ar << name << lower_rating_limit << upper_rating_limit << lower_grade_limit << upper_grade_limit << sec_type << num_subsections << uscf_required << which_computer << time_control << starting_board_number << playing_room << num_rounds << parent_section << num_split;
 		}
 		else
 		{
-			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required >> which_computer >> time_control >> starting_board_number >> playing_room >> num_rounds;
+			ar >> name >> lower_rating_limit >> upper_rating_limit >> lower_grade_limit >> upper_grade_limit >> sec_type >> num_subsections >> uscf_required >> which_computer >> time_control >> starting_board_number >> playing_room >> num_rounds >> parent_section >> num_split;
 		}
 	}
 
@@ -349,8 +358,50 @@ public:
 	}
 };
 
+bool SectionPointerRatingReverseSort(const Section *a, const Section *b);
+
 class Sections : public SerializedVector<Section> {
 public:
+	std::vector<Section *> getSectionsWithParentSorted(unsigned parent_section) {
+		std::vector<Section *> ret;
+		for (unsigned i = 0; i < size(); ++i) {
+			if (operator[](i).parent_section == parent_section) {
+				ret.push_back(&(operator[](i)));
+			}
+		}
+		std::sort(ret.begin(), ret.end(), SectionPointerRatingReverseSort);
+		return ret;
+	}
+
+	bool remove(Section *sec) {
+		for (auto siter = begin(); siter != end(); ++siter) {
+			if (&(*siter) == sec) {
+				SerializedVector<Section>::erase(siter);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void turnOffResectioning(unsigned parent_section) {
+		// Find all sections with the given parent_section and set them to -1 which turns off automatic resectioning.
+		for (unsigned i = 0; i < size(); ++i) {
+			operator[](i).parent_section = -1;
+		}
+	}
+
+	void deleteWithParentSection(unsigned parent_section) {
+		auto psiter = begin();
+		while (psiter != end()) {
+			if (psiter->parent_section == parent_section) {
+				psiter = erase(psiter);
+			}
+			else {
+				++psiter;
+			}
+		}
+	}
+
 	void clear(void) {
 		std::vector<Section>::clear();
 	}
@@ -876,10 +927,17 @@ public:
 
 CArchive & operator<<(CArchive &ar, const std::wstring &s);
 CArchive & operator>>(CArchive &ar, std::wstring &s);
+CArchive & operator<<(CArchive &ar, Section &s);
+CArchive & operator>>(CArchive &ar, Section &s);
 
 template <typename A, typename B>
 class SerializedMap : public std::map<A, B> {
 public:
+
+	virtual A last_key() const {
+		return this->rbegin()->first;
+	}
+
 	virtual void Serialize(CArchive& ar) {
 		if (ar.IsStoring())
 		{
@@ -893,7 +951,8 @@ public:
 			int fs_size;
 			ar >> fs_size;
 			for (unsigned i = 0; i < fs_size; ++i) {
-				std::wstring a, b;
+				A a;
+				B b;
 				ar >> a >> b;
 				insert(std::pair<A, B>(a, b));
 			}
@@ -949,11 +1008,71 @@ public:
 	SerializedSet<std::wstring> noshows;
 	SerializedMap<std::wstring, std::wstring> force_sections;  // map of unique player key to the forced section name
 	CTime m_tournament_date;
+	SerializedMap<unsigned, Section> parent_sections;
 
 // Operations
 public:
 
 	bool loadRatingsFile();
+
+	void clearPlayers(void) {
+		sections.clearPlayers();
+		for (auto psiter = parent_sections.begin(); psiter != parent_sections.end(); ++psiter) {
+			psiter->second.clearPlayers();
+		}
+	}
+
+	void turnOffResectioning(unsigned parent_section, bool keep_sections) {
+		if (keep_sections) {
+			sections.turnOffResectioning(parent_section);
+			parent_sections.erase(parent_section);
+		}
+		else {
+			sections.deleteWithParentSection(parent_section);
+			auto ps = parent_sections.find(parent_section);
+			ASSERT(ps != parent_sections.end());
+			ps->second.num_split = -1;
+			sections.push_back(ps->second);
+			parent_sections.erase(ps);
+		}
+		SetModifiedFlag();
+	}
+
+	Sections getSectionsWithParents(std::map<int, int> &ssmap) {
+		Sections ret;
+		std::set<int> placed_parent_sections;
+
+		// For each section...
+		for (int i = 0; i < sections.size(); ++i) {
+			// If it is a non-automatic resectioned section then place it.
+			if (sections[i].parent_section == -1) {
+				ssmap.insert(std::pair<int, int>(ret.size(), i));
+				ret.push_back(sections[i]);
+			}
+			else {
+				// Else see if we haven't already placed the parent section.
+				if (placed_parent_sections.find(sections[i].parent_section) == placed_parent_sections.end()) {
+					// We haven't so  place it now.
+
+					// Find the parent section based on its number.
+					auto ps = parent_sections.find(sections[i].parent_section);
+					// Make sure the parent section exists.
+					if (ps == parent_sections.end()) {
+						ASSERT(0);
+					}
+					// Add the parent section.
+					ssmap.insert(std::pair<int, int>(ret.size(), i));
+					ret.push_back(ps->second);
+					// Remember that we've added this parent section.
+					placed_parent_sections.insert(sections[i].parent_section);
+				}
+			}
+		}
+
+		ASSERT(placed_parent_sections.size() == parent_sections.size());
+
+		return ret;
+	}
 
 	std::map<std::wstring, CorrectedFields>::iterator get_corrected_iter(const std::wstring &key) {
 		auto prev_iter = saved_school_corrections.find(key);

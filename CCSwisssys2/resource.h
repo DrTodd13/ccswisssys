@@ -58,6 +58,9 @@
 #define IDC_WITHDRAWAL                  1042
 #define IDC_REENTER                     1043
 #define IDC_FORCE_SECTION               1044
+#define IDC_AUTO_RESECTION              1045
+#define IDC_CHECK2                      1046
+#define IDC_AUTO_RESEC_CHECK            1046
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 #define ID_OPTIONS_TEST                 32772
 #define ID_OPTIONS_TOURNAMENTDATE       32773
@@ -68,7 +71,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        335
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1047
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

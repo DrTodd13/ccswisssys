@@ -178,7 +178,7 @@ CAPTION "About CCSwisssys"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
-    LTEXT           "CCSwisssys, Version 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "CCSwisssys, Version 1.1",IDC_STATIC,42,14,114,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2016",IDC_STATIC,42,26,114,8
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
@@ -208,7 +208,7 @@ BEGIN
     PUSHBUTTON      "Create Swisssys Tournament",IDC_BUTTON10,571,265,56,48,BS_MULTILINE
     LTEXT           "Restricted Entry?",IDC_STATIC,19,100,59,8
     EDITTEXT        IDC_EDIT5,79,98,396,13,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "Browse",IDC_BUTTON11,485,97,50,14
+    PUSHBUTTON      "Browse",IDC_BUTTON11,486,97,50,14
     PUSHBUTTON      "Split",IDC_SPLIT_SECTION,572,191,50,14
 END
 
@@ -245,6 +245,7 @@ BEGIN
     LTEXT           "Playing Room Name",IDC_STATIC,15,205,77,8
     COMBOBOX        IDC_NUM_ROUNDS,107,223,39,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Number of rounds",IDC_STATIC,16,226,63,8
+    CONTROL         "Automatic Resectioning",IDC_AUTO_RESEC_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,266,106,10
 END
 
 IDD_MANAGE_REGISTRATIONS DIALOGEX 0, 0, 602, 385
@@ -321,6 +322,8 @@ BEGIN
                     "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP,18,21,205,10
     CONTROL         "Split into the specified number of equally sized sections.",IDC_RADIO_EQUAL,
                     "Button",BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP,18,43,194,10
+    CONTROL         "Automatically resection as registrations change.",IDC_AUTO_RESECTION,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,85,198,10
 END
 
 IDD_FORCE_SECTION DIALOGEX 0, 0, 309, 122

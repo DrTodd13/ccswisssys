@@ -12,8 +12,8 @@
 
 IMPLEMENT_DYNAMIC(SectionEditor, CDialog)
 
-SectionEditor::SectionEditor(Section *s, bool &check, CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_SECTION_EDITOR, pParent), m_s(s), needs_check(check)
+SectionEditor::SectionEditor(Section *s, CCCSwisssys2Doc* d, bool &check, CWnd* pParent /*=NULL*/)
+	: CDialog(IDD_SECTION_EDITOR, pParent), m_s(s), pDoc(d), needs_check(check)
 {
 }
 
@@ -74,7 +74,23 @@ BOOL SectionEditor::OnInitDialog() {
 	time_control_edit.SetWindowTextW(m_s->time_control);
 	board_number_edit.SetWindowTextW(m_s->starting_board_number);
 	playing_room_edit.SetWindowTextW(m_s->playing_room);
-	//	section_name_edit.SetWindowText(m_s->subsections);
+	if (m_s->parent_section != -1) {
+		AutoResection.ShowWindow(SW_SHOW);
+		AutoResection.SetCheck(BST_CHECKED);
+		min_grade_combo.EnableWindow(FALSE);
+		max_grade_combo.EnableWindow(FALSE);
+		min_rating_edit.EnableWindow(FALSE);
+		max_rating_edit.EnableWindow(FALSE);
+		section_type_combo.EnableWindow(FALSE);
+	}
+	else {
+		AutoResection.ShowWindow(SW_HIDE);
+		min_grade_combo.EnableWindow(TRUE);
+		max_grade_combo.EnableWindow(TRUE);
+		min_rating_edit.EnableWindow(TRUE);
+		max_rating_edit.EnableWindow(TRUE);
+		section_type_combo.EnableWindow(TRUE);
+	}
 
 	if (m_s->usedRatings()) {
 		std::wstringstream ss;
@@ -115,6 +131,7 @@ void SectionEditor::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BOARD_NUMBER, board_number_edit);
 	DDX_Control(pDX, IDC_PLAYING_ROOM, playing_room_edit);
 	DDX_Control(pDX, IDC_NUM_ROUNDS, num_rounds_combobox);
+	DDX_Control(pDX, IDC_AUTO_RESEC_CHECK, AutoResection);
 }
 
 
@@ -122,6 +139,7 @@ BEGIN_MESSAGE_MAP(SectionEditor, CDialog)
 	ON_BN_CLICKED(IDOK, &SectionEditor::OnBnClickedOk)
 	ON_BN_CLICKED(IDCANCEL, &SectionEditor::OnBnClickedCancel)
 	ON_EN_CHANGE(IDC_EDIT4, &SectionEditor::OnEnChangeSubsections)
+	ON_BN_CLICKED(IDC_AUTO_RESEC_CHECK, &SectionEditor::OnBnClickedAutoResecCheck)
 END_MESSAGE_MAP()
 
 
@@ -274,4 +292,18 @@ void SectionEditor::OnEnChangeSubsections()
 	// with the ENM_CHANGE flag ORed into the mask.
 
 	// TODO:  Add your control notification handler code here
+}
+
+
+void SectionEditor::OnBnClickedAutoResecCheck()
+{
+	int ret = MessageBox(_T("This section belongs to an automatic resectioning group.  Do you want to turn off automatic resectioning for this group and keep the current sections (Yes), go back to the original single section (No), or abort this operation (Cancel)?"), _T("Turn off automatic resection?"), MB_ICONQUESTION | MB_YESNOCANCEL);
+	if (ret == IDYES) {
+		OnBnClickedOk();
+		pDoc->turnOffResectioning(m_s->parent_section, true);
+	}
+	else if (ret == IDNO) {
+		OnBnClickedOk();
+		pDoc->turnOffResectioning(m_s->parent_section, false);
+	}
 }

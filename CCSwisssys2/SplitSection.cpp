@@ -30,6 +30,7 @@ void SplitSection::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_NUM_SPLIT, num_split);
 	DDX_Control(pDX, IDC_RADIO_MAKE_QUADS, QuadButton);
 	DDX_Control(pDX, IDC_RADIO_EQUAL, EqualButton);
+	DDX_Control(pDX, IDC_AUTO_RESECTION, auto_resection);
 }
 
 
@@ -121,8 +122,133 @@ struct {
 	}
 } customSplitLess;
 
+/*
+ * num_split = 0 for quads
+ *             2+ for even split
+ */
+std::vector<Section> do_split(const Section *sec, int num_split, HWND hwnd) {
+	bool make_quads = false;
+	bool make_equal = false;
+	bool quad_swiss = false;
+	int sections_left = 0;
+	int int_num_split = 0;
+
+	if (num_split == 0) {
+		make_quads = true;
+	}
+	else if (num_split >= 2) {
+		make_equal = true;
+		int_num_split = num_split;
+	}
+	else {
+		ASSERT(0);
+	}
+	int players_left = (int)sec->players.size();
+	int new_num_sections = 0;
+
+	if (make_quads) {
+		// This works for both even and odd sections.
+		// If there is between a full quad plus one to full quads plus 3
+		// then this integer division rounds down because those extra
+		// players are absorbed into a 5+ swiss section.
+		sections_left = players_left / 4;
+		quad_swiss = ((players_left % 4) != 0 ? true : false);
+	}
+	else if (make_equal) {
+		sections_left = int_num_split;
+	}
+	else {
+		ASSERT(0);
+	}
+
+	new_num_sections = sections_left;
+
+	std::vector<SectionPlayerInfo> working_copy = sec->players;
+	std::sort(working_copy.begin(), working_copy.end(), customSplitLess);
+	int next_to_use = 0;
+	std::vector<Section> new_sections;
+	int cur_sec = 0;
+	int cur_upper_limit = sec->upper_rating_limit;
+
+	for (; sections_left > 0; --sections_left) {
+		cur_sec++;
+		int approx_size = players_left;
+
+		if (sections_left > 1) {
+			if (make_quads) {
+				approx_size = 4;
+			}
+			else {
+				approx_size = players_left / sections_left;
+				if (approx_size % 2 == 1) {
+					approx_size--;
+				}
+			}
+		}
+
+		players_left -= approx_size;
+
+		Section newSection;
+		newSection.lower_grade_limit = sec->lower_grade_limit;
+
+		if (make_quads) {
+			if (sections_left > 1 || !quad_swiss) {
+				newSection.sec_type = ROUND_ROBIN;
+			}
+			else {
+				newSection.sec_type = SWISS;
+			}
+		}
+		else {
+			newSection.sec_type = sec->sec_type;
+		}
+
+		newSection.upper_grade_limit = sec->upper_grade_limit;
+		newSection.uscf_required = sec->uscf_required;
+		std::wstringstream new_name;
+		new_name << CStringToWString(sec->name) << L"-" << cur_sec;
+		newSection.name = WStringToCString(new_name.str());
+		newSection.upper_rating_limit = cur_upper_limit;
+
+		int limit = next_to_use + approx_size;
+		for (; next_to_use < limit; next_to_use++) {
+			newSection.players.push_back(working_copy[next_to_use]);
+			cur_upper_limit = working_copy[next_to_use].rating;
+		}
+
+		if (sections_left > 1) {
+			newSection.lower_rating_limit = cur_upper_limit;
+		}
+		else {
+			newSection.lower_rating_limit = sec->lower_rating_limit;
+		}
+		cur_upper_limit--;
+		new_sections.push_back(newSection);
+	}
+
+	if (new_sections.size() != new_num_sections) {
+//		MessageBox(hwnd, _T("Split section algorithm failed to split into the requested number of sections."), _T("ERROR"));
+		ASSERT(0);
+	}
+	return new_sections;
+}
+
 void SplitSection::OnBnClickedOk()
 {
+	int ns_param = 0;
+	if (QuadButton.GetCheck()) {
+		ns_param = 0;
+		// All quad sections will be 3 rounds.
+		sec->num_rounds = 3;
+	}
+	else if (EqualButton.GetCheck()) {
+		ns_param = int_num_split;
+	}
+
+	int auto_resec = auto_resection.GetCheck();
+	std::vector<Section> new_sections = do_split(sec, ns_param, GetSafeHwnd());
+
+#if 0
 	bool make_quads = false;
 	bool make_equal = false;
 	bool quad_swiss = false;
@@ -134,7 +260,7 @@ void SplitSection::OnBnClickedOk()
 	if (QuadButton.GetCheck()) {
 		make_quads = true;
 
-		// This works for both even and off sections.
+		// This works for both even and odd sections.
 		// If there is between a full quad plus one to full quads plus 3
 		// then this integer division rounds down because those extra
 		// players are absorbed into a 5+ swiss section.
@@ -218,11 +344,22 @@ void SplitSection::OnBnClickedOk()
 		MessageBox(_T("Split section algorithm failed to split into the requested number of sections."), _T("ERROR"));
 		return;
 	}
+#endif
+
+	unsigned next_key = -1;
+	if (auto_resec) {
+		next_key = doc->parent_sections.last_key() + 1;
+		sec->num_split = ns_param;
+		doc->parent_sections[next_key] = *sec;
+	}
 
 	doc->sections.erase(doc->sections.begin() + index);
 
 	unsigned i;
 	for (i = 0; i < new_sections.size(); ++i) {
+		if (auto_resec) {
+			new_sections[i].parent_section = next_key;
+		}
 		doc->sections.push_back(new_sections[i]);
 	}
 

@@ -35,4 +35,7 @@ public:
 	afx_msg void OnBnClickedOk();
 	CButton QuadButton;
 	CButton EqualButton;
+	CButton auto_resection;
 };
+
+std::vector<Section> do_split(const Section *sec, int num_split, HWND hwnd);

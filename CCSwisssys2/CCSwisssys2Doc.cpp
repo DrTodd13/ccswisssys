@@ -121,6 +121,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		ar << m_tournament_date;
 		force_sections.Serialize(ar);
 		noshows.Serialize(ar);
+		parent_sections.Serialize(ar);
 	}
 	else
 	{
@@ -139,6 +140,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		ar >> m_tournament_date;
 		force_sections.Serialize(ar);
 		noshows.Serialize(ar);
+		parent_sections.Serialize(ar);
 	}
 }
 
@@ -880,4 +882,18 @@ CArchive & operator>>(CArchive &ar, std::wstring &s) {
 	ar >> ins;
 	s = CStringToWString(ins);
 	return ar;
+}
+
+CArchive & operator<<(CArchive &ar, Section &s) {
+	s.Serialize(ar);
+	return ar;
+}
+
+CArchive & operator>>(CArchive &ar, Section &s) {
+	s.Serialize(ar);
+	return ar;
+}
+
+bool SectionPointerRatingReverseSort(const Section *a, const Section *b) {
+	return a->upper_rating_limit > b->upper_rating_limit;
 }
