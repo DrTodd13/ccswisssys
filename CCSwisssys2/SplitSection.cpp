@@ -122,6 +122,12 @@ struct {
 	}
 } customSplitLess;
 
+CString tocstring(int x) {
+	std::wstringstream new_name;
+	new_name << x;
+	return WStringToCString(new_name.str());
+}
+
 /*
  * num_split = 0 for quads
  *             2+ for even split
@@ -169,6 +175,7 @@ std::vector<Section> do_split(const Section *sec, int num_split, HWND hwnd) {
 	std::vector<Section> new_sections;
 	int cur_sec = 0;
 	int cur_upper_limit = sec->upper_rating_limit;
+	int cur_board_num = _ttoi(sec->starting_board_number);
 
 	for (; sections_left > 0; --sections_left) {
 		cur_sec++;
@@ -191,7 +198,10 @@ std::vector<Section> do_split(const Section *sec, int num_split, HWND hwnd) {
 		Section newSection;
 		newSection.lower_grade_limit = sec->lower_grade_limit;
 
+		newSection.time_control = sec->time_control;
+
 		if (make_quads) {
+			newSection.num_rounds = 3;
 			if (sections_left > 1 || !quad_swiss) {
 				newSection.sec_type = ROUND_ROBIN;
 			}
@@ -201,6 +211,7 @@ std::vector<Section> do_split(const Section *sec, int num_split, HWND hwnd) {
 		}
 		else {
 			newSection.sec_type = sec->sec_type;
+			newSection.num_rounds = sec->num_rounds;
 		}
 
 		newSection.upper_grade_limit = sec->upper_grade_limit;
@@ -222,6 +233,12 @@ std::vector<Section> do_split(const Section *sec, int num_split, HWND hwnd) {
 		else {
 			newSection.lower_rating_limit = sec->lower_rating_limit;
 		}
+		
+		if (cur_board_num != 0) {
+			newSection.starting_board_number = tocstring(cur_board_num);
+			cur_board_num = newSection.getLastBoardNumber() + 1;
+		}
+
 		cur_upper_limit--;
 		new_sections.push_back(newSection);
 	}
