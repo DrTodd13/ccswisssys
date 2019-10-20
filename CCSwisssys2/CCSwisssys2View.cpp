@@ -1608,6 +1608,10 @@ void CCCSwisssys2View::OnCreateSections()
 							lm.expired_uscf_membership << "    WARNING: Player in section requiring USCF membership will have an expired membership by the date of the tournament. NWSRS=" << CStringToWString(ppiter->full_id) << " USCF=" << CStringToWString(ppiter->uscf_id) << " Expired: " << CStringToWString(ppiter->uscf_expr) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
 							//normal_log << "WARNING: Player in section requiring USCF membership will have an expired membership by the date of the tournament. NWSRS=" << CStringToWString(ppiter->full_id) << " USCF=" << CStringToWString(ppiter->uscf_id) << " Expired: " << CStringToWString(ppiter->uscf_expr) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
 						}
+						else if (ws_uscf_expr.length() == 0) {
+							warning_condition = true;
+							lm.expired_uscf_membership << "    WARNING: Player in section requiring USCF membership has no verifiable expiration date. NWSRS=" << CStringToWString(ppiter->full_id) << " USCF=" << CStringToWString(ppiter->uscf_id) << " Expired: " << CStringToWString(ppiter->uscf_expr) << " " << CStringToWString(ppiter->last_name) << " " << CStringToWString(ppiter->first_name) << " " << ppiter->cc_rating << " " << ppiter->grade << " " << CStringToWString(ppiter->school) << std::endl;
+						}
 					}
 				}
 				with_parent_sections[target_section].players.push_back(*ppiter);
