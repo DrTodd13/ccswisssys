@@ -607,6 +607,9 @@ public:
 	}
 
 	void Load(const std::wstring filename) {
+		clear();
+		map_id_to_index.clear();
+
 		auto ccret = load_csvw_file(filename, false);
 
 		unsigned i;
@@ -615,14 +618,14 @@ public:
 			map_id_to_index.insert(std::pair<std::wstring, unsigned>(ccret[i][0], i));
 		}
 
+		SerializedVector<AllCodesEntry> after_dels;
 		for (i = 0; i < m_new_schools.size(); ++i) {
-			if (find(m_new_schools[i].getSchoolCode()) != -1) {
-				m_new_schools.clear();
-			}
-			else {
+			if (find(m_new_schools[i].getSchoolCode()) == -1) {
 				push_back(m_new_schools[i]);
+				after_dels.push_back(m_new_schools[i]);
 			}
 		}
+		m_new_schools = after_dels;
 
 		sortAndIndex();
 	}

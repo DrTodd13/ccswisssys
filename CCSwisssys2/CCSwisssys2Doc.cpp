@@ -799,6 +799,9 @@ void CCCSwisssys2Doc::Dump(CDumpContext& dc) const
 
 bool CCCSwisssys2Doc::loadRatingsFile() {
 	rated_players.clear();
+	nwsrs_map.clear();
+	nwsrs_four_map.clear();
+	uscf_map.clear();
 
 	std::wifstream infile(ratings_file);
 	unsigned player_index = 0;

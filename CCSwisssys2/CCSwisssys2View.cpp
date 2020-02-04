@@ -573,6 +573,34 @@ bool isIDInDB(const std::wstring &id, const std::map<std::wstring, unsigned> &db
 	return rentry != db.end();
 }
 
+void parents_registering_no_children(
+	const std::vector<SectionPlayerInfo> &post_proc,
+	const std::map<std::wstring, unsigned> &adult_map,
+	bool &error_condition,
+	std::wofstream &normal_log) {
+
+	// Initialize number of children to each parent to 0.
+	std::map<std::wstring, unsigned> children_per_adult;
+	for (auto aiter = adult_map.begin(); aiter != adult_map.end(); ++aiter) {
+		children_per_adult.insert(std::pair<std::wstring, unsigned>(aiter->first, 0));
+	}
+	// For each player.
+	for (const SectionPlayerInfo &spi : post_proc) {
+		const std::wstring adult_combined = spi.adult_last + spi.adult_first;
+		auto citer = children_per_adult.find(adult_combined);
+		ASSERT(citer != children_per_adult.end());
+		citer->second++;
+	}
+	// For each adult.
+	for (auto citer = children_per_adult.begin(); citer != children_per_adult.end(); ++citer) {
+		// If they didn't register any players then throw an error to the log.
+		if (citer->second == 0) {
+			error_condition = true;
+			normal_log << "ERROR: Parent " << citer->first << " did not register any players." << std::endl;
+		}
+	}
+}
+
 // MAIN
 std::vector<SectionPlayerInfo> process_cc_file(
 	HWND hWnd, 
@@ -1495,6 +1523,8 @@ std::vector<SectionPlayerInfo> process_cc_file(
 #endif
 			}
 		}
+
+		parents_registering_no_children(post_proc, adult_map, error_condition, normal_log);
 	}
 
 	return post_proc;
