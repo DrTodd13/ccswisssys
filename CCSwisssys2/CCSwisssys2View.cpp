@@ -560,7 +560,7 @@ std::wstring removeWhitespace(std::wstring &s) {
 }
 
 std::wstring stripNA(const std::wstring &s) {
-	if (s == L"NONE" || s == L"NA" || s == L"N/A") {
+	if (s == L"NONE" || s == L"NA" || s == L"N/A" || s == L"NEW") {
 		return L"";
 	}
 	else {
@@ -2449,7 +2449,7 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	td_info->colwidth(8, 256 * 11);  // phone
 	td_info->colwidth(9, 256 * 30);  // email
 	td_info->colwidth(10, 256 * 30); // registration date/time
-	td_info->colwidth(11, 256 * 12); // registration date/time
+	td_info->colwidth(11, 256 * 12); // playing room
 	td_info->colwidth(12, 256 * 30); // notes
 
 	td_sections->colwidth(0, 256 * 14); // name
@@ -2547,6 +2547,8 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	unsigned cur_row = 1;
 	for (i = 0; i < vsi.size(); ++i) {
 		std::wstring sec_name = vsi[i].section->getPrintName(vsi[i].section->players[vsi[i].index].subsection);
+		std::wstring playing_room = vsi[i].section->playing_room;
+		std::wstring room_name = getSubsecPlayingRoom(vsi[i].section->players[vsi[i].index].subsection, playing_room);
 
 		checkin->label(3 + i, 1, toString(capWords(CStringToWString(vsi[i].section->players[vsi[i].index].last_name))));  // last
 		checkin->label(3 + i, 2, toString(capWords(CStringToWString(vsi[i].section->players[vsi[i].index].first_name)))); // first
@@ -2583,10 +2585,15 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 		td_info->label(1 + i, 8, toString(ws_phone)); // phone
 		td_info->label(1 + i, 9, toString(adult_email)); // email
 		td_info->label(1 + i, 10, toString(CStringToWString(vsi[i].section->players[vsi[i].index].registration_date))); // registration date/time
+		if (room_name != L"") {
+			td_info->label(1 + i, 11, toString(room_name)); // playing room
+		}
+#if 0
 		int section_index = pDoc->sections.findByName(WStringToCString(sec_name));
 		if (section_index >= 0) {
-			td_info->label(1 + i, 11, toString(CStringToWString(pDoc->sections[section_index].playing_room))); // registration date/time
+			td_info->label(1 + i, 11, toString(CStringToWString(pDoc->sections[section_index].playing_room))); // playing room
 		}
+#endif
 		
 		std::wstringstream notes_field;
 

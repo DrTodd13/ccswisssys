@@ -184,7 +184,50 @@ void SectionEditor::OnBnClickedOk()
 	board_number_edit.GetWindowText(new_board_number);
 	playing_room_edit.GetWindowText(new_playing_room);
 	std::wstring wstr_new_sec_name = CStringToWString(new_section_name);
-	
+
+	std::wstring wstr_board_num = CStringToWString(new_board_number);
+	std::wstring wstr_playing_room = CStringToWString(new_playing_room);
+
+	unsigned board_number_count_semi = std::count(wstr_board_num.begin(), wstr_board_num.end(), ';');
+	unsigned playing_room_count_semi = std::count(wstr_playing_room.begin(), wstr_playing_room.end(), ';');
+
+	if (wstr_board_num.size() != 0) {
+		board_number_count_semi += 1;
+	}
+	if (wstr_playing_room.size() != 0) {
+		playing_room_count_semi += 1;
+	}
+
+	if (board_number_count_semi != 0 && board_number_count_semi != num_subsections_sel) {
+		std::wstringstream wss;
+		wss << "Section is configured to be split into " << num_subsections_sel
+			<< "subsections but board number information was provided for only " << board_number_count_semi
+			<< "subsections. ";
+		if (board_number_count_semi == 1) {
+			wss << "Board numbers for subsections can be entered as starting board numbers for each subsection separated by semi-colons: e.g., 101;131;161. ";
+		}
+		wss << "Do you wish to go back and enter all the subsection starting board numbers?";
+		int ret = MessageBox(WStringToCString(wss.str()), _T("Sub-section information mismatch."), MB_ICONQUESTION | MB_YESNO);
+		if (ret == IDYES) {
+			return;
+		}
+	}
+
+	if (playing_room_count_semi != 0 && playing_room_count_semi != num_subsections_sel) {
+		std::wstringstream wss;
+		wss << "Section is configured to be split into " << num_subsections_sel
+			<< "subsections but playing room information was provided for only " << playing_room_count_semi
+			<< "subsections. ";
+		if (playing_room_count_semi == 1) {
+			wss << "Playing rooms for subsections can be entered with names separated by semi-colons: e.g., AAA;BBB;CCC. ";
+		}
+		wss << "Do you wish to go back and enter all the subsection playing room names?";
+		int ret = MessageBox(WStringToCString(wss.str()), _T("Sub-section information mismatch."), MB_ICONQUESTION | MB_YESNO);
+		if (ret == IDYES) {
+			return;
+		}
+	}
+
 	if (wstr_new_sec_name.find_first_not_of(L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_+-!@#$") != std::string::npos)	{
 		MessageBox(_T("Section names can only consist of letters, numbers, _, +, -, !, @, #, or $."), _T("Section Editor Error"));
 		return;
@@ -243,6 +286,7 @@ void SectionEditor::OnBnClickedOk()
 		MessageBox(_T("Minimum rating range is 0-3000."), _T("Section Editor Error"));
 		return;
 	}
+
 	set_changed(m_s->name, new_section_name, name_change);
 	set_changed(m_s->lower_rating_limit, new_min_int, other_change);
 	set_changed(m_s->upper_rating_limit, new_max_int, other_change);
