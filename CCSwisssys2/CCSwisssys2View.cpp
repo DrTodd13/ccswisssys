@@ -287,7 +287,8 @@ CCCSwisssys2Doc* CCCSwisssys2View::GetDocument() const // non-debug version is i
 
 void CCCSwisssys2View::OnRatingsFileBrowse()
 {
-	CFileDialog FileDialog(TRUE, _T("dat"));
+	static TCHAR BASED_CODE szFilter[] = _T("NWSRS Ratings Dat Files (*.dat)|*.dat|");
+	CFileDialog FileDialog(TRUE, _T("dat"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, szFilter);
 
 	if (FileDialog.DoModal() == IDOK)
 	{

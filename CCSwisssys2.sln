@@ -1,28 +1,49 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CCSwisssys2", "CCSwisssys2\CCSwisssys2.vcxproj", "{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CCSwisssys", "CCSwisssys2\CCSwisssys2.vcxproj", "{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xlslib_lib", "xlslib-package-2.5.0\xlslib\xlslib\build\msvc2012\xlslib_lib.vcxproj", "{9024B90A-422E-4E07-A497-992044A5B87B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Itanium = Debug|Itanium
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|Itanium = Release|Itanium
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Debug|Itanium.ActiveCfg = Debug|Win32
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Debug|x64.ActiveCfg = Debug|x64
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Debug|x64.Build.0 = Debug|x64
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Debug|x86.ActiveCfg = Debug|Win32
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Debug|x86.Build.0 = Debug|Win32
+		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Release|Itanium.ActiveCfg = Release|Win32
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Release|x64.ActiveCfg = Release|x64
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Release|x64.Build.0 = Release|x64
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Release|x86.ActiveCfg = Release|Win32
 		{00F0FC39-78EC-4AF4-83F8-0CA214E7B9DF}.Release|x86.Build.0 = Release|Win32
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Debug|Itanium.ActiveCfg = Debug|Itanium
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Debug|Itanium.Build.0 = Debug|Itanium
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Debug|x64.ActiveCfg = Debug|x64
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Debug|x64.Build.0 = Debug|x64
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Debug|x86.ActiveCfg = Debug|Win32
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Debug|x86.Build.0 = Debug|Win32
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Release|Itanium.ActiveCfg = Release|Itanium
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Release|Itanium.Build.0 = Release|Itanium
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Release|x64.ActiveCfg = Release|x64
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Release|x64.Build.0 = Release|x64
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Release|x86.ActiveCfg = Release|Win32
+		{9024B90A-422E-4E07-A497-992044A5B87B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {49A25945-7475-4E3F-A279-2DAF8EFFCC90}
 	EndGlobalSection
 EndGlobal

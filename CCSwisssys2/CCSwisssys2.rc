@@ -372,13 +372,13 @@ BEGIN
         BLOCK "040904B0"
         BEGIN
             VALUE "CompanyName", "TODO: <Company name>"
-            VALUE "FileDescription", "CCSwisssys2"
+            VALUE "FileDescription", "CCSwisssys"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "CCSwisssys2.exe"
-            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
-            VALUE "OriginalFilename", "CCSwisssys2.exe"
-            VALUE "ProductName", "TODO: <Product name>"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "InternalName", "CCSwisssys.exe"
+            VALUE "LegalCopyright", "(c) Todd A. Anderson.  All rights reserved."
+            VALUE "OriginalFilename", "CCSwisssys.exe"
+            VALUE "ProductName", "CCSwisssysTODO: <Product name>"
+            VALUE "ProductVersion", "1.1.0.1"
         END
     END
     BLOCK "VarFileInfo"

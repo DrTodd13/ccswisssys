@@ -5,7 +5,7 @@ REGEDIT
 ;   CWinApp::RegisterShellFileTypes and COleObjectFactory::UpdateRegistryAll.
 
 HKEY_CLASSES_ROOT\.cts = CCSwisssys2.Document
-HKEY_CLASSES_ROOT\CCSwisssys2.Document\shell\open\command = CCSwisssys2.EXE %1
+HKEY_CLASSES_ROOT\CCSwisssys2.Document\shell\open\command = CCSwisssys.EXE %1
 HKEY_CLASSES_ROOT\CCSwisssys2.Document\shell\open\ddeexec = [open("%1")]
 HKEY_CLASSES_ROOT\CCSwisssys2.Document\shell\open\ddeexec\application = CCSwisssys2
     ; note: the application is optional
