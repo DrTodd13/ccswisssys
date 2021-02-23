@@ -627,7 +627,7 @@ std::vector<SectionPlayerInfo> process_cc_file(
 
 	if (use_cc) {
 		std::wstring ccsstr = CStringToWString(pDoc->constant_contact_file);
-		entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_four_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log);
+		entries = load_constant_contact_file(ccsstr, pDoc->nwsrs_four_map, pDoc->uscf_map, pDoc->rated_players, pDoc->school_codes, normal_log, pDoc->dynamic_locations);
 		if (entries.size() == 0) {
 			MessageBox(hWnd, _T("No players loaded from constant contact file."), _T("ERROR"), MB_OK);
 			return post_proc;
@@ -1599,9 +1599,9 @@ void CCCSwisssys2View::OnCreateSections()
 		}
 	}
 
-	entries.clear();
+	pDoc->entries.clear();
 	adult_map.clear();
-	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, entries, adult_map, error_condition, warning_condition, info_condition, normal_log, lm);
+	auto post_proc = process_cc_file(this->GetSafeHwnd(), pDoc, pDoc->entries, adult_map, error_condition, warning_condition, info_condition, normal_log, lm);
 
 	std::map<int, int> ssmap;
 	Sections with_parent_sections = pDoc->getSectionsWithParents(ssmap);
@@ -2148,6 +2148,8 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 	worksheet* results = wb.sheet("Results");
 	worksheet* tables = wb.sheet("Tables");
 
+	auto pDoc = GetDocument();
+
 	workbook checkin_wb;
 	worksheet* checkin = checkin_wb.sheet("Check-In");
 	checkin->defaultColwidth(8);
@@ -2166,6 +2168,14 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 	checkin->label(2, 4, "ID");
 	checkin->label(2, 5, "Present");
 	checkin->label(2, 6, "Notes");
+
+	unsigned next_column = 7;
+	unsigned k;
+	for (k = 0; k < pDoc->rdfv.size(); ++k) {
+		if (pDoc->rdfv[k].put_on_checkin) {
+			checkin->label(2, next_column++, toString(pDoc->rdfv[k].column_name));
+		}
+	}
 
 	unsigned i;
 	unsigned num_players = 0;
@@ -2357,6 +2367,22 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 		players->number(j+1, 28, 0);
 		players->label(j+1, 31, "FALSE");
 		players->number(j+1, 38, 0);
+
+		unsigned k;
+		for (k = 0; k < pDoc->rdfv.size(); ++k) {
+			if (pDoc->rdfv[k].swisssys_field_name != _T("None")) {
+				auto esfiter = pDoc->extra_swisssys_fields.find(pDoc->rdfv[k].swisssys_field_name);
+				if (esfiter != pDoc->extra_swisssys_fields.end()) {
+					int cccolumn = pDoc->rdfv[k].column_number;
+					int ccfi = sec.players[i].cc_file_index;
+					if (ccfi) {
+						ccfi = -ccfi - 1;
+						std::wstring field_value = pDoc->entries[ccfi].getField(cccolumn);
+						players->label(j + 1, esfiter->second, toString(field_value));
+					}
+				}
+			}
+		}
 	}
 
 	for (j = 0; j < this_sorted_name.size(); ++j) {
@@ -2382,6 +2408,30 @@ unsigned CCCSwisssys2View::createSectionWorksheet(
 			
 		if (notes_field.str().length() != 0) {
 			checkin->label(3 + j, 6, toString(notes_field.str()));
+		}
+
+		next_column = 7;
+		unsigned k;
+		for (k = 0; k < pDoc->rdfv.size(); ++k) {
+			if (pDoc->rdfv[k].put_on_checkin) {
+				int cccolumn = pDoc->rdfv[k].column_number;
+				int ccfi = sec.players[i].cc_file_index;
+				if (ccfi) {
+					ccfi = -ccfi - 1;
+					std::wstring field_value = pDoc->entries[ccfi].getField(cccolumn);
+
+					if (field_value == L"") {
+						std::wstring adult_combined = CStringToWString(sec.players[i].adult_last + sec.players[i].adult_first);
+						auto adult_iter = adult_map.find(adult_combined);
+						if (adult_iter != adult_map.end()) {
+							int adult_index = adult_iter->second;
+							field_value = pDoc->entries[adult_index].getField(cccolumn);
+						}
+					}
+
+					checkin->label(3 + j, next_column++, toString(field_value));
+				}
+			}
 		}
 	}
 
@@ -2414,6 +2464,8 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	const std::wstring &output_dir,
 	const std::vector<SectionIndex> &vsi) {
 
+	auto pDoc = GetDocument();
+
 	workbook checkin_wb;
 	worksheet* checkin = checkin_wb.sheet("Check-In");
 	checkin->defaultColwidth(8);
@@ -2434,6 +2486,14 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 	checkin->label(2, 5, "Grade");
 	checkin->label(2, 6, "ID");
 	checkin->label(2, 7, "Notes");
+
+	unsigned next_column = 8;
+	unsigned k;
+	for (k = 0; k < pDoc->rdfv.size(); ++k) {
+		if (pDoc->rdfv[k].put_on_checkin) {
+			checkin->label(2, next_column++, toString(pDoc->rdfv[k].column_name));
+		}
+	}
 
 	workbook td_wb;
 	worksheet* td_info = td_wb.sheet("Info");
@@ -2522,7 +2582,6 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 		}
 	}
 
-	auto pDoc = GetDocument();
 	unsigned sec_index = 0;
 	for (sec_index = 0; sec_index < pDoc->sections.size(); ++sec_index) {
 		td_sections->label(1 + sec_index, 0, toString(CStringToWString(pDoc->sections[sec_index].name)));
@@ -2574,8 +2633,8 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 		auto adult_iter = adult_map.find(adult_combined);
 		if (adult_iter != adult_map.end()) {
 			int adult_index = adult_iter->second;
-			adult_email = entries[adult_index].getEmail();
-			adult_phone = entries[adult_index].getPhone();
+			adult_email = pDoc->entries[adult_index].getEmail();
+			adult_phone = pDoc->entries[adult_index].getPhone();
 		}
 
 		std::wstring ws_phone = adult_phone;
@@ -2614,10 +2673,35 @@ void CCCSwisssys2View::createAllCheckinWorksheet(
 			td_info->label(1 + i, 12, toString(notes_field.str()));
 		}
 
+		next_column = 8;
+		unsigned k;
+		for (k = 0; k < pDoc->rdfv.size(); ++k) {
+			if (pDoc->rdfv[k].put_on_checkin) {
+				int cccolumn = pDoc->rdfv[k].column_number;
+				auto &loop_player = vsi[i].section->players[vsi[i].index];
+				int ccfi = loop_player.cc_file_index;
+				if (ccfi) {
+					ccfi = -ccfi - 1;
+					std::wstring field_value = pDoc->entries[ccfi].getField(cccolumn);
+
+					if (field_value == L"") {
+						std::wstring adult_combined = CStringToWString(loop_player.adult_last + loop_player.adult_first);
+						auto adult_iter = adult_map.find(adult_combined);
+						if (adult_iter != adult_map.end()) {
+							int adult_index = adult_iter->second;
+							field_value = pDoc->entries[adult_index].getField(cccolumn);
+						}
+					}
+
+					checkin->label(3 + i, next_column++, toString(field_value));
+				}
+			}
+		}
+
 		++cur_row;
 	}
 
-	std::wstring checkin_s = output_dir + L"\\all-checkin.xls";
+	std::wstring checkin_s = output_dir + L"\\all-tournament-checkin.xls";
 	std::string checkin_filename = toString(checkin_s);
 	int err = checkin_wb.Dump(checkin_filename);
 

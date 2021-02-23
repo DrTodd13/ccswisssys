@@ -131,6 +131,7 @@ BEGIN
     BEGIN
         MENUITEM "Save School Corrections",     ID_OPTIONS_SAVESCHOOLCORRECTIONS
         MENUITEM "Tournament Date",             ID_OPTIONS_TOURNAMENTDATE
+        MENUITEM "Registration Fields",         ID_OPTIONS_REGISTRATIONFIELDS
     END
     POPUP "&View"
     BEGIN
@@ -348,6 +349,20 @@ BEGIN
     CONTROL         "",IDC_DATETIMEPICKER1,"SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,19,56,100,15
 END
 
+IDD_FIELD_MANAGER DIALOGEX 0, 0, 337, 133
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Registsration Data Field Manager"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,209,98,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,264,98,50,14
+    LTEXT           "Column Label in Registration Data",IDC_STATIC,7,7,108,8
+    COMBOBOX        IDC_COMBO1,7,19,239,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Target SwissSys Field",IDC_STATIC,7,38,70,8
+    COMBOBOX        IDC_COMBO2,7,54,202,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Include column in check-in sheets",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,122,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -459,6 +474,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 98
     END
+
+    IDD_FIELD_MANAGER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 330
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 126
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -504,6 +527,11 @@ BEGIN
 END
 
 IDD_TOURNAMENT_DATE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_FIELD_MANAGER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

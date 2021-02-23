@@ -14,6 +14,7 @@
 #define IDD_SPLIT_SECTION               325
 #define IDD_FORCE_SECTION               327
 #define IDD_TOURNAMENT_DATE             333
+#define IDD_FIELD_MANAGER               334
 #define IDC_EDIT1                       1000
 #define IDC_BUTTON1                     1001
 #define IDC_EDIT2                       1002
@@ -61,17 +62,19 @@
 #define IDC_AUTO_RESECTION              1045
 #define IDC_CHECK2                      1046
 #define IDC_AUTO_RESEC_CHECK            1046
+#define IDC_LIST                        1047
 #define ID_OPTIONS_SAVESCHOOLCORRECTIONS 32771
 #define ID_OPTIONS_TEST                 32772
 #define ID_OPTIONS_TOURNAMENTDATE       32773
+#define ID_OPTIONS_REGISTRATIONFIELDS   32774
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        335
-#define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1047
+#define _APS_NEXT_COMMAND_VALUE         32775
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

@@ -10,6 +10,8 @@
 #endif
 
 #include "CCSwisssys2Doc.h"
+#include "RegistrationFields.h"
+#include "tokenize_csv.h"
 
 #include <propkey.h>
 #include <assert.h>
@@ -26,6 +28,7 @@ IMPLEMENT_DYNCREATE(CCCSwisssys2Doc, CDocument)
 
 BEGIN_MESSAGE_MAP(CCCSwisssys2Doc, CDocument)
 	ON_COMMAND(ID_OPTIONS_TOURNAMENTDATE, &CCCSwisssys2Doc::OnOptionsTournamentdate)
+	ON_COMMAND(ID_OPTIONS_REGISTRATIONFIELDS, &CCCSwisssys2Doc::OnOptionsRegistrationFields)
 END_MESSAGE_MAP()
 
 
@@ -54,6 +57,17 @@ BOOL CCCSwisssys2Doc::OnNewDocument()
 	mrplayers.clear();
 	rated_players.clear();
 	save_school_corrections = true;
+	extra_swisssys_fields.clear();
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("AGE"), 11));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("FEES1"), 14));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("FEES2"), 15));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("FEES3"), 16));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("ADDRESS"), 17));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("CITY"), 18));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("STATE"), 19));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("ZIP"), 20));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("PHONE"), 23));
+	extra_swisssys_fields.insert(std::pair<std::wstring, unsigned>(_T("EMAIL"), 24));
 
 	return TRUE;
 }
@@ -122,11 +136,13 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		force_sections.Serialize(ar);
 		noshows.Serialize(ar);
 		parent_sections.Serialize(ar);
+		rdfv.Serialize(ar);
 	}
 	else
 	{
 		sections.clear();
 		mrplayers.clear();
+		rdfv.clear();
 
 		ar >> ratings_file;
 		ar >> constant_contact_file;
@@ -141,6 +157,7 @@ void CCCSwisssys2Doc::Serialize(CArchive& ar)
 		force_sections.Serialize(ar);
 		noshows.Serialize(ar);
 		parent_sections.Serialize(ar);
+		rdfv.Serialize(ar);
 	}
 }
 
@@ -604,16 +621,18 @@ std::set<int> findEmptyPlayerFields(std::vector< std::vector<std::wstring> > &cc
 	return ret;
 }
 
-std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstring &filename,
+std::vector< ConstantContactEntry > load_constant_contact_file(
+	const std::wstring &filename,
 	const std::map<std::wstring, unsigned> &nwsrs_map,
 	const std::map<std::wstring, unsigned> &uscf_map,
 	const std::vector<Player> &rated_players,
 	const AllCodes &school_codes,
-	std::wofstream &normal_log) {
+	std::wofstream &normal_log,
+	DynamicLocations &dynamic_locations) {
 
 	auto ccret = load_csvw_file(filename, true);
 
-	DynamicLocations dynamic_locations;
+	//DynamicLocations dynamic_locations;
 
 	std::vector< ConstantContactEntry > ret;
 
@@ -899,4 +918,52 @@ CArchive & operator>>(CArchive &ar, Section &s) {
 
 bool SectionPointerRatingReverseSort(const Section *a, const Section *b) {
 	return a->upper_rating_limit > b->upper_rating_limit;
+}
+
+std::vector<SectionPlayerInfo> process_cc_file(
+	HWND hWnd,
+	CCCSwisssys2Doc* pDoc,
+	std::vector<ConstantContactEntry>& entries,
+	std::map<std::wstring, unsigned>& adult_map,
+	bool& error_condition,
+	bool& warning_condition,
+	bool& info_condition,
+	std::wofstream& normal_log,
+	log_messages& lm);
+
+void CCCSwisssys2Doc::OnOptionsRegistrationFields()
+{
+	std::wstring ccname = CStringToWString(constant_contact_file);
+	auto rdfv_copy = rdfv;
+	if (rdfv.size() == 0) {
+		std::wofstream normal_log;
+		log_messages lm;
+		bool error_condition = false, warning_condition = false, info_condition = false;
+		std::map<std::wstring, unsigned> adult_map;
+		std::vector<SectionPlayerInfo> post_proc = process_cc_file(NULL, this, entries, adult_map, error_condition, warning_condition, info_condition, normal_log, lm);
+		if (post_proc.size() > 0) {
+			rdfv.init_from_file(ccname, dynamic_locations);
+		}
+	}
+	else {
+	}
+
+	RegistrationFields rf(this);
+
+	if (rf.DoModal() == IDOK) {
+	}
+	else {
+		rdfv = rdfv_copy;
+	}
+}
+
+void RegDataFieldVector::init_from_file(const std::wstring& ccname, const DynamicLocations &dynamic_locations) {
+	std::vector<std::wstring> headers = load_csvw_file_header(ccname);
+	std::set<int> used_columns = dynamic_locations.get_used_columns();
+	unsigned i;
+	for (i = 0; i < headers.size(); ++i) {
+		if (used_columns.find(i) == used_columns.end()) {
+			push_back(RegDataField(i, headers[i]));
+		}
+	}
 }

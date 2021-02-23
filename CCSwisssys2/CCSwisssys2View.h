@@ -34,7 +34,7 @@ public:
 // Attributes
 public:
 	CCCSwisssys2Doc* GetDocument() const;
-	std::vector<ConstantContactEntry> entries;
+	//std::vector<ConstantContactEntry> entries;
 	std::map<std::wstring, unsigned> adult_map;
 	bool section_sort[8];
 	void reset_section_sort() {

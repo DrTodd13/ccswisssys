@@ -119,11 +119,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\xlslib-package-2.5.0\xlslib\xlslib;$(SolutionDir)\xlslib-package-2.5.0\xlslib\xlslib\src;$(SolutionDir)\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2012;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>C:\Users\taanders\Documents\Visual Studio 2015\Projects\CCSwisssys2\CCSwisssys2\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2012\bin\x64_MSVC2010.Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\drtod\source\repos\ccswisssys\xlslib-package-2.5.0\xlslib\xlslib\build\msvc2012\bin\x64_MSVC2010.Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>xlslib_lib.lib</AdditionalDependencies>
     </Link>
     <Midl>
@@ -206,6 +206,7 @@
     <ClInclude Include="helper.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="ManageRegistrations.h" />
+    <ClInclude Include="RegistrationFields.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SchoolSelector.h" />
     <ClInclude Include="SectionEditor.h" />
@@ -226,6 +227,7 @@
     <ClCompile Include="helper.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="ManageRegistrations.cpp" />
+    <ClCompile Include="RegistrationFields.cpp" />
     <ClCompile Include="SchoolSelector.cpp" />
     <ClCompile Include="SectionEditor.cpp" />
     <ClCompile Include="SplitSection.cpp" />

@@ -35,6 +35,126 @@ CString getSectionTypeString(int type);
 std::wstring CStringToWString(const CString &cs);
 CString WStringToCString(const std::wstring &ws);
 std::wstring toUpper(const std::wstring &s);
+wchar_t getGradeCode(const std::wstring& s);
+
+class UnrecognizedGradeCode {};
+
+enum {
+	FIRST_NAME = 0,
+	LAST_NAME = 1,
+	STUDENT_SCHOOL = 2,
+	STUDENT_GRADE = 3,
+	STUDENT_NWSRS_ID = 4,
+	STUDENT_USCF_ID = 5,
+	REGISTERED = 6,
+	RESPONSIBLE_FIRST = 7,
+	RESPONSIBLE_LAST = 8,
+	ADULT_EMAIL = 9,
+	ADULT_PHONE = 10,
+	REGISTRATION_DATETIME = 11
+};
+
+
+#define NUM_DYNAMIC_LOCATIONS 12
+
+class DynamicLocations {
+protected:
+	int locations[NUM_DYNAMIC_LOCATIONS];
+public:
+	DynamicLocations() {
+		unsigned i;
+		for (i = 0; i < NUM_DYNAMIC_LOCATIONS; ++i) {
+			locations[i] = -1;
+		}
+	}
+
+	std::set<int> get_used_columns(void) const {
+		std::set<int> ret;
+		unsigned i;
+		for (i = 0; i < NUM_DYNAMIC_LOCATIONS; ++i) {
+			if (locations[i] != -1) {
+				ret.insert(locations[i]);
+			}
+		}
+		return ret;
+	}
+
+	int operator [](int i) const { return locations[i]; }
+	int& operator [](int i) { return locations[i]; }
+};
+
+bool doAdultCheck(const std::vector<std::wstring>& fields, std::set<int>* empty_player_fields);
+
+extern std::wstring REG_STR;
+
+class ConstantContactEntry {
+protected:
+	std::vector<std::wstring> fields;
+	DynamicLocations m_locations;
+	std::set<int>* m_empty_player_fields;
+	void valid(void) const {
+		//if (fields.size() < 18) {
+			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
+		//	exit(-1);
+		//}
+	}
+public:
+	ConstantContactEntry(const std::vector<std::wstring>& f, const DynamicLocations& locations, std::set<int>* epf) : fields(f), m_locations(locations), m_empty_player_fields(epf) { valid(); }
+
+	std::wstring getField(unsigned index) const { valid(); return fields[index]; }
+	std::wstring getFirstName(void)   const { valid(); return fields[m_locations[FIRST_NAME]]; }
+	std::wstring getLastName(void)    const { valid(); return fields[m_locations[LAST_NAME]]; }
+	std::wstring getEmail(void)       const { valid(); return fields[m_locations[ADULT_EMAIL]]; }
+	std::wstring getPhone(void)       const { valid(); return fields[m_locations[ADULT_PHONE]]; }
+	std::wstring getAdultFirst(void)  const { valid(); return fields[m_locations[RESPONSIBLE_FIRST]]; }
+	std::wstring getAdultLast(void)   const { valid(); return fields[m_locations[RESPONSIBLE_LAST]]; }
+	std::wstring getRegistrationDate(void)   const { valid(); return fields[m_locations[REGISTRATION_DATETIME]]; }
+
+	/*
+	std::wstring getAddress1(void)    const { valid(); return fields[4]; }
+	std::wstring getCity(void)        const { valid(); return fields[5]; }
+	std::wstring getState(void)       const { valid(); return fields[6]; }
+	std::wstring getZip(void)         const { valid(); return fields[7]; }
+	std::wstring getCellPhone(void)   const { valid(); return fields[8]; }
+	std::wstring getVolunteer(void)   const { valid(); return fields[9]; }
+	std::wstring getQuestions(void)   const { valid(); return fields[10]; }
+	*/
+	bool didAdultCheck(void)          const {
+		valid();
+		return doAdultCheck(fields, m_empty_player_fields);
+	}
+	std::wstring getSchool(void)      const { valid(); return fields[m_locations[STUDENT_SCHOOL]]; }
+	std::wstring getGrade(void)       const { valid(); return fields[m_locations[STUDENT_GRADE]]; }
+	//std::wstring getSection(void)     const { valid(); return fields[13]; }
+	std::wstring getNwsrsId(void)     const { valid(); return fields[m_locations[STUDENT_NWSRS_ID]]; }
+	//std::wstring getNwsrsRating(void) const { valid(); return fields[m_locations[STUDENT_NWSRS_RATING]]; }
+	std::wstring getUscfId(void)      const {
+		valid();
+		if (m_locations[STUDENT_USCF_ID] >= 0) {
+			return fields[m_locations[STUDENT_USCF_ID]];
+		}
+		else return L"";
+	}
+	//std::wstring getUscfRating(void)  const { valid(); return fields[m_locations[STUDENT_USCF_RATING]]; }
+
+	bool isRegistered(void) const {
+		valid();
+		return fields[m_locations[REGISTERED]] == REG_STR;
+	}
+
+	bool isParent(void) const {
+		return didAdultCheck();
+		//		return didAdultCheck() && getSchool().empty() && getGrade().empty() && getNwsrsId().empty();
+	}
+
+	bool isPlayer(void) const {
+		return !didAdultCheck();
+	}
+
+	wchar_t getGradeCode(void) const {
+		return ::getGradeCode(getGrade());
+	}
+};
 
 class SectionPlayerInfo {
 public:
@@ -55,6 +175,7 @@ public:
 	int cc_rating;
 	CString adult_first, adult_last, adult_email, adult_phone;
 	CString registration_date;
+//	ConstantContactEntry cce;
 
 	std::wstring getUnique() {
 		return CStringToWString(last_name + first_name + grade + school + adult_first + adult_last);
@@ -782,114 +903,6 @@ public:
 	}
 };
 
-extern std::wstring REG_STR;
-
-enum {
-	FIRST_NAME = 0,
-	LAST_NAME = 1,
-	STUDENT_SCHOOL = 2,
-	STUDENT_GRADE = 3,
-	STUDENT_NWSRS_ID = 4,
-	STUDENT_USCF_ID = 5,
-	REGISTERED = 6,
-	RESPONSIBLE_FIRST = 7,
-	RESPONSIBLE_LAST = 8,
-	ADULT_EMAIL = 9,
-	ADULT_PHONE = 10,
-	REGISTRATION_DATETIME = 11
-};
-
-#define NUM_DYNAMIC_LOCATIONS 12
-
-class DynamicLocations {
-protected:
-	int locations[NUM_DYNAMIC_LOCATIONS];
-public:
-	DynamicLocations() {
-		unsigned i;
-		for (i = 0; i < NUM_DYNAMIC_LOCATIONS; ++i) {
-			locations[i] = -1;
-		}
-	}
-
-	int operator [](int i) const { return locations[i]; }
-	int & operator [](int i) { return locations[i]; }
-};
-
-wchar_t getGradeCode(const std::wstring &s);
-
-bool doAdultCheck(const std::vector<std::wstring> &fields, std::set<int> *empty_player_fields);
-
-class UnrecognizedGradeCode {};
-
-class ConstantContactEntry {
-protected:
-	std::vector<std::wstring> fields;
-	DynamicLocations m_locations;
-	std::set<int> *m_empty_player_fields;
-	void valid(void) const {
-		//if (fields.size() < 18) {
-			//std::cerr << "fields is not at least 18 long, it is " << fields.size() << " instead." << std::endl;
-		//	exit(-1);
-		//}
-	}
-public:
-	ConstantContactEntry(const std::vector<std::wstring> &f, const DynamicLocations &locations, std::set<int> * epf) : fields(f), m_locations(locations), m_empty_player_fields(epf) { valid(); }
-
-	std::wstring getFirstName(void)   const { valid(); return fields[m_locations[FIRST_NAME]]; }
-	std::wstring getLastName(void)    const { valid(); return fields[m_locations[LAST_NAME]]; }
-	std::wstring getEmail(void)       const { valid(); return fields[m_locations[ADULT_EMAIL]]; }
-	std::wstring getPhone(void)       const { valid(); return fields[m_locations[ADULT_PHONE]]; }
-	std::wstring getAdultFirst(void)  const { valid(); return fields[m_locations[RESPONSIBLE_FIRST]]; }
-	std::wstring getAdultLast(void)   const { valid(); return fields[m_locations[RESPONSIBLE_LAST]]; }
-	std::wstring getRegistrationDate(void)   const { valid(); return fields[m_locations[REGISTRATION_DATETIME]]; }
-
-	/*
-	std::wstring getAddress1(void)    const { valid(); return fields[4]; }
-	std::wstring getCity(void)        const { valid(); return fields[5]; }
-	std::wstring getState(void)       const { valid(); return fields[6]; }
-	std::wstring getZip(void)         const { valid(); return fields[7]; }
-	std::wstring getCellPhone(void)   const { valid(); return fields[8]; }
-	std::wstring getVolunteer(void)   const { valid(); return fields[9]; }
-	std::wstring getQuestions(void)   const { valid(); return fields[10]; }
-	*/
-	bool didAdultCheck(void)          const { 
-		valid(); 
-		return doAdultCheck(fields, m_empty_player_fields);
-	}
-	std::wstring getSchool(void)      const { valid(); return fields[m_locations[STUDENT_SCHOOL]]; }
-	std::wstring getGrade(void)       const { valid(); return fields[m_locations[STUDENT_GRADE]]; }
-	//std::wstring getSection(void)     const { valid(); return fields[13]; }
-	std::wstring getNwsrsId(void)     const { valid(); return fields[m_locations[STUDENT_NWSRS_ID]]; }
-	//std::wstring getNwsrsRating(void) const { valid(); return fields[m_locations[STUDENT_NWSRS_RATING]]; }
-	std::wstring getUscfId(void)      const { 
-		valid(); 
-		if (m_locations[STUDENT_USCF_ID] >= 0) {
-			return fields[m_locations[STUDENT_USCF_ID]];
-		}
-		else return L"";
-	}
-	//std::wstring getUscfRating(void)  const { valid(); return fields[m_locations[STUDENT_USCF_RATING]]; }
-
-	bool isRegistered(void) const {
-		valid();
-		return fields[m_locations[REGISTERED]] == REG_STR;
-	}
-
-	bool isParent(void) const {
-		return didAdultCheck();
-//		return didAdultCheck() && getSchool().empty() && getGrade().empty() && getNwsrsId().empty();
-	}
-
-	bool isPlayer(void) const {
-		return !didAdultCheck();
-	}
-
-	wchar_t getGradeCode(void) const {
-		return ::getGradeCode(getGrade());
-	}
-};
-
 bool isAlpha(std::wstring &s);
 bool isNumeric(const std::wstring &s);
 bool hasNumeric(std::wstring &s);
@@ -899,7 +912,8 @@ std::vector< ConstantContactEntry > load_constant_contact_file(const std::wstrin
 	const std::map<std::wstring, unsigned> &uscf_map,
 	const std::vector<Player> &rated_players,
 	const AllCodes &school_codes,
-	std::wofstream &normal_log);
+	std::wofstream &normal_log,
+	DynamicLocations& dynamic_locations);
 
 std::wstring getLastFour(const std::wstring &full);
 
@@ -987,6 +1001,31 @@ public:
 	}
 };
 
+class RegDataField {
+public:
+	int column_number;
+	std::wstring column_name;
+	std::wstring swisssys_field_name;
+	bool put_on_checkin;
+
+	RegDataField(int c, const std::wstring& cn) : column_number(c), column_name(cn), swisssys_field_name(_T("None")), put_on_checkin(false) {}
+	RegDataField() : column_number(-1), column_name(_T("")), swisssys_field_name(_T("None")), put_on_checkin(false) {}
+
+	void Serialize(CArchive& ar) {
+		if (ar.IsStoring()) {
+			ar << column_number << column_name << swisssys_field_name << put_on_checkin;
+		}
+		else {
+			ar >> column_number >> column_name >> swisssys_field_name >> put_on_checkin;
+		}
+	}
+};
+
+class RegDataFieldVector : public SerializedVector<RegDataField> {
+public:
+	void init_from_file(const std::wstring& ccname, const DynamicLocations& dynamic_locations);
+};
+
 class CCCSwisssys2Doc : public CDocument
 {
 protected: // create from serialization only
@@ -1012,6 +1051,10 @@ public:
 	SerializedMap<std::wstring, std::wstring> force_sections;  // map of unique player key to the forced section name
 	CTime m_tournament_date;
 	SerializedMap<unsigned, Section> parent_sections;
+	RegDataFieldVector rdfv;
+	DynamicLocations dynamic_locations;
+	std::map<std::wstring, unsigned> extra_swisssys_fields;
+	std::vector<ConstantContactEntry> entries;
 
 // Operations
 public:
@@ -1165,6 +1208,7 @@ protected:
 #endif // SHARED_HANDLERS
 public:
 	afx_msg void OnOptionsTournamentdate();
+	afx_msg void OnOptionsRegistrationFields();
 };
 
 class log_messages {
